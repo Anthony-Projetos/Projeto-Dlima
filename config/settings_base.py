@@ -70,10 +70,12 @@ LOGOUT_REDIRECT_URL = "login"
 PDV_RECEIPT_SETTINGS = {
     "store_name": env("PDV_STORE_NAME", "Dlima Store"),
     "cnpj": env("PDV_STORE_CNPJ", "12.345.678/0001-99"),
-    "printer_name": env("PDV_PRINTER_NAME", ""),
+    "store_address": env("PDV_STORE_ADDRESS", ""),
+    "customer_label": env("PDV_CUSTOMER_LABEL", "CONSUMIDOR"),
+    "printer_name": env("PDV_PRINTER_NAME", "PIprinter"),
     "printer_search_terms": env_list(
         "PDV_PRINTER_SEARCH_TERMS",
-        ["ELGIN", "I9", "EPSON", "TM-T20", "POS-58", "POS-80", "BEMATECH"],
+        ["PIprinter", "ELGIN", "I9", "EPSON", "TM-T20", "POS-58", "POS-80", "BEMATECH"],
     ),
 }
 

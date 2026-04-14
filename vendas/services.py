@@ -15,8 +15,10 @@ TWO_PLACES = Decimal("0.01")
 DEFAULT_RECEIPT_SETTINGS = {
     "store_name": "Dlima Store",
     "cnpj": "00.000.000/0001-00",
-    "printer_name": "",
-    "printer_search_terms": ["EPSON", "TM-T20", "POS-58", "POS-80", "ELGIN", "BEMATECH"],
+    "store_address": "",
+    "customer_label": "CONSUMIDOR",
+    "printer_name": "PIprinter",
+    "printer_search_terms": ["PIprinter", "EPSON", "TM-T20", "POS-58", "POS-80", "ELGIN", "BEMATECH"],
 }
 
 
@@ -97,6 +99,7 @@ def build_receipt_payload(venda):
         "store": {
             "name": receipt_settings["store_name"],
             "cnpj": receipt_settings["cnpj"],
+            "address": receipt_settings["store_address"],
         },
         "sale": {
             "id": venda.id,
@@ -115,7 +118,10 @@ def build_receipt_payload(venda):
             "preferred_name": receipt_settings["printer_name"],
             "search_terms": receipt_settings["printer_search_terms"],
         },
-        "message": "Obrigado pela preferencia!",
+        "customer": {
+            "name": receipt_settings["customer_label"],
+        },
+        "message": "VOLTE SEMPRE!!!",
     }
 
 
