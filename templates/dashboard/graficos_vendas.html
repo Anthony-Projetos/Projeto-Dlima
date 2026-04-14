@@ -1,0 +1,193 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dlima Store | Gráficos</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="page-dashboard">
+
+<div class="bg-overlay"></div>
+
+<main class="dashboard-wrapper">
+    <section class="dashboard-shell">
+
+        <header class="topbar">
+            <div>
+                <span class="brand-badge">Dlima Store</span>
+                <h1>Gráficos de vendas</h1>
+                <p>Veja os produtos mais vendidos e o desempenho por vendedor.</p>
+            </div>
+
+            <div class="topbar-actions">
+                <a href="{% url 'dashboard_gerente' %}" class="btn-secondary">Voltar</a>
+            </div>
+        </header>
+
+        <section class="panel" style="margin-bottom: 20px;">
+            <h2>Filtrar período</h2>
+
+            <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px;">
+                <div>
+                    <label>Data inicial</label><br>
+                    <input type="date" name="data_inicial" value="{{ data_inicial }}" class="modal-input">
+                </div>
+
+                <div>
+                    <label>Data final</label><br>
+                    <input type="date" name="data_final" value="{{ data_final }}" class="modal-input">
+                </div>
+
+                <div style="display: flex; align-items: end;">
+                    <button type="submit" class="btn-primary">Filtrar</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="content-grid">
+            <div class="panel">
+                <h2>Produtos mais vendidos</h2>
+                <canvas id="graficoProdutos"></canvas>
+            </div>
+
+            <div class="panel">
+                <h2>Vendedores que mais venderam</h2>
+                <canvas id="graficoVendedores"></canvas>
+            </div>
+        </section>
+
+        <section class="content-grid" style="margin-top: 20px;">
+            <div class="panel">
+                <h2>Tabela de produtos</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Quantidade vendida</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in produtos_tabela %}
+                        <tr>
+                            <td>{{ item.produto__nome }}</td>
+                            <td>{{ item.total_quantidade }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2">Nenhum dado encontrado</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <h2>Tabela de vendedores</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vendedor</th>
+                            <th>Total vendido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in vendedores_tabela %}
+                        <tr>
+                            <td>{{ item.vendedor__nome }}</td>
+                            <td>R$ {{ item.total_vendido|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2">Nenhum dado encontrado</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </section>
+</main>
+
+{{ produtos_labels|json_script:"produtos-labels" }}
+{{ produtos_valores|json_script:"produtos-valores" }}
+{{ vendedores_labels|json_script:"vendedores-labels" }}
+{{ vendedores_valores|json_script:"vendedores-valores" }}
+
+<script>
+    const produtosLabels = JSON.parse(document.getElementById('produtos-labels').textContent);
+    const produtosValores = JSON.parse(document.getElementById('produtos-valores').textContent);
+
+    const vendedoresLabels = JSON.parse(document.getElementById('vendedores-labels').textContent);
+    const vendedoresValores = JSON.parse(document.getElementById('vendedores-valores').textContent);
+
+    new Chart(document.getElementById('graficoProdutos'), {
+        type: 'bar',
+        data: {
+            labels: produtosLabels,
+            datasets: [{
+                label: 'Quantidade vendida',
+                data: produtosValores,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'white'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: 'white' },
+                    grid: { color: 'rgba(255,255,255,0.08)' }
+                },
+                y: {
+                    ticks: { color: 'white' },
+                    grid: { color: 'rgba(255,255,255,0.08)' }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('graficoVendedores'), {
+        type: 'bar',
+        data: {
+            labels: vendedoresLabels,
+            datasets: [{
+                label: 'Total vendido',
+                data: vendedoresValores,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'white'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: 'white' },
+                    grid: { color: 'rgba(255,255,255,0.08)' }
+                },
+                y: {
+                    ticks: { color: 'white' },
+                    grid: { color: 'rgba(255,255,255,0.08)' }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

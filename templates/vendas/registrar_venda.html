@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dlima Store | Registrar Venda</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.5/qz-tray.js"></script>
+</head>
+<body class="page-venda">
+
+    <div class="bg-overlay"></div>
+
+    <main class="venda-wrapper">
+        <section class="venda-card">
+            <div class="brand-top">
+                <span class="brand-badge">Dlima Store</span>
+                <h1>Registrar Venda</h1>
+                <p>Controle de caixa rapido, elegante e organizado.</p>
+            </div>
+
+            <div id="vendaStatus" class="status-box" hidden></div>
+
+            <form method="post" class="venda-form">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="error-box">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.vendedor.id_for_label }}">Vendedor</label>
+                        {{ form.vendedor }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.forma_pagamento.id_for_label }}">Forma de pagamento</label>
+                        {{ form.forma_pagamento }}
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.desconto.id_for_label }}">Desconto</label>
+                        {{ form.desconto }}
+                        {% if form.desconto.errors %}
+                            <div class="error-box">
+                                {{ form.desconto.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.observacao.id_for_label }}">Observacao</label>
+                    {{ form.observacao }}
+                </div>
+
+                <div class="total-box">
+                    <span>Total da venda</span>
+                    <strong>
+                        <span>R$</span>
+                        <span id="totalVenda">0,00</span>
+                    </strong>
+                    <small id="subtotalVenda">Subtotal: R$ 0,00</small>
+                </div>
+
+                <div class="products-toolbar">
+                    <h2>Produtos</h2>
+                    <div class="search-box search-box-centered">
+                        <label for="pesquisaProduto" class="search-label">Pesquisar produto</label>
+                        <input
+                            id="pesquisaProduto"
+                            type="text"
+                            class="search-input"
+                            name="q"
+                            value="{{ termo_pesquisa }}"
+                            placeholder="Digite nome, categoria, cor ou tamanho"
+                            autocomplete="off"
+                        >
+                    </div>
+                </div>
+
+                <div class="produtos-grid">
+                    {% for produto in produtos %}
+                        <div
+                            class="produto-card"
+                            data-produto-nome="{{ produto.nome|lower }}"
+                            data-produto-categoria="{{ produto.categoria|lower }}"
+                            data-produto-cor="{{ produto.cor|lower }}"
+                            data-produto-tamanho="{{ produto.tamanho|lower }}"
+                        >
+                            <div class="produto-info">
+                                <h3>{{ produto.nome }}</h3>
+                                <p>Preco: <strong>R$ {{ produto.preco }}</strong></p>
+                                <p>Estoque: {{ produto.estoque }}</p>
+                                {% if produto.categoria or produto.cor or produto.tamanho %}
+                                    <p>
+                                        {% if produto.categoria %}Categoria: {{ produto.categoria }}{% endif %}
+                                        {% if produto.cor %}{% if produto.categoria %} | {% endif %}Cor: {{ produto.cor }}{% endif %}
+                                        {% if produto.tamanho %} | Tam: {{ produto.tamanho }}{% endif %}
+                                    </p>
+                                {% endif %}
+                            </div>
+
+                            <div class="produto-qty">
+                                <label for="quantidade_{{ produto.id }}">Quantidade</label>
+                                <input
+                                    id="quantidade_{{ produto.id }}"
+                                    type="number"
+                                    name="quantidade_{{ produto.id }}"
+                                    min="0"
+                                    max="{{ produto.estoque }}"
+                                    value=""
+                                    placeholder="0"
+                                    data-preco="{{ produto.preco }}"
+                                    data-estoque="{{ produto.estoque }}"
+                                    class="qty-input"
+                                >
+                                <small class="error-box estoque-alerta" hidden>
+                                    Quantidade maior que o estoque disponivel.
+                                </small>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="produto-card empty-state">
+                            <p>Nenhum produto disponivel em estoque.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div id="semResultadosBusca" class="search-empty-state" hidden>
+                    <p>Nenhum produto encontrado para essa busca.</p>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Finalizar venda</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        window.PDV_CONFIG = {
+            finalizeSaleUrl: "{% url 'finalizar_venda_api' %}",
+            qzCertificateUrl: "",
+            qzSignatureUrl: ""
+        };
+    </script>
+    <script src="{% static 'js/vendas/registrar_venda.js' %}"></script>
+
+</body>
+</html>

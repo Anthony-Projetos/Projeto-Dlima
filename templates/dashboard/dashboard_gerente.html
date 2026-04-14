@@ -1,0 +1,296 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dlima Store | Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body class="page-dashboard">
+
+<div class="bg-overlay"></div>
+
+<main class="dashboard-wrapper">
+    <section class="dashboard-shell">
+
+        <header class="topbar">
+            <div>
+                <span class="brand-badge">Dlima Store</span>
+                <h1>Dashboard do Gerente</h1>
+                <p>Controle total das vendas e estoque da loja.</p>
+            </div>
+
+            <div class="topbar-actions">
+                <button type="button" class="btn-secondary" id="openEstoqueModal">Adicionar estoque</button>
+                <a href="/vendas/registrar/" class="btn-secondary">Nova venda</a>
+                <a href="{% url 'graficos_vendas' %}" class="btn-secondary">Gráficos</a>
+                <a href="/admin/" class="btn-primary">Administração</a>
+            </div>
+        </header>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span>Comissões do mês</span>
+                <strong>R$ {{ total_comissoes_mes|floatformat:2 }}</strong>
+            </div>
+            
+            <div class="stat-card">
+                <span>Total hoje</span>
+                <strong>R$ {{ total_hoje|floatformat:2 }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Total mês</span>
+                <strong>R$ {{ total_mes|floatformat:2 }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Vendas hoje</span>
+                <strong>{{ ultimas_vendas|length }}</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Top vendedor</span>
+                <strong>
+                    {% if ranking_mes %}
+                        {{ ranking_mes.0.vendedor__nome }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </strong>
+            </div>
+        </section>
+
+        <section class="content-grid">
+            <div class="panel">
+                <h2>Resumo por vendedor (hoje)</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vendedor</th>
+                            <th>Total</th>
+                            <th>Vendas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in resumo_vendedores %}
+                        <tr>
+                            <td>{{ item.vendedor__nome }}</td>
+                            <td>R$ {{ item.total_vendido|floatformat:2 }}</td>
+                            <td>{{ item.qtd_vendas }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3">Sem vendas hoje</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <h2>Ranking do mês</h2>
+
+                {% for item in ranking_mes %}
+                <div class="ranking-item">
+                    <div>
+                        <strong>#{{ forloop.counter }} - {{ item.vendedor__nome }}</strong>
+                    </div>
+                    <span>R$ {{ item.total_vendido|floatformat:2 }}</span>
+                </div>
+                {% empty %}
+                <p>Sem vendas no mês</p>
+                {% endfor %}
+            </div>
+        </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Comissão do mês por vendedor</h2>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vendedor</th>
+                        <th>% Comissão</th>
+                        <th>Total vendido no mês</th>
+                        <th>Comissão do mês</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in comissoes_mes %}
+                        <tr>
+                            <td>{{ item.nome }}</td>
+                            <td>{{ item.percentual|floatformat:2 }}%</td>
+                            <td>R$ {{ item.total_vendido|floatformat:2 }}</td>
+                            <td>R$ {{ item.comissao|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-row">Nenhuma comissão calculada neste mês.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+        <section class="panel">
+            <h2>Últimas vendas</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Vendedor</th>
+                        <th>Desconto</th>
+                        <th>Total</th>
+                        <th>Pagamento</th>
+                        <th>Hora</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venda in ultimas_vendas %}
+                    <tr>
+                        <td>#{{ venda.id }}</td>
+                        <td>{{ venda.vendedor.nome }}</td>
+                        <td>R$ {{ venda.desconto|floatformat:2 }}</td>
+                        <td>R$ {{ venda.total|floatformat:2 }}</td>
+                        <td>{{ venda.get_forma_pagamento_display }}</td>
+                        <td>{{ venda.data_hora|date:"H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">Nenhuma venda</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+    </section>
+</main>
+
+<div class="modal-overlay" id="estoqueModal" style="display: none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2>Adicionar estoque</h2>
+            <button type="button" class="modal-close" id="closeEstoqueModal">&times;</button>
+        </div>
+
+        <form method="post" action="{% url 'adicionar_estoque' %}" class="modal-form">
+            {% csrf_token %}
+
+            <div class="modal-group">
+                <label for="{{ estoque_form.produto.id_for_label }}">Produto</label>
+                {{ estoque_form.produto }}
+            </div>
+
+            <div class="modal-group">
+                <label for="{{ estoque_form.quantidade.id_for_label }}">Quantidade</label>
+                {{ estoque_form.quantidade }}
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" id="cancelEstoqueModal">Cancelar</button>
+                <button type="submit" class="btn-primary">Salvar estoque</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('estoqueModal');
+        const openBtn = document.getElementById('openEstoqueModal');
+        const closeBtn = document.getElementById('closeEstoqueModal');
+        const cancelBtn = document.getElementById('cancelEstoqueModal');
+
+        function abrirModal() {
+            modal.classList.add('active');
+        }
+
+        function fecharModal() {
+            modal.classList.remove('active');
+        }
+
+        if (openBtn) {
+            openBtn.addEventListener('click', abrirModal);
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', fecharModal);
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', fecharModal);
+        }
+
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    fecharModal();
+                }
+            });
+        }
+    });
+    </script>
+
+    <script>
+        window.onload = function () {
+            const modal = document.getElementById('estoqueModal');
+            const openBtn = document.getElementById('openEstoqueModal');
+            const closeBtn = document.getElementById('closeEstoqueModal');
+            const cancelBtn = document.getElementById('cancelEstoqueModal');
+
+            if (openBtn) {
+                openBtn.onclick = function () {
+                    modal.style.display = 'flex';
+                };
+            }
+
+            if (closeBtn) {
+                closeBtn.onclick = function () {
+                    modal.style.display = 'none';
+                };
+            }
+
+            if (cancelBtn) {
+                cancelBtn.onclick = function () {
+                    modal.style.display = 'none';
+                };
+            }
+
+            if (modal) {
+                modal.onclick = function (e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                };
+            }
+        };
+    </script>
+    
+    <script>
+        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const dashboardSocket = new WebSocket(`${protocol}://${window.location.host}/ws/dashboard/`);
+
+        dashboardSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+
+            if (data.type === "venda_atualizada") {
+                window.location.reload();
+            }
+        };
+
+        dashboardSocket.onclose = function() {
+            console.log("WebSocket do dashboard desconectado");
+        };
+    </script>
+
+</body>
+</html>

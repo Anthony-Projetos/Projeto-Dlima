@@ -1,0 +1,564 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body.page-venda {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    color: #ffffff;
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.78)),
+        url("../images/dlima-bg.jpg") center/cover no-repeat fixed;
+    position: relative;
+}
+
+.bg-overlay {
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(circle at top right, rgba(180, 0, 0, 0.22), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(120, 0, 0, 0.14), transparent 30%);
+    pointer-events: none;
+}
+
+.venda-wrapper {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+}
+
+.venda-card {
+    width: 100%;
+    max-width: 1180px;
+    background: rgba(10, 10, 10, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 24px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    padding: 32px;
+}
+
+.brand-top {
+    margin-bottom: 28px;
+}
+
+.brand-badge {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: #f5f5f5;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    margin-bottom: 16px;
+}
+
+.brand-top h1 {
+    font-size: 38px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.brand-top p {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 16px;
+}
+
+.venda-form {
+    width: 100%;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f3f4f6;
+}
+
+.form-group select,
+.form-group textarea,
+.qty-input {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    border-radius: 14px;
+    outline: none;
+    transition: 0.2s ease;
+}
+
+.form-group select {
+    height: 50px;
+    padding: 0 14px;
+}
+
+.form-group textarea {
+    min-height: 110px;
+    padding: 14px;
+    resize: vertical;
+}
+
+.form-group select:focus,
+.form-group textarea:focus,
+.qty-input:focus {
+    border-color: rgba(255, 70, 70, 0.8);
+    box-shadow: 0 0 0 4px rgba(255, 70, 70, 0.12);
+}
+
+.section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 28px 0 22px;
+    text-align: center;
+}
+
+.section-header h2 {
+    font-size: 24px;
+    color: #ffffff;
+}
+
+.products-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin: 28px 0 22px;
+    text-align: center;
+}
+
+.products-toolbar h2 {
+    font-size: 24px;
+    color: #ffffff;
+}
+
+.search-box {
+    width: min(100%, 460px);
+    margin: 0 auto;
+}
+
+.search-box-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.search-label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+    letter-spacing: 0.02em;
+}
+
+.search-input {
+    width: 100%;
+    height: 54px;
+    padding: 0 18px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+    border-radius: 16px;
+    outline: none;
+    transition: 0.2s ease;
+    text-align: center;
+    font-size: 15px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.44);
+}
+
+.search-input:focus {
+    border-color: rgba(255, 70, 70, 0.8);
+    box-shadow: 0 0 0 4px rgba(255, 70, 70, 0.12);
+}
+
+.total-box {
+    background: linear-gradient(135deg, #7a0000, #2b0000);
+    border-radius: 18px;
+    
+    padding: 10px 30px;      /* 🔥 diminui o vermelho */
+    width: fit-content;      /* 🔥 não estica */
+    margin-left: auto;       /* 🔥 joga pra direita */
+
+    text-align: right;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+
+/* texto pequeno */
+.total-box span {
+    font-size: 14px;
+    opacity: 0.8;
+    display: block;
+    margin-bottom: 6px;
+}
+
+/* container do valor */
+.total-box strong {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+/* R$ */
+.total-box strong span:first-child {
+    font-size: 22px;
+    opacity: 0.8;
+}
+
+/* VALOR GRANDE */
+#totalVenda {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #ffffff;
+}
+
+/* efeito glow leve */
+#totalVenda {
+    text-shadow: 0 0 12px rgba(255,255,255,0.2);
+}
+
+.produtos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.produto-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.produto-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 70, 70, 0.45);
+}
+
+.produto-info h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.produto-info p {
+    color: rgba(255, 255, 255, 0.78);
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.produto-qty label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f3f4f6;
+}
+
+.qty-input {
+    height: 50px;
+    padding: 0 14px;
+    font-size: 16px;
+}
+
+.empty-state {
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.search-empty-state {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    border: 1px dashed rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.78);
+    text-align: center;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 28px;
+}
+
+.status-box {
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.status-box[data-status-type="success"] {
+    background: rgba(51, 173, 127, 0.18);
+    color: #dff8ec;
+    border: 1px solid rgba(51, 173, 127, 0.45);
+}
+
+.status-box[data-status-type="warning"] {
+    background: rgba(255, 183, 77, 0.18);
+    color: #fff1d6;
+    border: 1px solid rgba(255, 183, 77, 0.45);
+}
+
+.status-box[data-status-type="error"] {
+    background: rgba(226, 92, 92, 0.18);
+    color: #ffe3e3;
+    border: 1px solid rgba(226, 92, 92, 0.45);
+}
+
+.status-box[data-status-type="info"] {
+    background: rgba(124, 175, 255, 0.18);
+    color: #e6f0ff;
+    border: 1px solid rgba(124, 175, 255, 0.45);
+}
+
+.btn-primary {
+    border: none;
+    border-radius: 14px;
+    padding: 15px 28px;
+    background: linear-gradient(135deg, #ffffff, #e7e7e7);
+    color: #111111;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.25);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    opacity: 0.95;
+}
+
+@media (max-width: 900px) {
+    .form-grid,
+    .produtos-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .total-box {
+        text-align: left;
+        min-width: auto;
+    }
+
+    .brand-top h1 {
+        font-size: 30px;
+    }
+
+    .venda-card {
+        padding: 22px;
+    }
+
+    select {
+    color: white;
+    background: rgba(255, 255, 255, 0.06);
+    }
+
+    select:focus {
+        color: white;
+    }
+
+    .ts-wrapper {
+    width: 100%;
+    }
+
+    .ts-control {
+        min-height: 52px;
+        border-radius: 14px !important;
+        border: 1px solid rgba(255, 255, 255, 0.10) !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        box-shadow: none !important;
+        padding: 10px 14px !important;
+    }
+
+    .ts-control input {
+        color: #ffffff !important;
+    }
+
+    .ts-control .item {
+        color: #ffffff !important;
+    }
+
+    .ts-dropdown {
+        border-radius: 14px !important;
+        border: 1px solid rgba(255, 255, 255, 0.10) !important;
+        background: #ffffff !important;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .ts-dropdown .option {
+        color: #111111 !important;
+        padding: 12px 14px !important;
+        font-size: 15px;
+    }
+
+    .ts-dropdown .option:hover,
+    .ts-dropdown .active {
+        background: #f3f4f6 !important;
+        color: #111111 !important;
+    }
+
+    .ts-dropdown .selected {
+        background: #e5e7eb !important;
+        color: #111111 !important;
+    }
+
+    .ts-wrapper.single .ts-control:after {
+        border-color: #ffffff transparent transparent transparent !important;
+    }
+
+    .ts-wrapper.focus .ts-control {
+        border-color: rgba(255, 70, 70, 0.8) !important;
+        box-shadow: 0 0 0 4px rgba(255, 70, 70, 0.12) !important;
+    }
+
+    .ts-wrapper {
+    width: 100%;
+    }
+
+    .ts-control {
+        min-height: 52px;
+        border-radius: 14px !important;
+        border: 1px solid rgba(255, 255, 255, 0.10) !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        box-shadow: none !important;
+        padding: 10px 14px !important;
+    }
+
+    .ts-control input {
+        color: #ffffff !important;
+    }
+
+    .ts-control .item {
+        color: #ffffff !important;
+    }
+
+    .ts-dropdown {
+        border-radius: 14px !important;
+        border: 1px solid rgba(255, 255, 255, 0.10) !important;
+        background: #ffffff !important;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .ts-dropdown .option {
+        color: #111111 !important;
+        padding: 12px 14px !important;
+        font-size: 15px;
+    }
+
+    .ts-dropdown .option:hover,
+    .ts-dropdown .active {
+        background: #f3f4f6 !important;
+        color: #111111 !important;
+    }
+
+    .ts-dropdown .selected {
+        background: #e5e7eb !important;
+        color: #111111 !important;
+    }
+
+    .ts-wrapper.single .ts-control:after {
+        border-color: #ffffff transparent transparent transparent !important;
+    }
+
+    .ts-wrapper.focus .ts-control {
+        border-color: rgba(255, 70, 70, 0.8) !important;
+        box-shadow: 0 0 0 4px rgba(255, 70, 70, 0.12) !important;
+    }
+    .produtos-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 18px;
+    }
+
+    .search-box {
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .search-box label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #f3f4f6;
+    }
+
+    .search-input-wrap {
+        position: relative;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 16px;
+        pointer-events: none;
+    }
+
+    .search-input-wrap input {
+        width: 100%;
+        height: 50px;
+        padding: 0 14px 0 42px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(255, 255, 255, 0.06);
+        color: #ffffff;
+        outline: none;
+        transition: 0.2s ease;
+        font-size: 14px;
+    }
+
+    .search-input-wrap input::placeholder {
+        color: rgba(255, 255, 255, 0.45);
+    }
+
+    .search-input-wrap input:focus {
+        border-color: rgba(255, 70, 70, 0.8);
+        box-shadow: 0 0 0 4px rgba(255, 70, 70, 0.12);
+    }
+}

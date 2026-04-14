@@ -1,0 +1,131 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body.page-login {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    color: #ffffff;
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.74), rgba(0, 0, 0, 0.82)),
+        url("../images/dlima-bg.jpg") center/cover no-repeat fixed;
+    position: relative;
+}
+
+.bg-overlay {
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(circle at top right, rgba(180, 0, 0, 0.20), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(120, 0, 0, 0.12), transparent 30%);
+    pointer-events: none;
+}
+
+.login-wrapper {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 460px;
+    background: rgba(10, 10, 10, 0.74);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 24px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    padding: 32px;
+}
+
+.login-brand {
+    margin-bottom: 24px;
+}
+
+.brand-badge {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: #f5f5f5;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    margin-bottom: 16px;
+}
+
+.login-brand h1 {
+    font-size: 34px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.login-brand p {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 15px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f3f4f6;
+}
+
+.form-group input {
+    width: 100%;
+    height: 52px;
+    padding: 0 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    outline: none;
+    transition: 0.2s ease;
+}
+
+.form-group input:focus {
+    border-color: rgba(255, 70, 70, 0.8);
+    box-shadow: 0 0 0 4px rgba(255, 70, 70, 0.12);
+}
+
+.error-box {
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(180, 0, 0, 0.18);
+    border: 1px solid rgba(255, 80, 80, 0.25);
+    color: #ffd1d1;
+    font-size: 14px;
+}
+
+.btn-login {
+    width: 100%;
+    height: 52px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #ffffff, #e7e7e7);
+    color: #111111;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.25);
+}
+
+.btn-login:hover {
+    transform: translateY(-1px);
+    opacity: 0.96;
+}
