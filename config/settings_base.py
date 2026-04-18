@@ -72,10 +72,10 @@ PDV_RECEIPT_SETTINGS = {
     "cnpj": env("PDV_STORE_CNPJ", "12.345.678/0001-99"),
     "store_address": env("PDV_STORE_ADDRESS", ""),
     "customer_label": env("PDV_CUSTOMER_LABEL", "CONSUMIDOR"),
-    "printer_name": env("PDV_PRINTER_NAME", "PIprinter"),
+    "printer_name": env("PDV_PRINTER_NAME", "PIPrinter"),
     "printer_search_terms": env_list(
         "PDV_PRINTER_SEARCH_TERMS",
-        ["PIprinter", "ELGIN", "I9", "EPSON", "TM-T20", "POS-58", "POS-80", "BEMATECH"],
+        ["PIPrinter", "ELGIN", "I9", "EPSON", "TM-T20", "POS-58", "POS-80", "BEMATECH"],
     ),
 }
 

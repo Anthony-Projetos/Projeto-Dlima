@@ -17,8 +17,8 @@ DEFAULT_RECEIPT_SETTINGS = {
     "cnpj": "00.000.000/0001-00",
     "store_address": "",
     "customer_label": "CONSUMIDOR",
-    "printer_name": "PIprinter",
-    "printer_search_terms": ["PIprinter", "EPSON", "TM-T20", "POS-58", "POS-80", "ELGIN", "BEMATECH"],
+    "printer_name": "PIPrinter",
+    "printer_search_terms": ["PIPrinter", "EPSON", "TM-T20", "POS-58", "POS-80", "ELGIN", "BEMATECH"],
 }
 
 
