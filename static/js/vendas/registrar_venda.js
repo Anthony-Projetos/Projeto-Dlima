@@ -1,5 +1,5 @@
 (function () {
-    const RECEIPT_WIDTH = 48;
+    const DEFAULT_RECEIPT_WIDTH = 32;
     const vendaForm = document.querySelector('.venda-form');
     const submitButton = vendaForm ? vendaForm.querySelector('button[type="submit"]') : null;
     const statusBox = document.getElementById('vendaStatus');
@@ -10,6 +10,15 @@
 
     function getAppConfig() {
         return window.PDV_CONFIG || {};
+    }
+
+    function getReceiptWidth(receipt) {
+        const configuredWidth = Number(receipt?.printer?.width);
+        if (!Number.isFinite(configuredWidth)) {
+            return DEFAULT_RECEIPT_WIDTH;
+        }
+
+        return Math.max(24, Math.min(Math.trunc(configuredWidth), 64));
     }
 
     async function fetchText(url) {
@@ -134,6 +143,30 @@
         const safeValue = String(value || '');
         const dots = '.'.repeat(Math.max(width - safeLabel.length - safeValue.length, 1));
         return `${safeLabel}${dots}${safeValue}`;
+    }
+
+    function getItemColumnSizes(width) {
+        if (width <= 32) {
+            return {
+                code: 6,
+                description: 16,
+                total: 10,
+            };
+        }
+
+        if (width <= 42) {
+            return {
+                code: 8,
+                description: 22,
+                total: 12,
+            };
+        }
+
+        return {
+            code: 10,
+            description: width - 24,
+            total: 14,
+        };
     }
 
     function formatDateOnly(dateTime) {
@@ -310,63 +343,73 @@
         const ESC = '\x1B';
         const GS = '\x1D';
         const lines = [];
+        const receiptWidth = getReceiptWidth(receipt);
+        const columns = getItemColumnSizes(receiptWidth);
         const sale = receipt.sale;
         const storeAddress = receipt.store.address || '';
         const customerName = receipt.customer?.name || 'CONSUMIDOR';
         const issueDate = formatDateOnly(sale.data_hora);
 
         lines.push(`${ESC}@`);
+        lines.push(`${ESC}2`);
+        lines.push(`${ESC}a${String.fromCharCode(0)}`);
+        lines.push(`${buildLineColumns(issueDate, `Orc. ${sale.numero}`, receiptWidth).join('\n')}\n`);
+        lines.push('\n');
         lines.push(`${ESC}a${String.fromCharCode(1)}`);
-        lines.push(`${buildLineColumns(issueDate, `Orc. ${sale.numero}`, RECEIPT_WIDTH).join('\n')}\n`);
         lines.push(`${ESC}E${String.fromCharCode(1)}`);
-        lines.push(`${centerText(receipt.store.name, RECEIPT_WIDTH)}\n`);
+        lines.push(`${centerText(receipt.store.name, receiptWidth)}\n`);
         lines.push(`${ESC}E${String.fromCharCode(0)}`);
         if (storeAddress) {
-            chunkText(storeAddress, RECEIPT_WIDTH).forEach(line => lines.push(`${centerText(line, RECEIPT_WIDTH)}\n`));
+            chunkText(storeAddress, receiptWidth).forEach(line => lines.push(`${centerText(line, receiptWidth)}\n`));
         }
-        lines.push(`${centerText('* ORCAMENTO SEM VALOR FISCAL *', RECEIPT_WIDTH)}\n`);
-        lines.push(`${'-'.repeat(RECEIPT_WIDTH)}\n`);
+        lines.push(`${centerText('* ORCAMENTO SEM VALOR FISCAL *', receiptWidth)}\n`);
+        lines.push(`${'-'.repeat(receiptWidth)}\n`);
         lines.push(`${ESC}a${String.fromCharCode(0)}`);
         lines.push(`Cliente: ${customerName}\n`);
-        lines.push('\n');
-        lines.push(`Comprador\n`);
         lines.push(`Vendedor: ${sale.vendedor}\n`);
-        lines.push('\n');
-        lines.push(`${centerText('Vencimentos...', RECEIPT_WIDTH)}\n`);
-        lines.push(`${buildLineColumns(`Vencto.: ${issueDate}`, `Valor: ${sale.total}`, RECEIPT_WIDTH).join('\n')}\n`);
-        lines.push(`${'-'.repeat(RECEIPT_WIDTH)}\n`);
-        lines.push(`${padRight('CODIGO', 10)}${padRight('DESCRICAO', 24)}${padRight('VL R$', 14)}\n`);
-        lines.push(`${padRight('', 10)}${padRight('QTD | UNT. R$', 24)}${padRight('', 14)}\n`);
+        lines.push(`Pagamento: ${sale.forma_pagamento}\n`);
+        lines.push(`${'-'.repeat(receiptWidth)}\n`);
+        lines.push(`${buildLineColumns(`Vencto.: ${issueDate}`, `Valor: ${sale.total}`, receiptWidth).join('\n')}\n`);
+        lines.push(`${'-'.repeat(receiptWidth)}\n`);
+        lines.push(
+            `${padRight('COD.', columns.code)}${padRight('DESCRICAO', columns.description)}${'TOTAL'.padStart(columns.total, ' ')}\n`
+        );
 
         sale.itens.forEach(item => {
             const code = String(item.produto_id).padStart(5, '0');
-            const descriptionLines = chunkText(item.nome, 24);
+            const descriptionLines = chunkText(item.nome, columns.description);
             const firstDescription = descriptionLines.shift() || '';
 
-            lines.push(`${padRight(code, 10)}${padRight(firstDescription, 24)}${String(item.valor_total).padStart(14, ' ')}\n`);
+            lines.push(
+                `${padRight(code, columns.code)}${padRight(firstDescription, columns.description)}${String(item.valor_total).padStart(columns.total, ' ')}\n`
+            );
             descriptionLines.forEach(line => {
-                lines.push(`${padRight('', 10)}${line}\n`);
+                lines.push(`${padRight('', columns.code)}${line}\n`);
             });
-            lines.push(`${padRight('', 10)}${padRight(`${item.quantidade} x ${item.valor_unitario}`, 24)}${String(item.valor_total).padStart(14, ' ')}\n`);
+            lines.push(
+                `${padRight('', columns.code)}${padRight(`${item.quantidade}x ${item.valor_unitario}`, columns.description)}${''.padStart(columns.total, ' ')}\n`
+            );
         });
 
-        lines.push(`${'-'.repeat(RECEIPT_WIDTH)}\n`);
+        lines.push(`${'-'.repeat(receiptWidth)}\n`);
         if (Number(sale.desconto || 0) > 0) {
-            lines.push(`${buildDottedLine('Subtotal', sale.subtotal, RECEIPT_WIDTH)}\n`);
-            lines.push(`${buildDottedLine('Desconto', sale.desconto, RECEIPT_WIDTH)}\n`);
+            lines.push(`${buildDottedLine('Subtotal', sale.subtotal, receiptWidth)}\n`);
+            lines.push(`${buildDottedLine('Desconto', sale.desconto, receiptWidth)}\n`);
         }
         lines.push(`${ESC}E${String.fromCharCode(1)}`);
-        lines.push(`${buildDottedLine('Total', sale.total, RECEIPT_WIDTH)}\n`);
+        lines.push(`${buildDottedLine('Total', sale.total, receiptWidth)}\n`);
         lines.push(`${ESC}E${String.fromCharCode(0)}`);
         lines.push('\n');
-        lines.push(`OBS: ${sale.observacao || ''}\n`);
+        if (sale.observacao) {
+            chunkText(`OBS: ${sale.observacao}`, receiptWidth).forEach(line => lines.push(`${line}\n`));
+            lines.push('\n');
+        }
 
-        lines.push('\n');
         lines.push(`${ESC}a${String.fromCharCode(1)}`);
-        chunkText(receipt.message, RECEIPT_WIDTH).forEach(line => lines.push(`${centerText(line, RECEIPT_WIDTH)}\n`));
+        chunkText(receipt.message, receiptWidth).forEach(line => lines.push(`${centerText(line, receiptWidth)}\n`));
         lines.push('\n\n');
         lines.push(`${GS}V${String.fromCharCode(66)}${String.fromCharCode(0)}`);
-        return lines;
+        return lines.join('');
     }
 
     async function printReceipt(receipt) {

@@ -72,6 +72,7 @@ PDV_RECEIPT_SETTINGS = {
     "cnpj": env("PDV_STORE_CNPJ", "12.345.678/0001-99"),
     "store_address": env("PDV_STORE_ADDRESS", ""),
     "customer_label": env("PDV_CUSTOMER_LABEL", "CONSUMIDOR"),
+    "receipt_width": env_int("PDV_RECEIPT_WIDTH", 32),
     "printer_name": env("PDV_PRINTER_NAME", "PIPrinter"),
     "printer_search_terms": env_list(
         "PDV_PRINTER_SEARCH_TERMS",
