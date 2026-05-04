@@ -422,12 +422,7 @@
             encoding: 'UTF-8',
             jobName: `Recibo Venda #${receipt.sale.numero}`,
         });
-        const data = [{
-            type: 'raw',
-            format: 'command',
-            flavor: 'plain',
-            data: buildEscPosReceipt(receipt),
-        }];
+        const data = [buildEscPosReceipt(receipt)];
 
         await window.qz.print(config, data);
         return printerName;
