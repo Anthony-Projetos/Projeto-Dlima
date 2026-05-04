@@ -17,7 +17,7 @@ DEFAULT_RECEIPT_SETTINGS = {
     "cnpj": "00.000.000/0001-00",
     "store_address": "",
     "customer_label": "CONSUMIDOR",
-    "receipt_width": 32,
+    "receipt_width": 48,
     "printer_name": "PIPrinter",
     "printer_search_terms": ["PIPrinter", "EPSON", "TM-T20", "POS-58", "POS-80", "ELGIN", "BEMATECH"],
 }

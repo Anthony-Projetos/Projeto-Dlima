@@ -1,5 +1,5 @@
 (function () {
-    const DEFAULT_RECEIPT_WIDTH = 32;
+    const DEFAULT_RECEIPT_WIDTH = 48;
     const vendaForm = document.querySelector('.venda-form');
     const submitButton = vendaForm ? vendaForm.querySelector('button[type="submit"]') : null;
     const statusBox = document.getElementById('vendaStatus');
@@ -409,7 +409,7 @@
         chunkText(receipt.message, receiptWidth).forEach(line => lines.push(`${centerText(line, receiptWidth)}\n`));
         lines.push('\n\n');
         lines.push(`${GS}V${String.fromCharCode(66)}${String.fromCharCode(0)}`);
-        return lines.join('');
+        return lines;
     }
 
     async function printReceipt(receipt) {
@@ -422,7 +422,12 @@
             encoding: 'UTF-8',
             jobName: `Recibo Venda #${receipt.sale.numero}`,
         });
-        const data = [buildEscPosReceipt(receipt)];
+        const data = [{
+            type: 'raw',
+            format: 'command',
+            flavor: 'plain',
+            data: buildEscPosReceipt(receipt),
+        }];
 
         await window.qz.print(config, data);
         return printerName;
