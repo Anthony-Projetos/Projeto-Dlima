@@ -1,5 +1,4 @@
 (function () {
-    const DEFAULT_RECEIPT_WIDTH = 48;
     const vendaForm = document.querySelector('.venda-form');
     const submitButton = vendaForm ? vendaForm.querySelector('button[type="submit"]') : null;
     const statusBox = document.getElementById('vendaStatus');
@@ -10,30 +9,6 @@
 
     function getAppConfig() {
         return window.PDV_CONFIG || {};
-    }
-
-    function getReceiptWidth(receipt) {
-        const configuredWidth = Number(receipt?.printer?.width);
-        if (!Number.isFinite(configuredWidth)) {
-            return DEFAULT_RECEIPT_WIDTH;
-        }
-
-        return Math.max(24, Math.min(Math.trunc(configuredWidth), 64));
-    }
-
-    async function fetchText(url) {
-        const response = await fetch(url, {
-            cache: 'no-store',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Falha ao carregar configuracao do QZ Tray.');
-        }
-
-        return response.text();
     }
 
     function formatCurrency(value) {
@@ -78,108 +53,6 @@
             }
         }
         return '';
-    }
-
-    function padRight(text, width) {
-        return String(text).length >= width ? String(text) : String(text).padEnd(width, ' ');
-    }
-
-    function centerText(text, width) {
-        const normalized = String(text || '');
-        if (normalized.length >= width) {
-            return normalized;
-        }
-        const leftPadding = Math.floor((width - normalized.length) / 2);
-        return `${' '.repeat(leftPadding)}${normalized}`;
-    }
-
-    function chunkText(text, width) {
-        const value = String(text || '').trim();
-        if (!value) {
-            return [''];
-        }
-
-        const words = value.split(/\s+/);
-        const lines = [];
-        let currentLine = '';
-
-        for (const word of words) {
-            const nextLine = currentLine ? `${currentLine} ${word}` : word;
-            if (nextLine.length > width) {
-                if (currentLine) {
-                    lines.push(currentLine);
-                    currentLine = word;
-                } else {
-                    lines.push(word.slice(0, width));
-                    currentLine = word.slice(width);
-                }
-            } else {
-                currentLine = nextLine;
-            }
-        }
-
-        if (currentLine) {
-            lines.push(currentLine);
-        }
-
-        return lines;
-    }
-
-    function buildLineColumns(left, right, width) {
-        const safeLeft = String(left || '');
-        const safeRight = String(right || '');
-        const available = Math.max(width - safeRight.length, 1);
-        const leftLines = chunkText(safeLeft, available);
-        return leftLines.map((line, index) => {
-            if (index === leftLines.length - 1) {
-                return `${padRight(line, available)}${safeRight}`;
-            }
-            return line;
-        });
-    }
-
-    function buildDottedLine(label, value, width) {
-        const safeLabel = String(label || '');
-        const safeValue = String(value || '');
-        const dots = '.'.repeat(Math.max(width - safeLabel.length - safeValue.length, 1));
-        return `${safeLabel}${dots}${safeValue}`;
-    }
-
-    function getItemColumnSizes(width) {
-        if (width <= 32) {
-            return {
-                code: 6,
-                description: 16,
-                total: 10,
-            };
-        }
-
-        if (width <= 42) {
-            return {
-                code: 8,
-                description: 22,
-                total: 12,
-            };
-        }
-
-        return {
-            code: 10,
-            description: width - 24,
-            total: 14,
-        };
-    }
-
-    function formatDateOnly(dateTime) {
-        if (!dateTime) {
-            return '';
-        }
-
-        const parsed = new Date(dateTime);
-        if (Number.isNaN(parsed.getTime())) {
-            return String(dateTime).slice(0, 10);
-        }
-
-        return parsed.toLocaleDateString('pt-BR');
     }
 
     function calculateTotal() {
@@ -239,6 +112,7 @@
     }
 
     async function saveSale(payload) {
+        // Envia a venda para o Django; se a venda for salva, o servidor devolve o recibo pronto para imprimir.
         const response = await fetch(getAppConfig().finalizeSaleUrl, {
             method: 'POST',
             headers: {
@@ -266,171 +140,13 @@
         return data;
     }
 
-    async function ensureQzTray() {
-        if (!window.qz) {
-            throw new Error('QZ Tray nao foi carregado no navegador.');
+    async function printSavedReceipt(receipt) {
+        if (!window.PDVReceiptPrinter) {
+            throw new Error('Modulo de impressao de recibo nao foi carregado.');
         }
 
-        if (window.qz.websocket.isActive()) {
-            return;
-        }
-
-        if (!window.__qzConfigured) {
-            const config = getAppConfig();
-
-            if (config.qzCertificateUrl) {
-                window.qz.security.setCertificatePromise((resolve, reject) => {
-                    fetchText(config.qzCertificateUrl)
-                        .then(resolve)
-                        .catch(reject);
-                });
-            } else {
-                window.qz.security.setCertificatePromise((resolve) => resolve(''));
-            }
-
-            if (config.qzSignatureUrl) {
-                window.qz.security.setSignatureAlgorithm('SHA512');
-                window.qz.security.setSignaturePromise((toSign) => (resolve, reject) => {
-                    fetch(`${config.qzSignatureUrl}?request=${encodeURIComponent(toSign)}`, {
-                        cache: 'no-store',
-                        headers: {
-                            'Content-Type': 'text/plain',
-                        },
-                    })
-                        .then(response => response.ok ? response.text() : Promise.reject(new Error('Falha ao assinar requisicao.')))
-                        .then(resolve)
-                        .catch(reject);
-                });
-            } else {
-                window.qz.security.setSignaturePromise(() => (resolve) => resolve());
-            }
-
-            window.__qzConfigured = true;
-        }
-
-        await window.qz.websocket.connect({ retries: 2, delay: 1 });
-    }
-
-    async function resolvePrinter(preferredName, searchTerms) {
-        if (preferredName) {
-            try {
-                return await window.qz.printers.find(preferredName);
-            } catch (error) {
-                console.warn('Impressora preferencial nao encontrada:', preferredName);
-            }
-        }
-
-        const printerDetails = await window.qz.printers.details();
-        const normalizedTerms = (searchTerms || []).map(term => String(term).toLowerCase());
-
-        const matchedPrinter = printerDetails.find(printer =>
-            normalizedTerms.some(term => printer.name.toLowerCase().includes(term))
-        );
-
-        if (matchedPrinter) {
-            return matchedPrinter.name;
-        }
-
-        const defaultPrinter = await window.qz.printers.getDefault();
-        if (defaultPrinter) {
-            return defaultPrinter;
-        }
-
-        throw new Error('Nenhuma impressora termica compativel foi encontrada.');
-    }
-
-    function buildEscPosReceipt(receipt) {
-        const ESC = '\x1B';
-        const GS = '\x1D';
-        const lines = [];
-        const receiptWidth = getReceiptWidth(receipt);
-        const columns = getItemColumnSizes(receiptWidth);
-        const sale = receipt.sale;
-        const storeAddress = receipt.store.address || '';
-        const customerName = receipt.customer?.name || 'CONSUMIDOR';
-        const issueDate = formatDateOnly(sale.data_hora);
-
-        lines.push(`${ESC}@`);
-        lines.push(`${ESC}2`);
-        lines.push(`${ESC}a${String.fromCharCode(0)}`);
-        lines.push(`${buildLineColumns(issueDate, `Orc. ${sale.numero}`, receiptWidth).join('\n')}\n`);
-        lines.push('\n');
-        lines.push(`${ESC}a${String.fromCharCode(1)}`);
-        lines.push(`${ESC}E${String.fromCharCode(1)}`);
-        lines.push(`${centerText(receipt.store.name, receiptWidth)}\n`);
-        lines.push(`${ESC}E${String.fromCharCode(0)}`);
-        if (storeAddress) {
-            chunkText(storeAddress, receiptWidth).forEach(line => lines.push(`${centerText(line, receiptWidth)}\n`));
-        }
-        lines.push(`${centerText('* ORCAMENTO SEM VALOR FISCAL *', receiptWidth)}\n`);
-        lines.push(`${'-'.repeat(receiptWidth)}\n`);
-        lines.push(`${ESC}a${String.fromCharCode(0)}`);
-        lines.push(`Cliente: ${customerName}\n`);
-        lines.push(`Vendedor: ${sale.vendedor}\n`);
-        lines.push(`Pagamento: ${sale.forma_pagamento}\n`);
-        lines.push(`${'-'.repeat(receiptWidth)}\n`);
-        lines.push(`${buildLineColumns(`Vencto.: ${issueDate}`, `Valor: ${sale.total}`, receiptWidth).join('\n')}\n`);
-        lines.push(`${'-'.repeat(receiptWidth)}\n`);
-        lines.push(
-            `${padRight('COD.', columns.code)}${padRight('DESCRICAO', columns.description)}${'TOTAL'.padStart(columns.total, ' ')}\n`
-        );
-
-        sale.itens.forEach(item => {
-            const code = String(item.produto_id).padStart(5, '0');
-            const descriptionLines = chunkText(item.nome, columns.description);
-            const firstDescription = descriptionLines.shift() || '';
-
-            lines.push(
-                `${padRight(code, columns.code)}${padRight(firstDescription, columns.description)}${String(item.valor_total).padStart(columns.total, ' ')}\n`
-            );
-            descriptionLines.forEach(line => {
-                lines.push(`${padRight('', columns.code)}${line}\n`);
-            });
-            lines.push(
-                `${padRight('', columns.code)}${padRight(`${item.quantidade}x ${item.valor_unitario}`, columns.description)}${''.padStart(columns.total, ' ')}\n`
-            );
-        });
-
-        lines.push(`${'-'.repeat(receiptWidth)}\n`);
-        if (Number(sale.desconto || 0) > 0) {
-            lines.push(`${buildDottedLine('Subtotal', sale.subtotal, receiptWidth)}\n`);
-            lines.push(`${buildDottedLine('Desconto', sale.desconto, receiptWidth)}\n`);
-        }
-        lines.push(`${ESC}E${String.fromCharCode(1)}`);
-        lines.push(`${buildDottedLine('Total', sale.total, receiptWidth)}\n`);
-        lines.push(`${ESC}E${String.fromCharCode(0)}`);
-        lines.push('\n');
-        if (sale.observacao) {
-            chunkText(`OBS: ${sale.observacao}`, receiptWidth).forEach(line => lines.push(`${line}\n`));
-            lines.push('\n');
-        }
-
-        lines.push(`${ESC}a${String.fromCharCode(1)}`);
-        chunkText(receipt.message, receiptWidth).forEach(line => lines.push(`${centerText(line, receiptWidth)}\n`));
-        lines.push('\n\n');
-        lines.push(`${GS}V${String.fromCharCode(66)}${String.fromCharCode(0)}`);
-        return lines;
-    }
-
-    async function printReceipt(receipt) {
-        await ensureQzTray();
-        const printerName = await resolvePrinter(
-            receipt.printer.preferred_name,
-            receipt.printer.search_terms
-        );
-        const config = window.qz.configs.create(printerName, {
-            encoding: 'UTF-8',
-            jobName: `Recibo Venda #${receipt.sale.numero}`,
-        });
-        const data = [{
-            type: 'raw',
-            format: 'command',
-            flavor: 'plain',
-            data: buildEscPosReceipt(receipt),
-        }];
-
-        await window.qz.print(config, data);
-        return printerName;
+        // A tela de venda nao conhece comandos de impressora; ela apenas entrega o recibo ao modulo especializado.
+        return window.PDVReceiptPrinter.print(receipt);
     }
 
     function resetSaleForm() {
@@ -492,7 +208,7 @@
             resetSaleForm();
 
             try {
-                const printerName = await printReceipt(response.receipt);
+                const printerName = await printSavedReceipt(response.receipt);
                 showStatus(`Venda #${response.receipt.sale.numero} salva e impressa em ${printerName}.`, 'success');
             } catch (printError) {
                 showStatus(
@@ -581,6 +297,4 @@
     calculateTotal();
 
     window.finalizarVenda = finalizarVenda;
-    window.printReceipt = printReceipt;
-    window.buildEscPosReceipt = buildEscPosReceipt;
 })();

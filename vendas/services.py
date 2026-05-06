@@ -32,6 +32,7 @@ class VendaPayloadError(Exception):
 
 
 def get_receipt_settings():
+    # Centraliza as configuracoes do recibo para o backend montar sempre o mesmo contrato.
     custom_settings = getattr(settings, "PDV_RECEIPT_SETTINGS", {})
     return {**DEFAULT_RECEIPT_SETTINGS, **custom_settings}
 
@@ -75,6 +76,7 @@ def normalize_form_errors(form_errors):
 
 
 def build_receipt_payload(venda):
+    # Recarrega a venda com vendedor e itens para evitar consultas repetidas durante a montagem do recibo.
     venda = (
         Venda.objects.select_related("vendedor")
         .prefetch_related("itens__produto")
@@ -84,6 +86,7 @@ def build_receipt_payload(venda):
     subtotal = sum((item.subtotal for item in venda.itens.all()), Decimal("0.00"))
     venda_datetime = timezone.localtime(venda.data_hora)
 
+    # O frontend recebe valores ja formatados como texto para nao arredondar dinheiro no JavaScript.
     itens = []
     for item in venda.itens.all():
         itens.append(
@@ -123,6 +126,7 @@ def build_receipt_payload(venda):
         "customer": {
             "name": receipt_settings["customer_label"],
         },
+        "title": "* ORCAMENTO SEM VALOR FISCAL *",
         "message": "VOLTE SEMPRE!!!",
     }
 
