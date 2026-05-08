@@ -353,7 +353,7 @@
             type: 'raw',
             format: 'command',
             flavor: 'plain',
-            data: buildEscPosReceipt(receipt),
+            data: buildReceiptPreview(receipt) + '\n\n\n',
         }];
 
         await window.qz.print(config, data);
