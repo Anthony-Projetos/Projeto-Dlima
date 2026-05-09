@@ -18,8 +18,8 @@ DEFAULT_RECEIPT_SETTINGS = {
     "store_address": "",
     "customer_label": "CONSUMIDOR",
     "receipt_width": 32,
-    "printer_name": "PIPrinter",
-    "printer_search_terms": ["PIPrinter", "EPSON", "TM-T20", "POS-58", "POS-80", "ELGIN", "BEMATECH"],
+    "printer_name": "ELGIN i9(USB)",
+    "printer_search_terms": ["ELGIN i9(USB)", "ELGIN", "I9", "EPSON", "TM-T20", "POS-58", "POS-80", "BEMATECH"],
     "receipt_encoding": "CP860",
     "open_cash_drawer": False,
 }
@@ -131,7 +131,7 @@ def build_receipt_payload(venda):
             "name": receipt_settings["customer_label"],
         },
         "title": "* ORCAMENTO SEM VALOR FISCAL *",
-        "message": "Obrigado pela preferência!",
+        "message": "Obrigado pela preferencia!",
     }
 
 

@@ -1,9 +1,9 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-20260509-5';
+    const PRINT_MODULE_VERSION = 'raw-escpos-20260509-6';
     const RECEIPT_WIDTH = 32;
     const DEFAULT_ENCODING = 'CP860';
-    const DEFAULT_PRINTER_NAME = 'PIPrinter';
-    const DEFAULT_SEARCH_TERMS = ['PIPrinter', 'ELGIN', 'I9', 'EPSON', 'TM-T20', 'POS-58', 'BEMATECH'];
+    const DEFAULT_PRINTER_NAME = 'ELGIN i9(USB)';
+    const DEFAULT_SEARCH_TERMS = ['ELGIN i9(USB)', 'ELGIN', 'I9', 'EPSON', 'TM-T20', 'POS-58', 'BEMATECH'];
     const ESC = '\x1B';
     const GS = '\x1D';
 
@@ -39,7 +39,7 @@
             ],
         },
         printer: {
-            preferred_name: 'PIPrinter',
+            preferred_name: 'ELGIN i9(USB)',
             search_terms: DEFAULT_SEARCH_TERMS,
             encoding: DEFAULT_ENCODING,
             open_drawer: false,

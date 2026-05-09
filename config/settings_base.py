@@ -73,10 +73,10 @@ PDV_RECEIPT_SETTINGS = {
     "store_address": env("PDV_STORE_ADDRESS", ""),
     "customer_label": env("PDV_CUSTOMER_LABEL", "CONSUMIDOR"),
     "receipt_width": env_int("PDV_RECEIPT_WIDTH", 32),
-    "printer_name": env("PDV_PRINTER_NAME", "PIPrinter"),
+    "printer_name": env("PDV_PRINTER_NAME", "ELGIN i9(USB)"),
     "printer_search_terms": env_list(
         "PDV_PRINTER_SEARCH_TERMS",
-        ["PIPrinter", "ELGIN", "I9", "EPSON", "TM-T20", "POS-58", "POS-80", "BEMATECH"],
+        ["ELGIN i9(USB)", "ELGIN", "I9", "EPSON", "TM-T20", "POS-58", "POS-80", "BEMATECH"],
     ),
     "receipt_encoding": env("PDV_RECEIPT_ENCODING", "CP860"),
     "open_cash_drawer": env_bool("PDV_OPEN_CASH_DRAWER", False),

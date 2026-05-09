@@ -141,7 +141,7 @@
     }
 
     async function printSavedReceipt(receipt) {
-        const expectedPrintVersion = 'raw-escpos-20260509-5';
+        const expectedPrintVersion = 'raw-escpos-20260509-6';
         if (!window.PDVReceiptPrinter) {
             console.error(
                 'O modulo static/js/vendas/print.js nao carregou. Rode collectstatic/deploy dos arquivos estaticos para habilitar a impressao do recibo.',
