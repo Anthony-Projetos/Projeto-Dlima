@@ -411,27 +411,26 @@
 
     function createQzConfig(printerName, venda) {
         return window.qz.configs.create(printerName, {
-            encoding: getEncoding(venda),
-            forceRaw: true,
-            copies: 1,
-            jobName: `Recibo Venda ${normalizeVenda(venda).sale.numero}`,
+            encoding: getEncoding(venda)
         });
     }
 
     async function printReceipt(venda) {
-        await connectQZ();
+    await connectQZ();
 
-        const printerName = await resolvePrinter(venda);
-        const config = createQzConfig(printerName, venda);
-        const data = [{
-            type: 'raw',
-            format: 'command',
-            flavor: 'plain',
-            data: buildEscPosPayload(venda),
-        }];
+    const printerName = await resolvePrinter(venda);
+    const config = qz.configs.create(printerName, {
+        encoding: 'CP860'
+    });
 
-        await window.qz.print(config, data);
-        return printerName;
+    const data = [{
+        type: 'raw',
+        format: 'plain',
+        data: buildEscPosPayload(venda)
+    }];
+
+    await qz.print(config, data);
+    return printerName;
     }
 
     async function testarImpressao() {
