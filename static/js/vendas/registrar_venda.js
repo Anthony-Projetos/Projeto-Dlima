@@ -143,7 +143,7 @@
     async function printSavedReceipt(receipt) {
         if (!window.PDVReceiptPrinter) {
             console.error(
-                'O modulo static/js/vendas/recibo_impressao.js nao carregou. Rode collectstatic/deploy dos arquivos estaticos para habilitar a previa do recibo.',
+                'O modulo static/js/vendas/print.js nao carregou. Rode collectstatic/deploy dos arquivos estaticos para habilitar a impressao do recibo.',
                 receipt
             );
             throw new Error('Modulo de impressao de recibo nao foi carregado.');
