@@ -141,12 +141,18 @@
     }
 
     async function printSavedReceipt(receipt) {
+        const expectedPrintVersion = 'plain-text-20260509-4';
         if (!window.PDVReceiptPrinter) {
             console.error(
                 'O modulo static/js/vendas/print.js nao carregou. Rode collectstatic/deploy dos arquivos estaticos para habilitar a impressao do recibo.',
                 receipt
             );
             throw new Error('Modulo de impressao de recibo nao foi carregado.');
+        }
+
+        if (window.PDVReceiptPrinter.version !== expectedPrintVersion) {
+            console.error('Modulo de impressao antigo carregado:', window.PDVReceiptPrinter, receipt);
+            throw new Error('Modulo de impressao antigo em cache. Atualize a pagina com Ctrl+F5 e rode collectstatic/deploy dos arquivos estaticos.');
         }
 
         // A tela de venda nao conhece comandos de impressora; ela apenas entrega o recibo ao modulo especializado.

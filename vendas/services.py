@@ -131,7 +131,7 @@ def build_receipt_payload(venda):
             "name": receipt_settings["customer_label"],
         },
         "title": "* ORCAMENTO SEM VALOR FISCAL *",
-        "message": "VOLTE SEMPRE!!!",
+        "message": "Obrigado pela preferência!",
     }
 
 

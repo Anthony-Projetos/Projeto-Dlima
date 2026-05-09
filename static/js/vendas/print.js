@@ -1,4 +1,5 @@
 (function () {
+    const PRINT_MODULE_VERSION = 'plain-text-20260509-4';
     const RECEIPT_WIDTH = 32;
     const DEFAULT_ENCODING = 'CP860';
     const DEFAULT_PRINTER_NAME = 'PIPrinter';
@@ -400,6 +401,7 @@
 
     window.connectQZ = connectQZ;
     window.printReceipt = printReceipt;
+    window.PDV_PRINT_VERSION = PRINT_MODULE_VERSION;
     window.buildReceiptText = buildReceiptText;
     window.buildPrintPayload = buildPrintPayload;
     window.buildEscPosPayload = buildEscPosPayload;
@@ -407,6 +409,7 @@
     window.PDVPrintExampleText = () => buildReceiptText(PRINT_EXAMPLE);
     window.PDVPrintExampleEscPos = () => buildPrintPayload(PRINT_EXAMPLE);
     window.PDVReceiptPrinter = {
+        version: PRINT_MODULE_VERSION,
         connectQZ,
         print: printReceipt,
         printReceipt,
