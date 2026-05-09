@@ -320,13 +320,21 @@
         return lines;
     }
 
-    function buildReceiptPreview(receipt) {
-        return buildEscPosReceipt(receipt)
-            .join('')
+    function stripEscPosCommands(value) {
+        return String(value || '')
             .replace(/\x1B[@2]/g, '')
             .replace(/\x1Ba[\x00\x01]/g, '')
             .replace(/\x1BE[\x00\x01]/g, '')
-            .replace(/\x1DVB\x00/g, '');
+            .replace(/\x1DVB\x00/g, '')
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    }
+
+    function buildReceiptPreview(receipt) {
+        return buildEscPosReceipt(receipt)
+            .join('')
+            .split('\n')
+            .map(stripEscPosCommands)
+            .join('\n');
     }
 
     function logReceiptPreview(receipt) {
@@ -351,9 +359,9 @@
         });
         const data = [{
             type: 'raw',
-            format: 'command',
+            format: 'plain',
             flavor: 'plain',
-            data: buildReceiptPreview(receipt) + '\n\n\n',
+            data: `${buildReceiptPreview(receipt)}\n\n\n`,
         }];
 
         await window.qz.print(config, data);
