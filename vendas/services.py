@@ -2,13 +2,25 @@ from decimal import Decimal, InvalidOperation
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 
 from .forms import VendaForm
 from .models import ItemVenda, Produto, Venda
 
 
 TWO_PLACES = Decimal("0.01")
+
+DEFAULT_RECEIPT_SETTINGS = {
+    "store_name": "Dlima Store",
+    "store_address": "",
+    "receipt_width": 32,
+    "printer_name": "ELGIN i9(USB)",
+    "printer_search_terms": ["ELGIN i9(USB)", "ELGIN", "I9", "POS-58", "BEMATECH"],
+    "receipt_encoding": "CP860",
+    "open_cash_drawer": False,
+}
 
 
 class VendaPayloadError(Exception):
@@ -17,6 +29,16 @@ class VendaPayloadError(Exception):
         self.message = message
         self.field_errors = field_errors or {}
         self.status_code = status_code
+
+
+def get_receipt_settings():
+    custom_settings = getattr(settings, "PDV_RECEIPT_SETTINGS", {})
+    return {**DEFAULT_RECEIPT_SETTINGS, **custom_settings}
+
+
+def decimal_to_str(value):
+    return str((value or Decimal("0.00")).quantize(TWO_PLACES))
+
 
 def parse_decimal(value, field_name):
     try:
@@ -50,6 +72,57 @@ def normalize_form_errors(form_errors):
     for field, errors in form_errors.items():
         normalized[field] = [error["message"] for error in errors]
     return normalized
+
+
+def build_receipt_payload(venda):
+    venda = (
+        Venda.objects.select_related("vendedor")
+        .prefetch_related("itens__produto")
+        .get(pk=venda.pk)
+    )
+    receipt_settings = get_receipt_settings()
+    venda_datetime = timezone.localtime(venda.data_hora)
+    subtotal = sum((item.subtotal for item in venda.itens.all()), Decimal("0.00"))
+    itens = []
+
+    for item in venda.itens.all():
+        itens.append(
+            {
+                "produto_id": item.produto_id,
+                "nome": item.produto.nome,
+                "quantidade": item.quantidade,
+                "valor_unitario": decimal_to_str(item.preco_unitario),
+                "valor_total": decimal_to_str(item.subtotal),
+            }
+        )
+
+    return {
+        "store": {
+            "name": receipt_settings["store_name"],
+            "address": receipt_settings["store_address"],
+        },
+        "sale": {
+            "id": venda.id,
+            "numero": str(venda.id).zfill(6),
+            "data_hora": venda_datetime.isoformat(),
+            "data": venda_datetime.strftime("%d/%m/%Y"),
+            "vendedor": venda.vendedor.nome,
+            "forma_pagamento": venda.get_forma_pagamento_display(),
+            "observacao": venda.observacao,
+            "subtotal": decimal_to_str(subtotal),
+            "desconto": decimal_to_str(venda.desconto),
+            "total": decimal_to_str(venda.total),
+            "itens": itens,
+        },
+        "printer": {
+            "width": receipt_settings["receipt_width"],
+            "preferred_name": receipt_settings["printer_name"],
+            "search_terms": receipt_settings["printer_search_terms"],
+            "encoding": receipt_settings["receipt_encoding"],
+            "open_drawer": receipt_settings["open_cash_drawer"],
+        },
+        "message": "Obrigado pela prefer\u00eancia!",
+    }
 
 
 def create_venda_from_payload(payload, user):

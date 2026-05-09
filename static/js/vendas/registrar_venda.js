@@ -112,6 +112,7 @@
     }
 
     async function saveSale(payload) {
+        // Envia a venda para o Django; o backend devolve os dados prontos para o recibo termico.
         const response = await fetch(getAppConfig().finalizeSaleUrl, {
             method: 'POST',
             headers: {
@@ -137,6 +138,18 @@
         }
 
         return data;
+    }
+
+    async function printSavedReceipt(receipt) {
+        if (!window.PDVReceiptPrinter) {
+            throw new Error('Modulo de impressao nao foi carregado.');
+        }
+
+        if (window.PDVReceiptPrinter.version !== 'raw-escpos-qz-20260509-1') {
+            throw new Error('Modulo de impressao antigo em cache. Atualize a pagina com Ctrl+F5.');
+        }
+
+        return window.PDVReceiptPrinter.printReceipt(receipt);
     }
 
     function resetSaleForm() {
@@ -196,8 +209,23 @@
         try {
             const response = await saveSale(payload);
             resetSaleForm();
-            const saleNumber = response.sale?.numero || response.sale?.id || '';
-            showStatus(saleNumber ? `Venda #${saleNumber} salva com sucesso.` : 'Venda salva com sucesso.', 'success');
+
+            try {
+                const printerName = await printSavedReceipt(response.receipt);
+                const saleNumber = response.sale?.numero || response.receipt?.sale?.numero || '';
+                showStatus(
+                    saleNumber ? `Venda #${saleNumber} salva e impressa em ${printerName}.` : `Venda salva e impressa em ${printerName}.`,
+                    'success'
+                );
+            } catch (printError) {
+                const saleNumber = response.sale?.numero || response.receipt?.sale?.numero || '';
+                showStatus(
+                    saleNumber
+                        ? `Venda #${saleNumber} salva com sucesso, mas a impressao falhou: ${printError.message}`
+                        : `Venda salva com sucesso, mas a impressao falhou: ${printError.message}`,
+                    'warning'
+                );
+            }
         } catch (error) {
             showStatus(error.message, 'error');
         } finally {

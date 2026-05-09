@@ -98,6 +98,31 @@ sudo certbot --nginx -d seudominio.com -d www.seudominio.com
 - `USE_REDIS_CHANNEL_LAYER=True`
 - `REDIS_URL`
 
+## Impressao termica com QZ Tray
+
+A impressao acontece no computador do caixa, via navegador + QZ Tray local.
+
+- Instale e deixe o QZ Tray aberto no Windows do caixa.
+- Instale a impressora termica, por exemplo `ELGIN i9(USB)`.
+- O template carrega `qz-tray.js` e `static/js/vendas/print.js`.
+- O recibo e enviado em RAW ESC/POS, com codepage `CP860`, sem HTML, PDF, canvas ou `window.print()`.
+
+Comandos uteis no console do navegador:
+
+```js
+window.PDV_PRINT_VERSION
+connectQZ()
+testarImpressao()
+```
+
+Se `print.js` retornar 404, rode no servidor:
+
+```bash
+python manage.py collectstatic --clear --noinput
+sudo systemctl restart dlima-vendas
+sudo systemctl reload nginx
+```
+
 ## Comandos uteis
 
 ```bash
