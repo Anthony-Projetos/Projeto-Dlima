@@ -4,24 +4,6 @@
     const DEFAULT_PRINTER_NAME = 'PIPrinter';
     const DEFAULT_SEARCH_TERMS = ['PIPrinter', 'ELGIN', 'I9', 'EPSON', 'TM-T20', 'POS-58', 'BEMATECH'];
 
-    const ESC = '\x1B';
-    const GS = '\x1D';
-
-    const ESC_POS = {
-        init: `${ESC}@`,
-        lineSpacingDefault: `${ESC}2`,
-        alignLeft: `${ESC}a\x00`,
-        alignCenter: `${ESC}a\x01`,
-        boldOn: `${ESC}E\x01`,
-        boldOff: `${ESC}E\x00`,
-        cut: `${GS}V\x42\x00`,
-        drawer: `${ESC}p\x00\x19\xFA`,
-        codePages: {
-            CP850: `${ESC}t\x02`,
-            CP860: `${ESC}t\x03`,
-        },
-    };
-
     const PRINT_EXAMPLE = {
         store: {
             name: 'DLIMA STORE',
@@ -198,9 +180,9 @@
     function sanitizeText(value) {
         return String(value || '')
             .normalize('NFC')
-            .replace(/[“”]/g, '"')
-            .replace(/[‘’]/g, "'")
-            .replace(/[–—]/g, '-')
+            .replace(/[\u201C\u201D]/g, '"')
+            .replace(/[\u2018\u2019]/g, "'")
+            .replace(/[\u2013\u2014]/g, '-')
             .replace(/\u00A0/g, ' ')
             .replace(/[^\x09\x0A\x0D\x20-\x7E\u00C0-\u00FF]/g, '');
     }
@@ -230,9 +212,20 @@
             return '';
         }
 
+        const text = String(value);
+        const brazilianDate = text.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+        if (brazilianDate) {
+            return `${brazilianDate[1]}/${brazilianDate[2]}/${brazilianDate[3]}`;
+        }
+
+        const isoDate = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (isoDate) {
+            return `${isoDate[3]}/${isoDate[2]}/${isoDate[1]}`;
+        }
+
         const parsed = new Date(value);
         if (Number.isNaN(parsed.getTime())) {
-            return String(value).slice(0, 10);
+            return text.slice(0, 10);
         }
 
         return parsed.toLocaleDateString('pt-BR');
@@ -277,15 +270,15 @@
         const quantity = sanitizeText(item.quantidade || item.qtd || 1);
         const name = sanitizeText(item.nome || item.descricao || item.produto || 'Produto');
         const total = formatMoney(item.valor_total || item.total || item.subtotal);
-        const prefix = `${quantity}x `;
+        const prefix = `${takeText(quantity, 4)}x `;
         const totalWidth = 10;
-        const nameWidth = RECEIPT_WIDTH - totalWidth - textLength(prefix);
+        const nameWidth = Math.max(RECEIPT_WIDTH - totalWidth - textLength(prefix), 8);
         const nameParts = wrapText(name, nameWidth);
         const lines = [];
 
         lines.push(`${prefix}${padRight(nameParts.shift(), nameWidth)}${padLeft(total, totalWidth)}`);
         nameParts.forEach(part => {
-            lines.push(`${padRight('', textLength(prefix))}${part}`);
+            lines.push(`${padRight('', textLength(prefix))}${takeText(part, RECEIPT_WIDTH - textLength(prefix))}`);
         });
 
         return lines;
@@ -317,9 +310,8 @@
         };
     }
 
-    function buildReceiptText(venda, options = {}) {
+    function buildReceiptText(venda) {
         const receipt = normalizeVenda(venda);
-        const escpos = Boolean(options.escpos);
         const lines = [];
 
         lines.push(line('='));
@@ -353,7 +345,7 @@
         }
 
         const totalLine = moneyLine('TOTAL:', receipt.sale.total);
-        lines.push(escpos ? `${ESC_POS.boldOn}${totalLine}${ESC_POS.boldOff}` : totalLine);
+        lines.push(totalLine);
         lines.push(line('='));
         lines.push('');
 
@@ -370,31 +362,19 @@
         }
 
         wrapText(receipt.message, RECEIPT_WIDTH).forEach(messageLine => {
-            lines.push(center(messageLine));
+            lines.push(messageLine);
         });
         lines.push(line('='));
 
         return lines.join('\n');
     }
 
+    function buildPrintPayload(venda) {
+        return `${buildReceiptText(venda)}\n\n\n`;
+    }
+
     function buildEscPosPayload(venda) {
-        const receipt = normalizeVenda(venda);
-        const encoding = getEncoding(venda);
-        const commands = [
-            ESC_POS.init,
-            ESC_POS.lineSpacingDefault,
-            ESC_POS.codePages[encoding],
-            ESC_POS.alignLeft,
-        ];
-
-        if (receipt.printer.open_drawer || receipt.printer.openDrawer) {
-            commands.push(ESC_POS.drawer);
-        }
-
-        commands.push(buildReceiptText(receipt, { escpos: true }));
-        commands.push('\n\n\n');
-        commands.push(ESC_POS.cut);
-        return commands.join('');
+        return buildPrintPayload(venda);
     }
 
     async function printReceipt(venda) {
@@ -409,9 +389,9 @@
         });
         const data = [{
             type: 'raw',
-            format: 'command',
+            format: 'plain',
             flavor: 'plain',
-            data: buildEscPosPayload(venda),
+            data: buildPrintPayload(venda),
         }];
 
         await window.qz.print(config, data);
@@ -421,15 +401,17 @@
     window.connectQZ = connectQZ;
     window.printReceipt = printReceipt;
     window.buildReceiptText = buildReceiptText;
+    window.buildPrintPayload = buildPrintPayload;
     window.buildEscPosPayload = buildEscPosPayload;
     window.PDVPrintExample = PRINT_EXAMPLE;
     window.PDVPrintExampleText = () => buildReceiptText(PRINT_EXAMPLE);
-    window.PDVPrintExampleEscPos = () => buildEscPosPayload(PRINT_EXAMPLE);
+    window.PDVPrintExampleEscPos = () => buildPrintPayload(PRINT_EXAMPLE);
     window.PDVReceiptPrinter = {
         connectQZ,
         print: printReceipt,
         printReceipt,
         buildReceiptText,
+        buildPrintPayload,
         buildEscPosPayload,
         example: PRINT_EXAMPLE,
     };
