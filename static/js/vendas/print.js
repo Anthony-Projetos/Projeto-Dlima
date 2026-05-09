@@ -1,9 +1,24 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'plain-text-20260509-4';
+    const PRINT_MODULE_VERSION = 'raw-escpos-20260509-5';
     const RECEIPT_WIDTH = 32;
     const DEFAULT_ENCODING = 'CP860';
     const DEFAULT_PRINTER_NAME = 'PIPrinter';
     const DEFAULT_SEARCH_TERMS = ['PIPrinter', 'ELGIN', 'I9', 'EPSON', 'TM-T20', 'POS-58', 'BEMATECH'];
+    const ESC = '\x1B';
+    const GS = '\x1D';
+
+    const ESC_POS = {
+        init: `${ESC}@`,
+        alignLeft: `${ESC}a\x00`,
+        boldOn: `${ESC}E\x01`,
+        boldOff: `${ESC}E\x00`,
+        cut: `${GS}V\x42\x00`,
+        drawer: `${ESC}p\x00\x19\xFA`,
+        codePages: {
+            CP850: `${ESC}t\x02`,
+            CP860: `${ESC}t\x03`,
+        },
+    };
 
     const PRINT_EXAMPLE = {
         store: {
@@ -311,8 +326,9 @@
         };
     }
 
-    function buildReceiptText(venda) {
+    function buildReceiptText(venda, options = {}) {
         const receipt = normalizeVenda(venda);
+        const escpos = Boolean(options.escpos);
         const lines = [];
 
         lines.push(line('='));
@@ -346,7 +362,7 @@
         }
 
         const totalLine = moneyLine('TOTAL:', receipt.sale.total);
-        lines.push(totalLine);
+        lines.push(escpos ? `${ESC_POS.boldOn}${totalLine}${ESC_POS.boldOff}` : totalLine);
         lines.push(line('='));
         lines.push('');
 
@@ -375,7 +391,22 @@
     }
 
     function buildEscPosPayload(venda) {
-        return buildPrintPayload(venda);
+        const receipt = normalizeVenda(venda);
+        const encoding = getEncoding(venda);
+        const commands = [
+            ESC_POS.init,
+            ESC_POS.codePages[encoding],
+            ESC_POS.alignLeft,
+        ];
+
+        if (receipt.printer.open_drawer || receipt.printer.openDrawer) {
+            commands.push(ESC_POS.drawer);
+        }
+
+        commands.push(buildReceiptText(receipt, { escpos: true }));
+        commands.push('\n\n\n');
+        commands.push(ESC_POS.cut);
+        return commands.join('');
     }
 
     async function printReceipt(venda) {
@@ -388,12 +419,7 @@
             jobName: `Recibo Venda ${normalizeVenda(venda).sale.numero}`,
             copies: 1,
         });
-        const data = [{
-            type: 'raw',
-            format: 'plain',
-            flavor: 'plain',
-            data: buildPrintPayload(venda),
-        }];
+        const data = [buildEscPosPayload(venda)];
 
         await window.qz.print(config, data);
         return printerName;
@@ -407,7 +433,7 @@
     window.buildEscPosPayload = buildEscPosPayload;
     window.PDVPrintExample = PRINT_EXAMPLE;
     window.PDVPrintExampleText = () => buildReceiptText(PRINT_EXAMPLE);
-    window.PDVPrintExampleEscPos = () => buildPrintPayload(PRINT_EXAMPLE);
+    window.PDVPrintExampleEscPos = () => buildEscPosPayload(PRINT_EXAMPLE);
     window.PDVReceiptPrinter = {
         version: PRINT_MODULE_VERSION,
         connectQZ,
