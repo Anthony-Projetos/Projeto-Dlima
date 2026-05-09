@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from .forms import VendaForm
 from .models import Produto
-from .services import VendaPayloadError, build_receipt_payload, create_venda_from_payload
+from .services import VendaPayloadError, create_venda_from_payload
 
 @login_required
 def registrar_venda(request):
@@ -53,7 +53,6 @@ def finalizar_venda_api(request):
 
     try:
         venda = create_venda_from_payload(payload, request.user)
-        receipt = build_receipt_payload(venda)
     except VendaPayloadError as exc:
         return JsonResponse(
             {
@@ -76,7 +75,10 @@ def finalizar_venda_api(request):
         {
             'success': True,
             'message': 'Venda salva com sucesso.',
-            'receipt': receipt,
+            'sale': {
+                'id': venda.id,
+                'numero': str(venda.id).zfill(6),
+            },
         },
         status=201,
     )

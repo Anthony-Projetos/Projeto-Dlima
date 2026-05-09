@@ -1,10 +1,11 @@
+import json
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
 from core.models import Vendedor
-from .models import ItemVenda, Produto, Venda
-from .services import build_receipt_payload
+from .models import Produto
 
 
 class RegistrarVendaBuscaTests(TestCase):
@@ -51,53 +52,30 @@ class RegistrarVendaBuscaTests(TestCase):
         self.assertContains(response, 'Calca Jeans Preta')
         self.assertNotContains(response, 'Camisa Polo Azul')
 
+    def test_finalizar_venda_retorna_apenas_dados_da_venda(self):
+        produto = Produto.objects.get(nome='Camisa Polo Azul')
+        payload = {
+            'vendedor_id': self.vendedor.id,
+            'forma_pagamento': 'pix',
+            'desconto': '0.00',
+            'observacao': '',
+            'itens': [
+                {
+                    'produto_id': produto.id,
+                    'quantidade': 1,
+                }
+            ],
+        }
 
-class ReceiptPayloadTests(TestCase):
-    def setUp(self):
-        self.user = get_user_model().objects.create_user(
-            username='caixa',
-            password='123456'
-        )
-        self.vendedor = Vendedor.objects.create(
-            nome='Marina',
-            percentual_comissao=10,
-            ativo=True
-        )
-        self.produto = Produto.objects.create(
-            nome='Vestido Floral',
-            categoria='Vestidos',
-            cor='Verde',
-            tamanho='P',
-            preco='120.00',
-            estoque=5,
-            ativo=True,
-        )
-
-    def test_recibo_tem_o_contrato_esperado_pelo_frontend(self):
-        venda = Venda.objects.create(
-            vendedor=self.vendedor,
-            usuario_registro=self.user,
-            forma_pagamento='pix',
-            desconto='10.00',
-            total='110.00',
-        )
-        ItemVenda.objects.create(
-            venda=venda,
-            produto=self.produto,
-            quantidade=1,
-            preco_unitario='120.00',
-            subtotal='120.00',
+        response = self.client.post(
+            reverse('finalizar_venda_api'),
+            data=json.dumps(payload),
+            content_type='application/json',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
         )
 
-        receipt = build_receipt_payload(venda)
-
-        self.assertEqual(receipt['title'], '* ORCAMENTO SEM VALOR FISCAL *')
-        self.assertEqual(receipt['sale']['numero'], str(venda.id).zfill(6))
-        self.assertEqual(receipt['sale']['subtotal'], '120.00')
-        self.assertEqual(receipt['sale']['desconto'], '10.00')
-        self.assertEqual(receipt['sale']['total'], '110.00')
-        self.assertEqual(receipt['sale']['itens'][0]['nome'], 'Vestido Floral')
-        self.assertEqual(receipt['printer']['width'], 32)
-        self.assertEqual(receipt['printer']['encoding'], 'CP860')
-        self.assertFalse(receipt['printer']['open_drawer'])
-        self.assertIn('preferred_name', receipt['printer'])
+        data = response.json()
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(data['success'])
+        self.assertIn('sale', data)
+        self.assertNotIn('receipt', data)

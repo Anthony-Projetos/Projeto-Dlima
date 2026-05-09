@@ -67,21 +67,6 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "redirecionar_usuario"
 LOGOUT_REDIRECT_URL = "login"
 
-PDV_RECEIPT_SETTINGS = {
-    "store_name": env("PDV_STORE_NAME", "Dlima Store"),
-    "cnpj": env("PDV_STORE_CNPJ", "12.345.678/0001-99"),
-    "store_address": env("PDV_STORE_ADDRESS", ""),
-    "customer_label": env("PDV_CUSTOMER_LABEL", "CONSUMIDOR"),
-    "receipt_width": env_int("PDV_RECEIPT_WIDTH", 32),
-    "printer_name": env("PDV_PRINTER_NAME", "ELGIN i9(USB)"),
-    "printer_search_terms": env_list(
-        "PDV_PRINTER_SEARCH_TERMS",
-        ["ELGIN i9(USB)", "ELGIN", "I9", "EPSON", "TM-T20", "POS-58", "POS-80", "BEMATECH"],
-    ),
-    "receipt_encoding": env("PDV_RECEIPT_ENCODING", "CP860"),
-    "open_cash_drawer": env_bool("PDV_OPEN_CASH_DRAWER", False),
-}
-
 
 def sqlite_database():
     return {

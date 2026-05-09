@@ -112,7 +112,6 @@
     }
 
     async function saveSale(payload) {
-        // Envia a venda para o Django; se a venda for salva, o servidor devolve o recibo pronto para imprimir.
         const response = await fetch(getAppConfig().finalizeSaleUrl, {
             method: 'POST',
             headers: {
@@ -138,25 +137,6 @@
         }
 
         return data;
-    }
-
-    async function printSavedReceipt(receipt) {
-        const expectedPrintVersion = 'raw-escpos-20260509-6';
-        if (!window.PDVReceiptPrinter) {
-            console.error(
-                'O modulo static/js/vendas/print.js nao carregou. Rode collectstatic/deploy dos arquivos estaticos para habilitar a impressao do recibo.',
-                receipt
-            );
-            throw new Error('Modulo de impressao de recibo nao foi carregado.');
-        }
-
-        if (window.PDVReceiptPrinter.version !== expectedPrintVersion) {
-            console.error('Modulo de impressao antigo carregado:', window.PDVReceiptPrinter, receipt);
-            throw new Error('Modulo de impressao antigo em cache. Atualize a pagina com Ctrl+F5 e rode collectstatic/deploy dos arquivos estaticos.');
-        }
-
-        // A tela de venda nao conhece comandos de impressora; ela apenas entrega o recibo ao modulo especializado.
-        return window.PDVReceiptPrinter.print(receipt);
     }
 
     function resetSaleForm() {
@@ -216,16 +196,8 @@
         try {
             const response = await saveSale(payload);
             resetSaleForm();
-
-            try {
-                const printerName = await printSavedReceipt(response.receipt);
-                showStatus(`Venda #${response.receipt.sale.numero} salva e impressa em ${printerName}.`, 'success');
-            } catch (printError) {
-                showStatus(
-                    `Venda #${response.receipt.sale.numero} salva com sucesso, mas a impressao falhou: ${printError.message}`,
-                    'warning'
-                );
-            }
+            const saleNumber = response.sale?.numero || response.sale?.id || '';
+            showStatus(saleNumber ? `Venda #${saleNumber} salva com sucesso.` : 'Venda salva com sucesso.', 'success');
         } catch (error) {
             showStatus(error.message, 'error');
         } finally {

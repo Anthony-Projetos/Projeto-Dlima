@@ -98,17 +98,6 @@ sudo certbot --nginx -d seudominio.com -d www.seudominio.com
 - `USE_REDIS_CHANNEL_LAYER=True`
 - `REDIS_URL`
 
-## Impressao no PDV
-
-Mesmo em producao web:
-
-- a venda sera salva no servidor
-- a impressao continua no computador do caixa
-- cada caixa precisa de:
-  - impressora Elgin instalada no Windows
-  - QZ Tray instalado e aberto
-  - acesso HTTPS ao sistema
-
 ## Comandos uteis
 
 ```bash
