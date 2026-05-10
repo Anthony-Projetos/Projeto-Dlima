@@ -1,5 +1,5 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260509-frase-1';
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260509-recibo-1';
     const DEFAULT_RECEIPT_WIDTH = 32;
     const MIN_RECEIPT_WIDTH = 24;
     const MAX_RECEIPT_WIDTH = 42;
@@ -356,7 +356,55 @@
     function buildReceiptText(venda, options = {}) {
         const receipt = normalizeVenda(venda);
         const width = getReceiptWidth(receipt);
-        return `${center('penso logo existo', width)}\n`;
+        const useEscPos = Boolean(options.escpos);
+        const lines = [];
+
+        lines.push(line(width));
+        lines.push(center(receipt.store.name, width));
+
+        if (receipt.store.address) {
+            lines.push(center(receipt.store.address, width));
+        }
+
+        lines.push(line(width));
+        lines.push(`Venda: ${receipt.sale.numero}`);
+
+        if (receipt.sale.data) {
+            lines.push(`Data: ${receipt.sale.data}`);
+        }
+
+        if (receipt.sale.vendedor) {
+            lines.push(`Vendedor: ${receipt.sale.vendedor}`);
+        }
+
+        lines.push('');
+
+        receipt.sale.itens.forEach(item => {
+            lines.push(...itemLines(item, width));
+        });
+
+        lines.push('');
+        lines.push(line(width, '-'));
+        lines.push(moneyLine('Subtotal:', receipt.sale.subtotal, width));
+        lines.push(moneyLine('Desconto:', receipt.sale.desconto, width));
+
+        const totalLine = moneyLine('TOTAL:', receipt.sale.total, width);
+        lines.push(useEscPos ? `${ESC_POS.boldOn}${totalLine}${ESC_POS.boldOff}` : totalLine);
+        lines.push(line(width));
+        lines.push('');
+
+        if (receipt.sale.pagamento) {
+            lines.push(`Pagamento: ${receipt.sale.pagamento}`);
+            lines.push('');
+        }
+
+        wrapText(receipt.message, width).forEach(messageLine => {
+            lines.push(messageLine);
+        });
+
+        lines.push(line(width));
+
+        return `${lines.join('\n')}\n`;
     }
 
     function buildEscPosPayload(venda) {
@@ -365,8 +413,8 @@
         const commands = [
             ESC_POS.init,
             getCodePageCommand(encoding),
-            ESC_POS.alignCenter,
-            buildReceiptText(receipt),
+            ESC_POS.alignLeft,
+            buildReceiptText(receipt, { escpos: true }),
             '\n\n\n',
             ESC_POS.cutPaper,
         ];
