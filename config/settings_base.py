@@ -69,8 +69,8 @@ LOGOUT_REDIRECT_URL = "login"
 
 PDV_RECEIPT_SETTINGS = {
     "store_name": env("PDV_STORE_NAME", "Dlima Store"),
-    "store_address": env("PDV_STORE_ADDRESS", ""),
-    "receipt_width": env_int("PDV_RECEIPT_WIDTH", 32),
+    "store_address": env("PDV_STORE_ADDRESS", "AV. CONRRADI SEGUNDO"),
+    "receipt_width": env_int("PDV_RECEIPT_WIDTH", 42),
     "printer_name": env("PDV_PRINTER_NAME", "ELGIN i9(USB)"),
     "printer_search_terms": env_list(
         "PDV_PRINTER_SEARCH_TERMS",

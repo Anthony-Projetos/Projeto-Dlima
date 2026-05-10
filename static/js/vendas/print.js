@@ -1,7 +1,7 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260509-centralizado-1';
-    const DEFAULT_RECEIPT_WIDTH = 32;
-    const MIN_RECEIPT_WIDTH = 24;
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260510-orcamento-1';
+    const DEFAULT_RECEIPT_WIDTH = 42;
+    const MIN_RECEIPT_WIDTH = 32;
     const MAX_RECEIPT_WIDTH = 42;
     const DEFAULT_ENCODING = 'CP860';
     const DEFAULT_PRINTER_NAME = 'ELGIN i9(USB)';
@@ -13,6 +13,7 @@
     const ESC_POS = {
         init: `${ESC}@`,
         fontANormal: `${ESC}!\x00${ESC}M\x00${GS}!\x00`,
+        fontBNormal: `${ESC}!\x01${ESC}M\x01${GS}!\x00`,
         noCharacterSpacing: `${ESC} \x00`,
         defaultLineSpacing: `${ESC}2`,
         leftMarginZero: `${GS}L\x00\x00`,
@@ -32,7 +33,7 @@
     const EXAMPLE_RECEIPT = {
         store: {
             name: 'DLIMA STORE',
-            address: '',
+            address: 'AV. CONRRADI SEGUNDO',
         },
         sale: {
             numero: '000123',
@@ -217,6 +218,37 @@
         return repeat(char, width);
     }
 
+    function leftRight(left, right, width) {
+        const leftText = sanitizeText(left);
+        const rightText = sanitizeText(right);
+        return `${padRight(leftText, width - textLength(rightText))}${rightText}`;
+    }
+
+    function placeText(lineText, value, start, width) {
+        const chars = Array.from(padRight(lineText, width));
+        const text = takeText(value, Math.max(width - start, 0));
+
+        Array.from(text).forEach((char, index) => {
+            if (start + index < width) {
+                chars[start + index] = char;
+            }
+        });
+
+        return chars.join('');
+    }
+
+    function threeColumns(left, middle, right, width) {
+        let output = repeat(' ', width);
+        const middleStart = Math.max(Math.floor((width - textLength(middle)) / 2), 0);
+        const rightStart = Math.max(width - textLength(right), 0);
+
+        output = placeText(output, left, 0, width);
+        output = placeText(output, middle, middleStart, width);
+        output = placeText(output, right, rightStart, width);
+
+        return output;
+    }
+
     function sanitizeText(value) {
         return String(value || '')
             .normalize('NFC')
@@ -245,6 +277,25 @@
 
     function formatSaleNumber(value) {
         return String(value || '').padStart(6, '0').slice(-6);
+    }
+
+    function formatShortNumber(value) {
+        const text = String(value || '').replace(/^0+/, '');
+        return text || '0';
+    }
+
+    function formatQuantity(value) {
+        const parsed = Number(String(value || '1').replace(',', '.'));
+        if (!Number.isFinite(parsed)) {
+            return sanitizeText(value);
+        }
+
+        return parsed.toFixed(2).replace('.', ',');
+    }
+
+    function formatProductCode(item) {
+        const code = item.codigo || item.produto_codigo || item.produto_id || item.id || '';
+        return String(code || '').padStart(5, '0').slice(-5);
     }
 
     function formatDate(value) {
@@ -332,6 +383,31 @@
         return lines;
     }
 
+    function budgetItemLines(item, width) {
+        const codeWidth = 10;
+        const descriptionIndent = codeWidth + 3;
+        const code = formatProductCode(item);
+        const name = sanitizeText(item.nome || item.descricao || item.produto || 'Produto').toUpperCase();
+        const quantity = formatQuantity(item.quantidade || item.qtd || 1);
+        const unitPrice = formatMoney(item.valor_unitario || item.preco_unitario || item.preco || item.valor_total || item.total || item.subtotal);
+        const total = formatMoney(item.valor_total || item.total || item.subtotal);
+        const descriptionWidth = Math.max(width - descriptionIndent, 12);
+        const nameLines = wrapText(name, descriptionWidth);
+        const lines = [];
+
+        lines.push(`${padRight(code, codeWidth)}-  ${takeText(nameLines.shift(), descriptionWidth)}`);
+
+        nameLines.forEach(part => {
+            lines.push(`${padRight('', descriptionIndent)}${takeText(part, descriptionWidth)}`);
+        });
+
+        lines.push(
+            `${padRight('', descriptionIndent)}${padLeft(quantity, 5)} x ${padLeft(unitPrice, 8)}${padLeft(total, width - descriptionIndent - 5 - 3 - 8)}`
+        );
+
+        return lines;
+    }
+
     function normalizeVenda(venda) {
         const sale = venda.sale || venda;
         const store = venda.store || {};
@@ -344,7 +420,11 @@
             },
             sale: {
                 numero: formatSaleNumber(sale.numero || sale.id || venda.numero || venda.id),
+                orcamento: formatShortNumber(sale.numero || sale.id || venda.numero || venda.id),
                 data: formatDate(sale.data || sale.data_hora || venda.data || venda.data_hora),
+                vencimento: formatDate(sale.vencimento || sale.data || sale.data_hora || venda.vencimento || venda.data || venda.data_hora),
+                cliente: sanitizeText(sale.cliente || venda.cliente || 'CONSUMIDOR').toUpperCase(),
+                comprador: sanitizeText(sale.comprador || venda.comprador || ''),
                 vendedor: sanitizeText(sale.vendedor || venda.vendedor || ''),
                 pagamento: sanitizeText(sale.forma_pagamento || sale.pagamento || venda.forma_pagamento || venda.pagamento || ''),
                 subtotal: sale.subtotal || venda.subtotal || sale.total || venda.total,
@@ -363,51 +443,57 @@
         const width = getReceiptWidth(receipt);
         const useEscPos = Boolean(options.escpos);
         const lines = [];
+        const fiscalNotice = '* ORCAMENTO SEM VALOR FISCAL *';
+        const total = formatMoney(receipt.sale.total);
 
-        lines.push(line(width));
+        lines.push(threeColumns(receipt.sale.data, 'Orc.', receipt.sale.orcamento, width));
         lines.push(center(receipt.store.name, width));
 
         if (receipt.store.address) {
-            lines.push(center(receipt.store.address, width));
+            lines.push(center(receipt.store.address.toUpperCase(), width));
         }
 
-        lines.push(line(width));
-        lines.push(`Venda: ${receipt.sale.numero}`);
-
-        if (receipt.sale.data) {
-            lines.push(`Data: ${receipt.sale.data}`);
-        }
+        lines.push('');
+        lines.push(useEscPos ? `${ESC_POS.boldOn}${center(fiscalNotice, width)}${ESC_POS.boldOff}` : center(fiscalNotice, width));
+        lines.push(line(width, '-'));
+        lines.push('');
+        lines.push(`Cliente: ${receipt.sale.cliente}`);
+        lines.push('');
+        lines.push(receipt.sale.comprador || 'Comprador');
 
         if (receipt.sale.vendedor) {
-            lines.push(`Vendedor: ${receipt.sale.vendedor}`);
+            lines.push(`Vendedor:${receipt.sale.vendedor.toUpperCase()}`);
         }
 
+        lines.push('');
+        lines.push(useEscPos ? `${ESC_POS.boldOn}${center('Vencimentos...', width)}${ESC_POS.boldOff}` : center('Vencimentos...', width));
+        lines.push(leftRight(`Vencto...: ${receipt.sale.vencimento || receipt.sale.data}`, `Valor...: ${total}`, width));
+        lines.push(line(width, '-'));
+        lines.push('CODIGO    |  DESCRICAO');
+        lines.push(`${padRight('', 14)}QTD | UNT.R$ |${padLeft('VLR$', width - 27)}`);
         lines.push('');
 
         receipt.sale.itens.forEach(item => {
-            lines.push(...itemLines(item, width));
+            budgetItemLines(item, width).forEach(itemLine => lines.push(itemLine));
+            lines.push('');
         });
 
+        lines.push('');
         lines.push('');
         lines.push(line(width, '-'));
-        lines.push(moneyLine('Subtotal:', receipt.sale.subtotal, width));
-        lines.push(moneyLine('Desconto:', receipt.sale.desconto, width));
-
-        const totalLine = moneyLine('TOTAL:', receipt.sale.total, width);
-        lines.push(useEscPos ? `${ESC_POS.boldOn}${totalLine}${ESC_POS.boldOff}` : totalLine);
-        lines.push(line(width));
+        lines.push(leftRight('Total.........:', total, width));
         lines.push('');
+        lines.push('OBS');
 
-        if (receipt.sale.pagamento) {
-            lines.push(`Pagamento: ${receipt.sale.pagamento}`);
-            lines.push('');
+        if (receipt.sale.observacao) {
+            wrapText(receipt.sale.observacao, width).forEach(observationLine => {
+                lines.push(observationLine);
+            });
         }
 
-        wrapText(receipt.message, width).forEach(messageLine => {
-            lines.push(messageLine);
-        });
-
-        lines.push(line(width));
+        lines.push('');
+        lines.push('');
+        lines.push(center('VOLTE SEMPRE!!!', width));
 
         return `${lines.join('\n')}\n`;
     }
@@ -418,12 +504,12 @@
         const commands = [
             ESC_POS.init,
             getCodePageCommand(encoding),
-            ESC_POS.fontANormal,
+            ESC_POS.fontBNormal,
             ESC_POS.noCharacterSpacing,
             ESC_POS.defaultLineSpacing,
             ESC_POS.leftMarginZero,
             ESC_POS.printArea58mm,
-            ESC_POS.alignCenter,
+            ESC_POS.alignLeft,
             buildReceiptText(receipt, { escpos: true }),
             '\n\n\n',
             ESC_POS.cutPaper,
