@@ -392,37 +392,35 @@
     function buildEscPosPayload(venda) {
         const receipt = normalizeVenda(venda);
 
-        let payload = '';
+        return [
+            '\x1B\x40',
+            '\x1B\x74\x03',
 
-        payload += '\x1B\x40';
-        payload += '\x1B\x74\x03';
+            '================================\n',
+            '         DLIMA STORE\n',
+            '================================\n\n',
 
-        payload += '================================\n';
-        payload += '         DLIMA STORE\n';
-        payload += '================================\n\n';
+            `Venda: ${receipt.sale.numero}\n`,
+            `Data: ${receipt.sale.data}\n`,
 
-        payload += `Venda: ${receipt.sale.numero}\n`;
-        payload += `Data: ${receipt.sale.data}\n`;
+            receipt.sale.vendedor
+                ? `Vendedor: ${receipt.sale.vendedor}\n`
+                : '',
 
-        if (receipt.sale.vendedor) {
-            payload += `Vendedor: ${receipt.sale.vendedor}\n`;
-        }
+            '\n',
 
-        payload += '\n';
+            ...receipt.sale.itens.map(item =>
+                `${item.quantidade}x ${item.nome} ${formatMoney(item.valor_total)}\n`
+            ),
 
-        receipt.sale.itens.forEach(item => {
-            payload += `${item.quantidade}x ${item.nome} ${formatMoney(item.valor_total)}\n`;
-        });
+            '--------------------------------\n',
+            `TOTAL: ${formatMoney(receipt.sale.total)}\n`,
+            '================================\n\n',
 
-        payload += '--------------------------------\n';
-        payload += `TOTAL: ${formatMoney(receipt.sale.total)}\n`;
-        payload += '================================\n\n';
+            'Obrigado pela preferencia!\n\n\n',
 
-        payload += 'Obrigado pela preferencia!\n\n\n';
-
-        payload += '\x1D\x56\x00';
-
-        return payload;
+            '\x1D\x56\x00'
+        ];
     }
 
     function createQzConfig(printerName, venda) {
@@ -432,21 +430,22 @@
     }
 
     async function printReceipt(venda) {
-    await connectQZ();
+        await connectQZ();
 
-    const printerName = await resolvePrinter(venda);
-    const config = qz.configs.create(printerName, {
-        encoding: 'CP860'
-    });
+        const printerName = await resolvePrinter(venda);
 
-    const data = [{
-        type: 'raw',
-        format: 'plain',
-        data: buildEscPosPayload(venda)
-    }];
+        const config = qz.configs.create(printerName, {
+            encoding: 'CP860'
+        });
 
-    await qz.print(config, data);
-    return printerName;
+        const data = [{
+            type: 'raw',
+            format: 'plain',
+            data: buildEscPosPayload(venda),
+        }];
+
+        await qz.print(config, data);
+        return printerName;
     }
 
     async function testarImpressao() {
