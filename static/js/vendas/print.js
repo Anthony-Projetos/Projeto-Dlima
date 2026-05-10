@@ -1,8 +1,8 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260510-orcamento-1';
-    const DEFAULT_RECEIPT_WIDTH = 42;
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260510-orcamento-centralizado-1';
+    const DEFAULT_RECEIPT_WIDTH = 40;
     const MIN_RECEIPT_WIDTH = 32;
-    const MAX_RECEIPT_WIDTH = 42;
+    const MAX_RECEIPT_WIDTH = 40;
     const DEFAULT_ENCODING = 'CP860';
     const DEFAULT_PRINTER_NAME = 'ELGIN i9(USB)';
     const DEFAULT_SEARCH_TERMS = ['ELGIN i9(USB)', 'ELGIN', 'I9', 'POS-58', 'BEMATECH'];
@@ -17,7 +17,9 @@
         noCharacterSpacing: `${ESC} \x00`,
         defaultLineSpacing: `${ESC}2`,
         leftMarginZero: `${GS}L\x00\x00`,
+        leftMarginCentered58mm: `${GS}L\x0C\x00`,
         printArea58mm: `${GS}W\x80\x01`,
+        printAreaCentered58mm: `${GS}W\x68\x01`,
         alignLeft: `${ESC}a\x00`,
         alignCenter: `${ESC}a\x01`,
         boldOn: `${ESC}E\x01`,
@@ -507,8 +509,8 @@
             ESC_POS.fontBNormal,
             ESC_POS.noCharacterSpacing,
             ESC_POS.defaultLineSpacing,
-            ESC_POS.leftMarginZero,
-            ESC_POS.printArea58mm,
+            ESC_POS.leftMarginCentered58mm,
+            ESC_POS.printAreaCentered58mm,
             ESC_POS.alignLeft,
             buildReceiptText(receipt, { escpos: true }),
             '\n\n\n',

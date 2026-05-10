@@ -15,7 +15,7 @@ TWO_PLACES = Decimal("0.01")
 DEFAULT_RECEIPT_SETTINGS = {
     "store_name": "Dlima Store",
     "store_address": "AV. CONRRADI SEGUNDO",
-    "receipt_width": 42,
+    "receipt_width": 40,
     "printer_name": "ELGIN i9(USB)",
     "printer_search_terms": ["ELGIN i9(USB)", "ELGIN", "I9", "POS-58", "BEMATECH"],
     "receipt_encoding": "CP860",

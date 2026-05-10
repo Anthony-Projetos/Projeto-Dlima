@@ -129,7 +129,7 @@ class ReceiptPayloadTests(TestCase):
         self.assertEqual(receipt['sale']['desconto'], '10.00')
         self.assertEqual(receipt['sale']['total'], '110.00')
         self.assertEqual(receipt['sale']['itens'][0]['nome'], 'Vestido Floral')
-        self.assertEqual(receipt['printer']['width'], 42)
+        self.assertEqual(receipt['printer']['width'], 40)
         self.assertEqual(receipt['printer']['encoding'], 'CP860')
         self.assertFalse(receipt['printer']['open_drawer'])
         self.assertIn('preferred_name', receipt['printer'])
