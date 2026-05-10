@@ -1,8 +1,8 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260510-orcamento-centralizado-1';
-    const DEFAULT_RECEIPT_WIDTH = 40;
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260510-orcamento-fonte-maior-1';
+    const DEFAULT_RECEIPT_WIDTH = 32;
     const MIN_RECEIPT_WIDTH = 32;
-    const MAX_RECEIPT_WIDTH = 40;
+    const MAX_RECEIPT_WIDTH = 32;
     const DEFAULT_ENCODING = 'CP860';
     const DEFAULT_PRINTER_NAME = 'ELGIN i9(USB)';
     const DEFAULT_SEARCH_TERMS = ['ELGIN i9(USB)', 'ELGIN', 'I9', 'POS-58', 'BEMATECH'];
@@ -393,6 +393,24 @@
         const quantity = formatQuantity(item.quantidade || item.qtd || 1);
         const unitPrice = formatMoney(item.valor_unitario || item.preco_unitario || item.preco || item.valor_total || item.total || item.subtotal);
         const total = formatMoney(item.valor_total || item.total || item.subtotal);
+
+        if (width <= 34) {
+            const compactDescriptionWidth = Math.max(width - 9, 12);
+            const compactNameLines = wrapText(name, compactDescriptionWidth);
+            const lines = [];
+
+            lines.push(`${padRight(code, 6)} - ${takeText(compactNameLines.shift(), compactDescriptionWidth)}`);
+
+            compactNameLines.forEach(part => {
+                lines.push(`${padRight('', 9)}${takeText(part, compactDescriptionWidth)}`);
+            });
+
+            lines.push(`${padRight(`QTD: ${quantity}`, 12)}${padRight(`UNT: ${unitPrice}`, 20)}`);
+            lines.push(leftRight('VLR:', total, width));
+
+            return lines;
+        }
+
         const descriptionWidth = Math.max(width - descriptionIndent, 12);
         const nameLines = wrapText(name, descriptionWidth);
         const lines = [];
@@ -469,10 +487,17 @@
 
         lines.push('');
         lines.push(useEscPos ? `${ESC_POS.boldOn}${center('Vencimentos...', width)}${ESC_POS.boldOff}` : center('Vencimentos...', width));
-        lines.push(leftRight(`Vencto...: ${receipt.sale.vencimento || receipt.sale.data}`, `Valor...: ${total}`, width));
+        if (width <= 34) {
+            lines.push(`Vencto...: ${receipt.sale.vencimento || receipt.sale.data}`);
+            lines.push(leftRight('Valor...:', total, width));
+        } else {
+            lines.push(leftRight(`Vencto...: ${receipt.sale.vencimento || receipt.sale.data}`, `Valor...: ${total}`, width));
+        }
         lines.push(line(width, '-'));
         lines.push('CODIGO    |  DESCRICAO');
-        lines.push(`${padRight('', 14)}QTD | UNT.R$ |${padLeft('VLR$', width - 27)}`);
+        if (width > 34) {
+            lines.push(`${padRight('', 14)}QTD | UNT.R$ |${padLeft('VLR$', width - 27)}`);
+        }
         lines.push('');
 
         receipt.sale.itens.forEach(item => {
@@ -506,11 +531,11 @@
         const commands = [
             ESC_POS.init,
             getCodePageCommand(encoding),
-            ESC_POS.fontBNormal,
+            ESC_POS.fontANormal,
             ESC_POS.noCharacterSpacing,
             ESC_POS.defaultLineSpacing,
-            ESC_POS.leftMarginCentered58mm,
-            ESC_POS.printAreaCentered58mm,
+            ESC_POS.leftMarginZero,
+            ESC_POS.printArea58mm,
             ESC_POS.alignLeft,
             buildReceiptText(receipt, { escpos: true }),
             '\n\n\n',

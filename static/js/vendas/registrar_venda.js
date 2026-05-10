@@ -145,7 +145,7 @@
             throw new Error('Modulo de impressao nao foi carregado.');
         }
 
-        if (window.PDVReceiptPrinter.version !== 'raw-escpos-qz-20260510-orcamento-centralizado-1') {
+        if (window.PDVReceiptPrinter.version !== 'raw-escpos-qz-20260510-orcamento-fonte-maior-1') {
             throw new Error('Modulo de impressao antigo em cache. Atualize a pagina com Ctrl+F5.');
         }
 
