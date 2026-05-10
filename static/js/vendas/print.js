@@ -266,6 +266,13 @@
         return parsed.toLocaleDateString('pt-BR');
     }
 
+    function stringToHex(str) {
+        return Array.from(str)
+            .map(char => char.charCodeAt(0).toString(16).padStart(2, "0"))
+            .join("")
+            .toUpperCase();
+    }
+
     function wrapText(value, width) {
         const words = sanitizeText(value).trim().split(/\s+/).filter(Boolean);
         const lines = [];
@@ -434,18 +441,33 @@
 
         const printerName = await resolvePrinter(venda);
 
-        const config = qz.configs.create(printerName, {
-            encoding: 'CP860'
-        });
+        const config = qz.configs.create(printerName);
+
+        const texto =
+            "================================\n" +
+            "         DLIMA STORE\n" +
+            "================================\n\n" +
+            "Venda: 000123\n" +
+            "Vendedor: Anthony\n\n" +
+            "1x Camiseta preta        59,90\n" +
+            "--------------------------------\n" +
+            "TOTAL:                   59,90\n" +
+            "================================\n\n" +
+            "Obrigado pela preferencia!\n\n\n";
+
+        const hex =
+            "1B40" +          // inicializa impressora
+            "1B7403" +        // code page CP860
+            stringToHex(texto) +
+            "1D5600";         // corta papel
 
         const data = [{
-            type: 'raw',
-            format: 'plain',
-            data: buildEscPosPayload(venda),
+            type: "raw",
+            format: "hex",
+            data: hex
         }];
 
         await qz.print(config, data);
-        return printerName;
     }
 
     async function testarImpressao() {
