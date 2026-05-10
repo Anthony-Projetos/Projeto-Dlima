@@ -1,8 +1,8 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260510-info-centralizada-1';
-    const DEFAULT_RECEIPT_WIDTH = 32;
-    const MIN_RECEIPT_WIDTH = 32;
-    const MAX_RECEIPT_WIDTH = 32;
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260510-80mm-1';
+    const DEFAULT_RECEIPT_WIDTH = 48;
+    const MIN_RECEIPT_WIDTH = 48;
+    const MAX_RECEIPT_WIDTH = 48;
     const DEFAULT_ENCODING = 'CP860';
     const DEFAULT_PRINTER_NAME = 'ELGIN i9(USB)';
     const DEFAULT_SEARCH_TERMS = ['ELGIN i9(USB)', 'ELGIN', 'I9', 'POS-58', 'BEMATECH'];
@@ -20,6 +20,7 @@
         leftMarginCentered58mm: `${GS}L\x0C\x00`,
         printArea58mm: `${GS}W\x80\x01`,
         printAreaCentered58mm: `${GS}W\x68\x01`,
+        printArea80mm: `${GS}W\x40\x02`,
         alignLeft: `${ESC}a\x00`,
         alignCenter: `${ESC}a\x01`,
         boldOn: `${ESC}E\x01`,
@@ -535,7 +536,7 @@
             ESC_POS.noCharacterSpacing,
             ESC_POS.defaultLineSpacing,
             ESC_POS.leftMarginZero,
-            ESC_POS.printArea58mm,
+            ESC_POS.printArea80mm,
             ESC_POS.alignLeft,
             buildReceiptText(receipt, { escpos: true }),
             '\n\n\n',
