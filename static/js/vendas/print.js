@@ -391,22 +391,38 @@
 
     function buildEscPosPayload(venda) {
         const receipt = normalizeVenda(venda);
-        const encoding = getEncoding(receipt);
-        const commands = [
-            ESC_POS.init,
-            getCodePageCommand(encoding),
-            ESC_POS.alignLeft,
-        ];
 
-        if (receipt.printer.open_drawer || receipt.printer.openDrawer) {
-            commands.push(ESC_POS.openDrawer);
+        let payload = '';
+
+        payload += '\x1B\x40';
+        payload += '\x1B\x74\x03';
+
+        payload += '================================\n';
+        payload += '         DLIMA STORE\n';
+        payload += '================================\n\n';
+
+        payload += `Venda: ${receipt.sale.numero}\n`;
+        payload += `Data: ${receipt.sale.data}\n`;
+
+        if (receipt.sale.vendedor) {
+            payload += `Vendedor: ${receipt.sale.vendedor}\n`;
         }
 
-        commands.push(buildReceiptText(receipt, { escpos: true }));
-        commands.push('\n\n\n');
-        commands.push(ESC_POS.cutPaper);
+        payload += '\n';
 
-        return commands.join('');
+        receipt.sale.itens.forEach(item => {
+            payload += `${item.quantidade}x ${item.nome} ${formatMoney(item.valor_total)}\n`;
+        });
+
+        payload += '--------------------------------\n';
+        payload += `TOTAL: ${formatMoney(receipt.sale.total)}\n`;
+        payload += '================================\n\n';
+
+        payload += 'Obrigado pela preferencia!\n\n\n';
+
+        payload += '\x1D\x56\x00';
+
+        return payload;
     }
 
     function createQzConfig(printerName, venda) {
