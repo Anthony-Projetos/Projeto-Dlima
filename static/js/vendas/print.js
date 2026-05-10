@@ -1,5 +1,5 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260509-proporcional-1';
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260509-maior-centralizado-1';
     const DEFAULT_RECEIPT_WIDTH = 32;
     const MIN_RECEIPT_WIDTH = 24;
     const MAX_RECEIPT_WIDTH = 42;
@@ -13,6 +13,8 @@
     const ESC_POS = {
         init: `${ESC}@`,
         fontANormal: `${ESC}!\x00${ESC}M\x00${GS}!\x00`,
+        textDoubleHeight: `${GS}!\x01`,
+        textNormalSize: `${GS}!\x00`,
         noCharacterSpacing: `${ESC} \x00`,
         defaultLineSpacing: `${ESC}2`,
         leftMarginZero: `${GS}L\x00\x00`,
@@ -423,9 +425,11 @@
             ESC_POS.defaultLineSpacing,
             ESC_POS.leftMarginZero,
             ESC_POS.printArea58mm,
-            ESC_POS.alignLeft,
+            ESC_POS.textDoubleHeight,
+            ESC_POS.alignCenter,
             buildReceiptText(receipt, { escpos: true }),
             '\n\n\n',
+            ESC_POS.textNormalSize,
             ESC_POS.cutPaper,
         ];
 
