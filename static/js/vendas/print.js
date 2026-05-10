@@ -1,5 +1,5 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260509-1';
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260509-2';
     const DEFAULT_RECEIPT_WIDTH = 32;
     const MIN_RECEIPT_WIDTH = 24;
     const MAX_RECEIPT_WIDTH = 42;
