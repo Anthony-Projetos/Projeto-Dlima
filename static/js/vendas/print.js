@@ -1,5 +1,5 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260509-2';
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260509-frase-1';
     const DEFAULT_RECEIPT_WIDTH = 32;
     const MIN_RECEIPT_WIDTH = 24;
     const MAX_RECEIPT_WIDTH = 42;
@@ -356,78 +356,26 @@
     function buildReceiptText(venda, options = {}) {
         const receipt = normalizeVenda(venda);
         const width = getReceiptWidth(receipt);
-        const useEscPos = Boolean(options.escpos);
-        const lines = [];
-
-        lines.push(line(width));
-        lines.push(useEscPos ? `${ESC_POS.alignCenter}${ESC_POS.boldOn}${receipt.store.name}${ESC_POS.boldOff}${ESC_POS.alignLeft}` : center(receipt.store.name, width));
-        lines.push(line(width));
-        lines.push('');
-        lines.push(`Venda: ${receipt.sale.numero}`);
-        lines.push(`Data: ${receipt.sale.data}`);
-
-        if (receipt.sale.vendedor) {
-            lines.push(`Vendedor: ${receipt.sale.vendedor}`);
-        }
-
-        lines.push('');
-        receipt.sale.itens.forEach(item => {
-            lines.push(...itemLines(item, width));
-        });
-        lines.push('');
-        lines.push(line(width, '-'));
-
-        const totalLine = moneyLine('TOTAL:', receipt.sale.total, width);
-        lines.push(useEscPos ? `${ESC_POS.boldOn}${totalLine}${ESC_POS.boldOff}` : totalLine);
-        lines.push(line(width));
-        lines.push('');
-
-        if (receipt.sale.observacao) {
-            wrapText(`OBS: ${receipt.sale.observacao}`, width).forEach(observationLine => {
-                lines.push(observationLine);
-            });
-            lines.push('');
-        }
-
-        wrapText(receipt.message, width).forEach(messageLine => {
-            lines.push(messageLine);
-        });
-
-        return lines.join('\n');
+        return `${center('penso logo existo', width)}\n`;
     }
 
     function buildEscPosPayload(venda) {
         const receipt = normalizeVenda(venda);
-
-        return [
-            '\x1B\x40',
-            '\x1B\x74\x03',
-
-            '================================\n',
-            '         DLIMA STORE\n',
-            '================================\n\n',
-
-            `Venda: ${receipt.sale.numero}\n`,
-            `Data: ${receipt.sale.data}\n`,
-
-            receipt.sale.vendedor
-                ? `Vendedor: ${receipt.sale.vendedor}\n`
-                : '',
-
-            '\n',
-
-            ...receipt.sale.itens.map(item =>
-                `${item.quantidade}x ${item.nome} ${formatMoney(item.valor_total)}\n`
-            ),
-
-            '--------------------------------\n',
-            `TOTAL: ${formatMoney(receipt.sale.total)}\n`,
-            '================================\n\n',
-
-            'Obrigado pela preferencia!\n\n\n',
-
-            '\x1D\x56\x00'
+        const encoding = getEncoding(receipt);
+        const commands = [
+            ESC_POS.init,
+            getCodePageCommand(encoding),
+            ESC_POS.alignCenter,
+            buildReceiptText(receipt),
+            '\n\n\n',
+            ESC_POS.cutPaper,
         ];
+
+        if (receipt.printer.open_drawer) {
+            commands.splice(2, 0, ESC_POS.openDrawer);
+        }
+
+        return commands.join('');
     }
 
     function createQzConfig(printerName, venda) {
@@ -440,34 +388,15 @@
         await connectQZ();
 
         const printerName = await resolvePrinter(venda);
-
-        const config = qz.configs.create(printerName);
-
-        const texto =
-            "================================\n" +
-            "         DLIMA STORE\n" +
-            "================================\n\n" +
-            "Venda: 000123\n" +
-            "Vendedor: Anthony\n\n" +
-            "1x Camiseta preta        59,90\n" +
-            "--------------------------------\n" +
-            "TOTAL:                   59,90\n" +
-            "================================\n\n" +
-            "Obrigado pela preferencia!\n\n\n";
-
-        const hex =
-            "1B40" +          // inicializa impressora
-            "1B7403" +        // code page CP860
-            stringToHex(texto) +
-            "1D5600";         // corta papel
-
+        const config = createQzConfig(printerName, venda);
         const data = [{
-            type: "raw",
-            format: "hex",
-            data: hex
+            type: 'raw',
+            format: 'command',
+            flavor: 'plain',
+            data: buildEscPosPayload(venda),
         }];
 
-        await qz.print(config, data);
+        await window.qz.print(config, data);
     }
 
     async function testarImpressao() {
