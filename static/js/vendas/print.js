@@ -1,5 +1,5 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260510-orcamento-fonte-maior-1';
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260510-info-centralizada-1';
     const DEFAULT_RECEIPT_WIDTH = 32;
     const MIN_RECEIPT_WIDTH = 32;
     const MAX_RECEIPT_WIDTH = 32;
@@ -399,14 +399,14 @@
             const compactNameLines = wrapText(name, compactDescriptionWidth);
             const lines = [];
 
-            lines.push(`${padRight(code, 6)} - ${takeText(compactNameLines.shift(), compactDescriptionWidth)}`);
+            lines.push(center(`${code} - ${takeText(compactNameLines.shift(), compactDescriptionWidth)}`, width));
 
             compactNameLines.forEach(part => {
-                lines.push(`${padRight('', 9)}${takeText(part, compactDescriptionWidth)}`);
+                lines.push(center(takeText(part, width), width));
             });
 
-            lines.push(`${padRight(`QTD: ${quantity}`, 12)}${padRight(`UNT: ${unitPrice}`, 20)}`);
-            lines.push(leftRight('VLR:', total, width));
+            lines.push(center(`QTD: ${quantity}  UNT: ${unitPrice}`, width));
+            lines.push(center(`VLR: ${total}`, width));
 
             return lines;
         }
@@ -477,24 +477,24 @@
         lines.push(useEscPos ? `${ESC_POS.boldOn}${center(fiscalNotice, width)}${ESC_POS.boldOff}` : center(fiscalNotice, width));
         lines.push(line(width, '-'));
         lines.push('');
-        lines.push(`Cliente: ${receipt.sale.cliente}`);
+        lines.push(center(`Cliente: ${receipt.sale.cliente}`, width));
         lines.push('');
-        lines.push(receipt.sale.comprador || 'Comprador');
+        lines.push(center(receipt.sale.comprador || 'Comprador', width));
 
         if (receipt.sale.vendedor) {
-            lines.push(`Vendedor:${receipt.sale.vendedor.toUpperCase()}`);
+            lines.push(center(`Vendedor: ${receipt.sale.vendedor.toUpperCase()}`, width));
         }
 
         lines.push('');
         lines.push(useEscPos ? `${ESC_POS.boldOn}${center('Vencimentos...', width)}${ESC_POS.boldOff}` : center('Vencimentos...', width));
         if (width <= 34) {
-            lines.push(`Vencto...: ${receipt.sale.vencimento || receipt.sale.data}`);
-            lines.push(leftRight('Valor...:', total, width));
+            lines.push(center(`Vencto...: ${receipt.sale.vencimento || receipt.sale.data}`, width));
+            lines.push(center(`Valor...: ${total}`, width));
         } else {
             lines.push(leftRight(`Vencto...: ${receipt.sale.vencimento || receipt.sale.data}`, `Valor...: ${total}`, width));
         }
         lines.push(line(width, '-'));
-        lines.push('CODIGO    |  DESCRICAO');
+        lines.push(center('CODIGO | DESCRICAO', width));
         if (width > 34) {
             lines.push(`${padRight('', 14)}QTD | UNT.R$ |${padLeft('VLR$', width - 27)}`);
         }
@@ -508,13 +508,13 @@
         lines.push('');
         lines.push('');
         lines.push(line(width, '-'));
-        lines.push(leftRight('Total.........:', total, width));
+        lines.push(center(`Total.........: ${total}`, width));
         lines.push('');
-        lines.push('OBS');
+        lines.push(center('OBS', width));
 
         if (receipt.sale.observacao) {
             wrapText(receipt.sale.observacao, width).forEach(observationLine => {
-                lines.push(observationLine);
+                lines.push(center(observationLine, width));
             });
         }
 
