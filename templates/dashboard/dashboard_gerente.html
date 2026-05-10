@@ -290,6 +290,10 @@
         dashboardSocket.onclose = function() {
             console.log("WebSocket do dashboard desconectado");
         };
+
+        setInterval(function() {
+            window.location.reload();
+        }, 3 * 60 * 1000);
     </script>
 
 </body>
