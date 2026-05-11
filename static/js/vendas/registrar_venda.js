@@ -6,6 +6,30 @@
     const pesquisaProduto = document.getElementById('pesquisaProduto');
     const produtoCards = Array.from(document.querySelectorAll('.produto-card[data-produto-nome]'));
     const semResultadosBusca = document.getElementById('semResultadosBusca');
+    const etiquetasModal = document.getElementById('etiquetasModal');
+    const etiquetaStatus = document.getElementById('etiquetaModalStatus');
+    const etiquetaBuscaProduto = document.getElementById('etiquetaBuscaProduto');
+    const etiquetaResultadosProduto = document.getElementById('etiquetaResultadosProduto');
+    const etiquetaQuantidade = document.getElementById('etiquetaQuantidade');
+    const etiquetaTamanho = document.getElementById('etiquetaTamanho');
+    const etiquetaLinguagem = document.getElementById('etiquetaLinguagem');
+    const etiquetaPrinterName = document.getElementById('etiquetaPrinterName');
+    const etiquetaNome = document.getElementById('etiquetaNome');
+    const etiquetaPreco = document.getElementById('etiquetaPreco');
+    const etiquetaCodigo = document.getElementById('etiquetaCodigo');
+    const etiquetaPreview = document.getElementById('etiquetaPreview');
+    const etiquetaCommandPreview = document.getElementById('etiquetaCommandPreview');
+    const etiquetaOptions = {
+        nome: document.getElementById('etiquetaMostrarNome'),
+        preco: document.getElementById('etiquetaMostrarPreco'),
+        codigo: document.getElementById('etiquetaMostrarCodigo'),
+        barcode: document.getElementById('etiquetaMostrarBarcode'),
+    };
+    const labelSizes = {
+        '40x30': { width: 40, height: 30, gap: 2, nameY: 20, priceY: 70, codeY: 120, barcodeY: 160, barcodeHeight: 50 },
+        '50x30': { width: 50, height: 30, gap: 2, nameY: 20, priceY: 70, codeY: 120, barcodeY: 160, barcodeHeight: 50 },
+        '60x40': { width: 60, height: 40, gap: 2, nameY: 25, priceY: 85, codeY: 145, barcodeY: 190, barcodeHeight: 65 },
+    };
 
     function getAppConfig() {
         return window.PDV_CONFIG || {};
@@ -13,6 +37,33 @@
 
     function formatCurrency(value) {
         return Number(value || 0).toFixed(2).replace('.', ',');
+    }
+
+    function parseMoney(value) {
+        const text = String(value || '').replace(/^R\$\s*/i, '').trim();
+        const normalized = text.includes(',') ? text.replace(/\./g, '').replace(',', '.') : text;
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function formatLabelPrice(value) {
+        return `R$ ${formatCurrency(parseMoney(value))}`;
+    }
+
+    function sanitizeLabelText(value) {
+        return String(value || '')
+            .normalize('NFC')
+            .replace(/[\u201C\u201D]/g, '"')
+            .replace(/[\u2018\u2019]/g, "'")
+            .replace(/[\u2013\u2014]/g, '-')
+            .replace(/\u00A0/g, ' ')
+            .replace(/"/g, "'")
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+            .trim();
+    }
+
+    function onlyBarcodeText(value) {
+        return sanitizeLabelText(value).replace(/[^A-Za-z0-9\-_.]/g, '') || '00000';
     }
 
     function showStatus(message, type) {
@@ -33,6 +84,27 @@
         statusBox.hidden = true;
         statusBox.textContent = '';
         delete statusBox.dataset.statusType;
+    }
+
+    function showEtiquetaStatus(message, type) {
+        if (!etiquetaStatus) {
+            showStatus(message, type);
+            return;
+        }
+
+        etiquetaStatus.textContent = message;
+        etiquetaStatus.hidden = false;
+        etiquetaStatus.dataset.statusType = type || 'info';
+    }
+
+    function clearEtiquetaStatus() {
+        if (!etiquetaStatus) {
+            return;
+        }
+
+        etiquetaStatus.hidden = true;
+        etiquetaStatus.textContent = '';
+        delete etiquetaStatus.dataset.statusType;
     }
 
     function setSubmitting(isSubmitting) {
@@ -261,6 +333,322 @@
         }
     }
 
+    function getLabelState() {
+        const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
+        const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '40x30';
+
+        return {
+            quantity,
+            sizeKey,
+            size: labelSizes[sizeKey] || labelSizes['40x30'],
+            language: etiquetaLinguagem ? etiquetaLinguagem.value : 'TSPL',
+            printerName: sanitizeLabelText(etiquetaPrinterName ? etiquetaPrinterName.value : getAppConfig().labelPrinterName || 'ELGIN'),
+            nome: sanitizeLabelText(etiquetaNome ? etiquetaNome.value : ''),
+            preco: sanitizeLabelText(etiquetaPreco ? etiquetaPreco.value : ''),
+            codigo: sanitizeLabelText(etiquetaCodigo ? etiquetaCodigo.value : ''),
+            showNome: !etiquetaOptions.nome || etiquetaOptions.nome.checked,
+            showPreco: !etiquetaOptions.preco || etiquetaOptions.preco.checked,
+            showCodigo: !etiquetaOptions.codigo || etiquetaOptions.codigo.checked,
+            showBarcode: !etiquetaOptions.barcode || etiquetaOptions.barcode.checked,
+        };
+    }
+
+    function validateLabelState(state) {
+        if (state.quantity <= 0) {
+            throw new Error('Informe uma quantidade de etiquetas maior que zero.');
+        }
+
+        const hasContent = [
+            state.showNome && state.nome,
+            state.showPreco && state.preco,
+            state.showCodigo && state.codigo,
+            state.showBarcode && state.codigo,
+        ].some(Boolean);
+
+        if (!hasContent) {
+            throw new Error('Informe ao menos um conteudo para imprimir na etiqueta.');
+        }
+
+        if (!state.printerName) {
+            throw new Error('Informe o nome da impressora no QZ Tray.');
+        }
+    }
+
+    function buildTsplLabelPayload() {
+        const state = getLabelState();
+        validateLabelState(state);
+        const commands = [
+            `SIZE ${state.size.width} mm,${state.size.height} mm`,
+            `GAP ${state.size.gap} mm,0 mm`,
+            'DIRECTION 1',
+            'REFERENCE 0,0',
+            'CLS',
+        ];
+
+        if (state.showNome && state.nome) {
+            commands.push(`TEXT 20,${state.size.nameY},"3",0,1,1,"${state.nome.toUpperCase()}"`);
+        }
+        if (state.showPreco && state.preco) {
+            commands.push(`TEXT 20,${state.size.priceY},"3",0,1,1,"${formatLabelPrice(state.preco)}"`);
+        }
+        if (state.showCodigo && state.codigo) {
+            commands.push(`TEXT 20,${state.size.codeY},"2",0,1,1,"REF: ${state.codigo}"`);
+        }
+        if (state.showBarcode && state.codigo) {
+            commands.push(`BARCODE 20,${state.size.barcodeY},"128",${state.size.barcodeHeight},1,0,2,2,"${onlyBarcodeText(state.codigo)}"`);
+        }
+
+        commands.push(`PRINT 1,${state.quantity}`);
+        return `${commands.join('\n')}\n`;
+    }
+
+    function buildZplLabelPayload() {
+        const state = getLabelState();
+        validateLabelState(state);
+        const dotsPerMm = 8;
+        const widthDots = Math.round(state.size.width * dotsPerMm);
+        const heightDots = Math.round(state.size.height * dotsPerMm);
+        const commands = ['^XA', `^PW${widthDots}`, `^LL${heightDots}`, '^CI28'];
+
+        if (state.showNome && state.nome) {
+            commands.push(`^FO20,20^A0N,28,24^FD${state.nome.toUpperCase()}^FS`);
+        }
+        if (state.showPreco && state.preco) {
+            commands.push(`^FO20,70^A0N,28,24^FD${formatLabelPrice(state.preco)}^FS`);
+        }
+        if (state.showCodigo && state.codigo) {
+            commands.push(`^FO20,120^A0N,22,18^FDREF: ${state.codigo}^FS`);
+        }
+        if (state.showBarcode && state.codigo) {
+            commands.push(`^FO20,160^BCN,50,Y,N,N^FD${onlyBarcodeText(state.codigo)}^FS`);
+        }
+
+        commands.push(`^PQ${state.quantity}`, '^XZ');
+        return `${commands.join('\n')}\n`;
+    }
+
+    function buildLabelPayload() {
+        return getLabelState().language === 'ZPL' ? buildZplLabelPayload() : buildTsplLabelPayload();
+    }
+
+    function atualizarPreviewEtiqueta() {
+        if (!etiquetaPreview) {
+            return;
+        }
+
+        const state = getLabelState();
+        const nameNode = etiquetaPreview.querySelector('[data-preview-name]');
+        const priceNode = etiquetaPreview.querySelector('[data-preview-price]');
+        const codeNode = etiquetaPreview.querySelector('[data-preview-code]');
+        const barcodeNode = etiquetaPreview.querySelector('[data-preview-barcode]');
+
+        etiquetaPreview.dataset.size = state.sizeKey;
+        if (nameNode) {
+            nameNode.textContent = state.nome || 'Produto';
+            nameNode.hidden = !state.showNome;
+        }
+        if (priceNode) {
+            priceNode.textContent = state.preco ? formatLabelPrice(state.preco) : 'R$ 0,00';
+            priceNode.hidden = !state.showPreco;
+        }
+        if (codeNode) {
+            codeNode.textContent = `REF: ${state.codigo || '00000'}`;
+            codeNode.hidden = !state.showCodigo;
+        }
+        if (barcodeNode) {
+            barcodeNode.hidden = !state.showBarcode;
+        }
+
+        if (etiquetaCommandPreview) {
+            try {
+                etiquetaCommandPreview.textContent = buildLabelPayload();
+            } catch (error) {
+                etiquetaCommandPreview.textContent = '';
+            }
+        }
+    }
+
+    function preencherProdutoEtiqueta(produto) {
+        const codigo = produto.referencia || produto.codigo || produto.id || '';
+        if (etiquetaNome) {
+            etiquetaNome.value = produto.nome || '';
+        }
+        if (etiquetaPreco) {
+            etiquetaPreco.value = formatLabelPrice(produto.preco || 0);
+        }
+        if (etiquetaCodigo) {
+            etiquetaCodigo.value = codigo;
+        }
+        clearEtiquetaStatus();
+        atualizarPreviewEtiqueta();
+    }
+
+    function renderProductResults(produtos) {
+        if (!etiquetaResultadosProduto) {
+            return;
+        }
+
+        etiquetaResultadosProduto.innerHTML = '';
+        if (!produtos.length) {
+            etiquetaResultadosProduto.hidden = false;
+            etiquetaResultadosProduto.innerHTML = '<div class="label-search-empty">Nenhum produto encontrado.</div>';
+            return;
+        }
+
+        produtos.forEach(produto => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'label-product-result';
+            button.innerHTML = `<strong>${sanitizeLabelText(produto.nome)}</strong><span>R$ ${formatCurrency(produto.preco)} | REF: ${sanitizeLabelText(produto.referencia || produto.codigo || produto.id)} | Estoque: ${produto.estoque}</span>`;
+            button.addEventListener('click', () => {
+                preencherProdutoEtiqueta(produto);
+                etiquetaResultadosProduto.hidden = true;
+            });
+            etiquetaResultadosProduto.appendChild(button);
+        });
+
+        etiquetaResultadosProduto.hidden = false;
+    }
+
+    async function buscarProdutoEtiqueta() {
+        if (!etiquetaBuscaProduto) {
+            return;
+        }
+
+        const termo = etiquetaBuscaProduto.value.trim();
+        if (!termo) {
+            if (etiquetaResultadosProduto) {
+                etiquetaResultadosProduto.hidden = true;
+                etiquetaResultadosProduto.innerHTML = '';
+            }
+            return;
+        }
+
+        try {
+            const url = new URL(getAppConfig().productSearchUrl || '/api/produtos/buscar/', window.location.origin);
+            url.searchParams.set('q', termo);
+            const response = await fetch(url.toString(), {
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-store',
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Nao foi possivel buscar produtos.');
+            }
+            renderProductResults(data.results || []);
+        } catch (error) {
+            showEtiquetaStatus(error.message, 'error');
+        }
+    }
+
+    function abrirModalEtiquetas() {
+        if (!etiquetasModal) {
+            return;
+        }
+
+        etiquetasModal.hidden = false;
+        document.body.classList.add('label-modal-open');
+        clearEtiquetaStatus();
+        atualizarPreviewEtiqueta();
+        if (etiquetaBuscaProduto) {
+            etiquetaBuscaProduto.focus();
+        }
+    }
+
+    function fecharModalEtiquetas() {
+        if (!etiquetasModal) {
+            return;
+        }
+
+        etiquetasModal.hidden = true;
+        document.body.classList.remove('label-modal-open');
+    }
+
+    function limparEtiquetas() {
+        [etiquetaBuscaProduto, etiquetaNome, etiquetaPreco, etiquetaCodigo].forEach(input => {
+            if (input) {
+                input.value = '';
+            }
+        });
+        if (etiquetaQuantidade) {
+            etiquetaQuantidade.value = '1';
+        }
+        if (etiquetaTamanho) {
+            etiquetaTamanho.value = '40x30';
+        }
+        if (etiquetaLinguagem) {
+            etiquetaLinguagem.value = getAppConfig().labelLanguage || 'TSPL';
+        }
+        if (etiquetaPrinterName) {
+            etiquetaPrinterName.value = getAppConfig().labelPrinterName || 'ELGIN';
+        }
+        Object.values(etiquetaOptions).forEach(option => {
+            if (option) {
+                option.checked = true;
+            }
+        });
+        if (etiquetaResultadosProduto) {
+            etiquetaResultadosProduto.hidden = true;
+            etiquetaResultadosProduto.innerHTML = '';
+        }
+        clearEtiquetaStatus();
+        atualizarPreviewEtiqueta();
+    }
+
+    async function connectQzForLabels() {
+        if (!window.qz) {
+            throw new Error('QZ Tray nao foi carregado. Atualize a pagina e tente novamente.');
+        }
+        if (window.connectQZ) {
+            await window.connectQZ();
+            return;
+        }
+        if (!window.qz.websocket.isActive()) {
+            await window.qz.websocket.connect({ retries: 3, delay: 1 });
+        }
+    }
+
+    async function resolveLabelPrinter(printerName) {
+        try {
+            return await window.qz.printers.find(printerName);
+        } catch (error) {
+            const details = await window.qz.printers.details();
+            const normalized = printerName.toLowerCase();
+            const match = details.find(printer => String(printer.name).toLowerCase().includes(normalized));
+            if (match) {
+                return match.name;
+            }
+            throw new Error(`Impressora "${printerName}" nao encontrada no QZ Tray.`);
+        }
+    }
+
+    async function printLabels() {
+        clearEtiquetaStatus();
+
+        try {
+            const state = getLabelState();
+            validateLabelState(state);
+            const payload = buildLabelPayload();
+            await connectQzForLabels();
+            const printerName = await resolveLabelPrinter(state.printerName);
+            const config = window.qz.configs.create(printerName);
+            const data = [{
+                type: 'raw',
+                format: 'command',
+                flavor: 'plain',
+                data: payload,
+            }];
+
+            await window.qz.print(config, data);
+            showEtiquetaStatus(`Etiquetas enviadas para ${printerName}.`, 'success');
+        } catch (error) {
+            const message = /websocket|connect|qz/i.test(error.message || '')
+                ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
+                : error.message;
+            showEtiquetaStatus(message, 'error');
+        }
+    }
+
     document.querySelectorAll('[data-preco]').forEach(input => {
         input.addEventListener('input', () => {
             validateStock(input);
@@ -300,11 +688,73 @@
         pesquisaProduto.addEventListener('input', filterProducts);
     }
 
+    const openEtiquetasModal = document.getElementById('openEtiquetasModal');
+    const closeEtiquetasModal = document.getElementById('closeEtiquetasModal');
+    const fecharEtiquetas = document.getElementById('fecharEtiquetas');
+    const limparEtiquetasButton = document.getElementById('limparEtiquetas');
+    const imprimirEtiquetasButton = document.getElementById('imprimirEtiquetas');
+    let etiquetaSearchTimeout = null;
+
+    if (openEtiquetasModal) {
+        openEtiquetasModal.addEventListener('click', abrirModalEtiquetas);
+    }
+    if (closeEtiquetasModal) {
+        closeEtiquetasModal.addEventListener('click', fecharModalEtiquetas);
+    }
+    if (fecharEtiquetas) {
+        fecharEtiquetas.addEventListener('click', fecharModalEtiquetas);
+    }
+    if (limparEtiquetasButton) {
+        limparEtiquetasButton.addEventListener('click', limparEtiquetas);
+    }
+    if (imprimirEtiquetasButton) {
+        imprimirEtiquetasButton.addEventListener('click', printLabels);
+    }
+    if (etiquetasModal) {
+        etiquetasModal.addEventListener('click', event => {
+            if (event.target === etiquetasModal) {
+                fecharModalEtiquetas();
+            }
+        });
+    }
+    if (etiquetaBuscaProduto) {
+        etiquetaBuscaProduto.addEventListener('input', () => {
+            window.clearTimeout(etiquetaSearchTimeout);
+            etiquetaSearchTimeout = window.setTimeout(buscarProdutoEtiqueta, 250);
+        });
+    }
+
+    [
+        etiquetaQuantidade,
+        etiquetaTamanho,
+        etiquetaLinguagem,
+        etiquetaPrinterName,
+        etiquetaNome,
+        etiquetaPreco,
+        etiquetaCodigo,
+        etiquetaOptions.nome,
+        etiquetaOptions.preco,
+        etiquetaOptions.codigo,
+        etiquetaOptions.barcode,
+    ].forEach(input => {
+        if (input) {
+            input.addEventListener('input', atualizarPreviewEtiqueta);
+            input.addEventListener('change', atualizarPreviewEtiqueta);
+        }
+    });
+
     if (vendaForm) {
         vendaForm.addEventListener('submit', finalizarVenda);
     }
 
     calculateTotal();
+    atualizarPreviewEtiqueta();
 
     window.finalizarVenda = finalizarVenda;
+    window.abrirModalEtiquetas = abrirModalEtiquetas;
+    window.fecharModalEtiquetas = fecharModalEtiquetas;
+    window.buscarProdutoEtiqueta = buscarProdutoEtiqueta;
+    window.atualizarPreviewEtiqueta = atualizarPreviewEtiqueta;
+    window.buildTsplLabelPayload = buildTsplLabelPayload;
+    window.printLabels = printLabels;
 })();

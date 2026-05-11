@@ -24,6 +24,7 @@
             </div>
 
             <div id="vendaStatus" class="status-box" hidden></div>
+            <div id="etiquetaStatus" class="status-box" hidden></div>
 
             <form method="post" class="venda-form">
                 {% csrf_token %}
@@ -141,15 +142,125 @@
                 </div>
 
                 <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="openEtiquetasModal">Etiquetas</button>
                     <button type="submit" class="btn-primary">Finalizar venda</button>
                 </div>
             </form>
         </section>
     </main>
 
+    <div class="label-modal-overlay" id="etiquetasModal" hidden>
+        <section class="label-modal" role="dialog" aria-modal="true" aria-labelledby="etiquetasModalTitle">
+            <div class="label-modal-header">
+                <div>
+                    <span class="brand-badge">Impressao RAW</span>
+                    <h2 id="etiquetasModalTitle">Etiquetas adesivas</h2>
+                </div>
+                <button type="button" class="label-icon-button" id="closeEtiquetasModal" aria-label="Fechar">&times;</button>
+            </div>
+
+            <div id="etiquetaModalStatus" class="status-box label-status" hidden></div>
+
+            <div class="label-modal-grid">
+                <div class="label-panel">
+                    <div class="form-group">
+                        <label for="etiquetaBuscaProduto">Buscar produto</label>
+                        <input
+                            id="etiquetaBuscaProduto"
+                            type="text"
+                            class="label-input"
+                            placeholder="Nome, codigo ou referencia"
+                            autocomplete="off"
+                        >
+                        <div class="label-search-results" id="etiquetaResultadosProduto" hidden></div>
+                    </div>
+
+                    <div class="form-grid label-form-grid">
+                        <div class="form-group">
+                            <label for="etiquetaQuantidade">Quantidade</label>
+                            <input id="etiquetaQuantidade" type="number" class="label-input" min="1" value="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="etiquetaTamanho">Tamanho</label>
+                            <select id="etiquetaTamanho" class="label-input">
+                                <option value="40x30">40x30mm</option>
+                                <option value="50x30">50x30mm</option>
+                                <option value="60x40">60x40mm</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid label-form-grid">
+                        <div class="form-group">
+                            <label for="etiquetaLinguagem">Linguagem</label>
+                            <select id="etiquetaLinguagem" class="label-input">
+                                <option value="TSPL">TSPL / TSC</option>
+                                <option value="ZPL">ZPL</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="etiquetaPrinterName">Impressora QZ</label>
+                            <input id="etiquetaPrinterName" type="text" class="label-input" value="ELGIN" placeholder="Nome da impressora">
+                        </div>
+                    </div>
+
+                    <div class="label-options">
+                        <label><input type="checkbox" id="etiquetaMostrarNome" checked> Nome do produto</label>
+                        <label><input type="checkbox" id="etiquetaMostrarPreco" checked> Preco</label>
+                        <label><input type="checkbox" id="etiquetaMostrarCodigo" checked> Codigo/referencia</label>
+                        <label><input type="checkbox" id="etiquetaMostrarBarcode" checked> Codigo de barras</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="etiquetaNome">Nome</label>
+                        <input id="etiquetaNome" type="text" class="label-input">
+                    </div>
+
+                    <div class="form-grid label-form-grid">
+                        <div class="form-group">
+                            <label for="etiquetaPreco">Preco</label>
+                            <input id="etiquetaPreco" type="text" class="label-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="etiquetaCodigo">Codigo/referencia</label>
+                            <input id="etiquetaCodigo" type="text" class="label-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="label-panel label-preview-panel">
+                    <h3>Previa</h3>
+                    <div class="label-preview-stage">
+                        <div class="label-preview" id="etiquetaPreview" data-size="40x30">
+                            <strong data-preview-name>Produto</strong>
+                            <span data-preview-price>R$ 0,00</span>
+                            <small data-preview-code>REF: 00000</small>
+                            <div class="barcode-preview" data-preview-barcode>
+                                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                            </div>
+                        </div>
+                    </div>
+                    <pre class="label-command-preview" id="etiquetaCommandPreview"></pre>
+                </div>
+            </div>
+
+            <div class="label-modal-actions">
+                <button type="button" class="btn-secondary" id="limparEtiquetas">Limpar</button>
+                <button type="button" class="btn-secondary" id="fecharEtiquetas">Fechar</button>
+                <button type="button" class="btn-primary" id="imprimirEtiquetas">Imprimir etiquetas</button>
+            </div>
+        </section>
+    </div>
+
     <script>
         window.PDV_CONFIG = {
             finalizeSaleUrl: "{% url 'finalizar_venda_api' %}",
+            productSearchUrl: "{% url 'buscar_produtos_api_root' %}",
+            labelPrinterName: "ELGIN",
+            labelLanguage: "TSPL",
             qzCertificateUrl: "",
             qzSignatureUrl: ""
         };

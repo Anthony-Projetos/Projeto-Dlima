@@ -31,6 +31,53 @@ def registrar_venda(request):
     })
 
 
+def get_optional_product_value(produto, field_name, default=''):
+    if hasattr(produto, field_name):
+        return getattr(produto, field_name) or default
+    return default
+
+
+@login_required
+def buscar_produtos_api(request):
+    termo = request.GET.get('q', '').strip()
+    produtos = Produto.objects.filter(ativo=True)
+
+    if termo:
+        filtros = (
+            Q(nome__icontains=termo) |
+            Q(categoria__icontains=termo) |
+            Q(cor__icontains=termo) |
+            Q(tamanho__icontains=termo)
+        )
+
+        if termo.isdigit():
+            filtros |= Q(id=int(termo))
+
+        campos_produto = {field.name for field in Produto._meta.get_fields()}
+        if 'codigo' in campos_produto:
+            filtros |= Q(codigo__icontains=termo)
+        if 'referencia' in campos_produto:
+            filtros |= Q(referencia__icontains=termo)
+
+        produtos = produtos.filter(filtros)
+
+    resultados = []
+    for produto in produtos.order_by('nome')[:20]:
+        codigo = str(get_optional_product_value(produto, 'codigo', '') or produto.id)
+        referencia = str(get_optional_product_value(produto, 'referencia', '') or codigo)
+
+        resultados.append({
+            'id': produto.id,
+            'nome': produto.nome,
+            'preco': str(produto.preco),
+            'codigo': codigo,
+            'referencia': referencia,
+            'estoque': produto.estoque,
+        })
+
+    return JsonResponse({'results': resultados})
+
+
 @login_required
 def finalizar_venda_api(request):
     if request.method != 'POST':
