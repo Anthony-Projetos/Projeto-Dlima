@@ -17,6 +17,8 @@
     const etiquetaNome = document.getElementById('etiquetaNome');
     const etiquetaPreco = document.getElementById('etiquetaPreco');
     const etiquetaCodigo = document.getElementById('etiquetaCodigo');
+    const etiquetaProdutoTamanho = document.getElementById('etiquetaProdutoTamanho');
+    const etiquetaCor = document.getElementById('etiquetaCor');
     const etiquetaPreview = document.getElementById('etiquetaPreview');
     const etiquetaCommandPreview = document.getElementById('etiquetaCommandPreview');
     const etiquetaOptions = {
@@ -26,9 +28,9 @@
         barcode: document.getElementById('etiquetaMostrarBarcode'),
     };
     const labelSizes = {
-        '40x30': { width: 40, height: 30, gap: 2, nameY: 20, priceY: 70, codeY: 120, barcodeY: 160, barcodeHeight: 50 },
-        '50x30': { width: 50, height: 30, gap: 2, nameY: 20, priceY: 70, codeY: 120, barcodeY: 160, barcodeHeight: 50 },
-        '60x40': { width: 60, height: 40, gap: 2, nameY: 25, priceY: 85, codeY: 145, barcodeY: 190, barcodeHeight: 65 },
+        '40x80': { width: 40, height: 80, gap: 2, brandY: 18, nameY: 105, detailsY: 155, colorY: 205, barcodeY: 250, barcodeHeight: 110, secondBarcodeY: 420, secondBarcodeHeight: 110, priceY: 590 },
+        '50x80': { width: 50, height: 80, gap: 2, brandY: 18, nameY: 105, detailsY: 155, colorY: 205, barcodeY: 250, barcodeHeight: 110, secondBarcodeY: 420, secondBarcodeHeight: 110, priceY: 590 },
+        '60x80': { width: 60, height: 80, gap: 2, brandY: 18, nameY: 105, detailsY: 155, colorY: 205, barcodeY: 250, barcodeHeight: 110, secondBarcodeY: 420, secondBarcodeHeight: 110, priceY: 590 },
     };
 
     function getAppConfig() {
@@ -335,17 +337,19 @@
 
     function getLabelState() {
         const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
-        const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '40x30';
+        const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '50x80';
 
         return {
             quantity,
             sizeKey,
-            size: labelSizes[sizeKey] || labelSizes['40x30'],
+            size: labelSizes[sizeKey] || labelSizes['50x80'],
             language: etiquetaLinguagem ? etiquetaLinguagem.value : 'TSPL',
             printerName: sanitizeLabelText(etiquetaPrinterName ? etiquetaPrinterName.value : getAppConfig().labelPrinterName || 'ELGIN'),
             nome: sanitizeLabelText(etiquetaNome ? etiquetaNome.value : ''),
             preco: sanitizeLabelText(etiquetaPreco ? etiquetaPreco.value : ''),
             codigo: sanitizeLabelText(etiquetaCodigo ? etiquetaCodigo.value : ''),
+            produtoTamanho: sanitizeLabelText(etiquetaProdutoTamanho ? etiquetaProdutoTamanho.value : ''),
+            cor: sanitizeLabelText(etiquetaCor ? etiquetaCor.value : ''),
             showNome: !etiquetaOptions.nome || etiquetaOptions.nome.checked,
             showPreco: !etiquetaOptions.preco || etiquetaOptions.preco.checked,
             showCodigo: !etiquetaOptions.codigo || etiquetaOptions.codigo.checked,
@@ -363,6 +367,8 @@
             state.showPreco && state.preco,
             state.showCodigo && state.codigo,
             state.showBarcode && state.codigo,
+            state.produtoTamanho,
+            state.cor,
         ].some(Boolean);
 
         if (!hasContent) {
@@ -384,18 +390,31 @@
             'REFERENCE 0,0',
             'CLS',
         ];
+        const barcodeText = onlyBarcodeText(state.codigo);
+        const labelWidth = Math.round(state.size.width * 8);
 
+        commands.push(`TEXT ${Math.max(Math.round(labelWidth / 2) - 60, 20)},${state.size.brandY},"3",0,2,2,"D'lima"`);
         if (state.showNome && state.nome) {
             commands.push(`TEXT 20,${state.size.nameY},"3",0,1,1,"${state.nome.toUpperCase()}"`);
         }
-        if (state.showPreco && state.preco) {
-            commands.push(`TEXT 20,${state.size.priceY},"3",0,1,1,"${formatLabelPrice(state.preco)}"`);
-        }
         if (state.showCodigo && state.codigo) {
-            commands.push(`TEXT 20,${state.size.codeY},"2",0,1,1,"REF: ${state.codigo}"`);
+            commands.push(`TEXT 20,${state.size.detailsY},"3",0,1,1,"Ref: ${state.codigo}"`);
+        }
+        if (state.produtoTamanho) {
+            commands.push(`TEXT ${Math.round(labelWidth * 0.66)},${state.size.detailsY},"3",0,1,1,"TAM: ${state.produtoTamanho.toUpperCase()}"`);
+        }
+        if (state.cor) {
+            commands.push(`TEXT 20,${state.size.colorY},"3",0,1,1,"COR: ${state.cor.toUpperCase()}"`);
         }
         if (state.showBarcode && state.codigo) {
-            commands.push(`BARCODE 20,${state.size.barcodeY},"128",${state.size.barcodeHeight},1,0,2,2,"${onlyBarcodeText(state.codigo)}"`);
+            commands.push(`BARCODE 20,${state.size.barcodeY},"128",${state.size.barcodeHeight},1,0,2,2,"${barcodeText}"`);
+            commands.push(`TEXT 20,${state.size.barcodeY + state.size.barcodeHeight + 8},"2",0,1,1,"${barcodeText}"`);
+            commands.push(`BARCODE 20,${state.size.secondBarcodeY},"128",${state.size.secondBarcodeHeight},1,0,2,2,"${barcodeText}"`);
+            commands.push(`TEXT 20,${state.size.secondBarcodeY + state.size.secondBarcodeHeight + 8},"2",0,1,1,"${barcodeText}"`);
+        }
+        if (state.showPreco && state.preco) {
+            commands.push(`TEXT 20,${state.size.priceY},"3",0,2,2,"R$"`);
+            commands.push(`TEXT ${Math.round(labelWidth * 0.54)},${state.size.priceY},"3",0,2,2,"${formatCurrency(parseMoney(state.preco))}"`);
         }
 
         commands.push(`PRINT 1,${state.quantity}`);
@@ -409,18 +428,30 @@
         const widthDots = Math.round(state.size.width * dotsPerMm);
         const heightDots = Math.round(state.size.height * dotsPerMm);
         const commands = ['^XA', `^PW${widthDots}`, `^LL${heightDots}`, '^CI28'];
+        const barcodeText = onlyBarcodeText(state.codigo);
 
+        commands.push(`^FO${Math.max(Math.round(widthDots / 2) - 58, 20)},${state.size.brandY}^A0N,40,34^FDD'lima^FS`);
         if (state.showNome && state.nome) {
-            commands.push(`^FO20,20^A0N,28,24^FD${state.nome.toUpperCase()}^FS`);
-        }
-        if (state.showPreco && state.preco) {
-            commands.push(`^FO20,70^A0N,28,24^FD${formatLabelPrice(state.preco)}^FS`);
+            commands.push(`^FO20,${state.size.nameY}^A0N,34,30^FD${state.nome.toUpperCase()}^FS`);
         }
         if (state.showCodigo && state.codigo) {
-            commands.push(`^FO20,120^A0N,22,18^FDREF: ${state.codigo}^FS`);
+            commands.push(`^FO20,${state.size.detailsY}^A0N,32,26^FDRef: ${state.codigo}^FS`);
+        }
+        if (state.produtoTamanho) {
+            commands.push(`^FO${Math.round(widthDots * 0.66)},${state.size.detailsY}^A0N,32,26^FDTAM: ${state.produtoTamanho.toUpperCase()}^FS`);
+        }
+        if (state.cor) {
+            commands.push(`^FO20,${state.size.colorY}^A0N,32,26^FDCOR: ${state.cor.toUpperCase()}^FS`);
         }
         if (state.showBarcode && state.codigo) {
-            commands.push(`^FO20,160^BCN,50,Y,N,N^FD${onlyBarcodeText(state.codigo)}^FS`);
+            commands.push(`^FO20,${state.size.barcodeY}^BCN,${state.size.barcodeHeight},N,N,N^FD${barcodeText}^FS`);
+            commands.push(`^FO20,${state.size.barcodeY + state.size.barcodeHeight + 8}^A0N,24,20^FD${barcodeText}^FS`);
+            commands.push(`^FO20,${state.size.secondBarcodeY}^BCN,${state.size.secondBarcodeHeight},N,N,N^FD${barcodeText}^FS`);
+            commands.push(`^FO20,${state.size.secondBarcodeY + state.size.secondBarcodeHeight + 8}^A0N,24,20^FD${barcodeText}^FS`);
+        }
+        if (state.showPreco && state.preco) {
+            commands.push(`^FO20,${state.size.priceY}^A0N,44,38^FDR$^FS`);
+            commands.push(`^FO${Math.round(widthDots * 0.54)},${state.size.priceY}^A0N,56,46^FD${formatCurrency(parseMoney(state.preco))}^FS`);
         }
 
         commands.push(`^PQ${state.quantity}`, '^XZ');
@@ -440,7 +471,13 @@
         const nameNode = etiquetaPreview.querySelector('[data-preview-name]');
         const priceNode = etiquetaPreview.querySelector('[data-preview-price]');
         const codeNode = etiquetaPreview.querySelector('[data-preview-code]');
+        const sizeNode = etiquetaPreview.querySelector('[data-preview-size]');
+        const colorNode = etiquetaPreview.querySelector('[data-preview-color]');
         const barcodeNode = etiquetaPreview.querySelector('[data-preview-barcode]');
+        const barcodeTextNode = etiquetaPreview.querySelector('[data-preview-barcode-text]');
+        const secondBarcodeNode = etiquetaPreview.querySelector('[data-preview-barcode-second]');
+        const secondBarcodeTextNode = etiquetaPreview.querySelector('[data-preview-barcode-text-second]');
+        const barcodeText = onlyBarcodeText(state.codigo);
 
         etiquetaPreview.dataset.size = state.sizeKey;
         if (nameNode) {
@@ -448,15 +485,35 @@
             nameNode.hidden = !state.showNome;
         }
         if (priceNode) {
-            priceNode.textContent = state.preco ? formatLabelPrice(state.preco) : 'R$ 0,00';
+            priceNode.textContent = state.preco ? formatCurrency(parseMoney(state.preco)) : '0,00';
             priceNode.hidden = !state.showPreco;
+            if (priceNode.parentElement) {
+                priceNode.parentElement.hidden = !state.showPreco;
+            }
         }
         if (codeNode) {
-            codeNode.textContent = `REF: ${state.codigo || '00000'}`;
+            codeNode.textContent = `Ref: ${state.codigo || '0000000'}`;
             codeNode.hidden = !state.showCodigo;
+        }
+        if (sizeNode) {
+            sizeNode.textContent = `TAM: ${state.produtoTamanho || 'G'}`;
+        }
+        if (colorNode) {
+            colorNode.textContent = `COR: ${(state.cor || 'PRETO').toUpperCase()}`;
         }
         if (barcodeNode) {
             barcodeNode.hidden = !state.showBarcode;
+        }
+        if (barcodeTextNode) {
+            barcodeTextNode.textContent = barcodeText;
+            barcodeTextNode.hidden = !state.showBarcode;
+        }
+        if (secondBarcodeNode) {
+            secondBarcodeNode.hidden = !state.showBarcode;
+        }
+        if (secondBarcodeTextNode) {
+            secondBarcodeTextNode.textContent = barcodeText;
+            secondBarcodeTextNode.hidden = !state.showBarcode;
         }
 
         if (etiquetaCommandPreview) {
@@ -479,6 +536,12 @@
         if (etiquetaCodigo) {
             etiquetaCodigo.value = codigo;
         }
+        if (etiquetaProdutoTamanho) {
+            etiquetaProdutoTamanho.value = produto.tamanho || '';
+        }
+        if (etiquetaCor) {
+            etiquetaCor.value = produto.cor || '';
+        }
         clearEtiquetaStatus();
         atualizarPreviewEtiqueta();
     }
@@ -499,7 +562,7 @@
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'label-product-result';
-            button.innerHTML = `<strong>${sanitizeLabelText(produto.nome)}</strong><span>R$ ${formatCurrency(produto.preco)} | REF: ${sanitizeLabelText(produto.referencia || produto.codigo || produto.id)} | Estoque: ${produto.estoque}</span>`;
+            button.innerHTML = `<strong>${sanitizeLabelText(produto.nome)}</strong><span>R$ ${formatCurrency(produto.preco)} | REF: ${sanitizeLabelText(produto.referencia || produto.codigo || produto.id)} | TAM: ${sanitizeLabelText(produto.tamanho || '-')} | COR: ${sanitizeLabelText(produto.cor || '-')} | Estoque: ${produto.estoque}</span>`;
             button.addEventListener('click', () => {
                 preencherProdutoEtiqueta(produto);
                 etiquetaResultadosProduto.hidden = true;
@@ -565,7 +628,7 @@
     }
 
     function limparEtiquetas() {
-        [etiquetaBuscaProduto, etiquetaNome, etiquetaPreco, etiquetaCodigo].forEach(input => {
+        [etiquetaBuscaProduto, etiquetaNome, etiquetaPreco, etiquetaCodigo, etiquetaProdutoTamanho, etiquetaCor].forEach(input => {
             if (input) {
                 input.value = '';
             }
@@ -574,7 +637,7 @@
             etiquetaQuantidade.value = '1';
         }
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = '40x30';
+            etiquetaTamanho.value = '50x80';
         }
         if (etiquetaLinguagem) {
             etiquetaLinguagem.value = getAppConfig().labelLanguage || 'TSPL';
@@ -732,6 +795,8 @@
         etiquetaNome,
         etiquetaPreco,
         etiquetaCodigo,
+        etiquetaProdutoTamanho,
+        etiquetaCor,
         etiquetaOptions.nome,
         etiquetaOptions.preco,
         etiquetaOptions.codigo,

@@ -72,6 +72,8 @@ def buscar_produtos_api(request):
             'preco': str(produto.preco),
             'codigo': codigo,
             'referencia': referencia,
+            'tamanho': produto.tamanho,
+            'cor': produto.cor,
             'estoque': produto.estoque,
         })
 
