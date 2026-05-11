@@ -25,12 +25,11 @@
         nome: document.getElementById('etiquetaMostrarNome'),
         preco: document.getElementById('etiquetaMostrarPreco'),
         codigo: document.getElementById('etiquetaMostrarCodigo'),
-        barcode: document.getElementById('etiquetaMostrarBarcode'),
     };
     const labelSizes = {
-        '40x80': { width: 40, height: 80, gap: 2, brandY: 18, nameY: 105, detailsY: 155, colorY: 205, barcodeY: 250, barcodeHeight: 110, secondBarcodeY: 420, secondBarcodeHeight: 110, priceY: 590 },
-        '50x80': { width: 50, height: 80, gap: 2, brandY: 18, nameY: 105, detailsY: 155, colorY: 205, barcodeY: 250, barcodeHeight: 110, secondBarcodeY: 420, secondBarcodeHeight: 110, priceY: 590 },
-        '60x80': { width: 60, height: 80, gap: 2, brandY: 18, nameY: 105, detailsY: 155, colorY: 205, barcodeY: 250, barcodeHeight: 110, secondBarcodeY: 420, secondBarcodeHeight: 110, priceY: 590 },
+        '40x80': { width: 40, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
+        '50x80': { width: 50, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
+        '60x80': { width: 60, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
     };
 
     function getAppConfig() {
@@ -353,7 +352,6 @@
             showNome: !etiquetaOptions.nome || etiquetaOptions.nome.checked,
             showPreco: !etiquetaOptions.preco || etiquetaOptions.preco.checked,
             showCodigo: !etiquetaOptions.codigo || etiquetaOptions.codigo.checked,
-            showBarcode: !etiquetaOptions.barcode || etiquetaOptions.barcode.checked,
         };
     }
 
@@ -366,7 +364,6 @@
             state.showNome && state.nome,
             state.showPreco && state.preco,
             state.showCodigo && state.codigo,
-            state.showBarcode && state.codigo,
             state.produtoTamanho,
             state.cor,
         ].some(Boolean);
@@ -390,7 +387,6 @@
             'REFERENCE 0,0',
             'CLS',
         ];
-        const barcodeText = onlyBarcodeText(state.codigo);
         const labelWidth = Math.round(state.size.width * 8);
 
         commands.push(`TEXT ${Math.max(Math.round(labelWidth / 2) - 60, 20)},${state.size.brandY},"3",0,2,2,"D'lima"`);
@@ -405,12 +401,6 @@
         }
         if (state.cor) {
             commands.push(`TEXT 20,${state.size.colorY},"3",0,1,1,"COR: ${state.cor.toUpperCase()}"`);
-        }
-        if (state.showBarcode && state.codigo) {
-            commands.push(`BARCODE 20,${state.size.barcodeY},"128",${state.size.barcodeHeight},1,0,2,2,"${barcodeText}"`);
-            commands.push(`TEXT 20,${state.size.barcodeY + state.size.barcodeHeight + 8},"2",0,1,1,"${barcodeText}"`);
-            commands.push(`BARCODE 20,${state.size.secondBarcodeY},"128",${state.size.secondBarcodeHeight},1,0,2,2,"${barcodeText}"`);
-            commands.push(`TEXT 20,${state.size.secondBarcodeY + state.size.secondBarcodeHeight + 8},"2",0,1,1,"${barcodeText}"`);
         }
         if (state.showPreco && state.preco) {
             commands.push(`TEXT 20,${state.size.priceY},"3",0,2,2,"R$"`);
@@ -428,7 +418,6 @@
         const widthDots = Math.round(state.size.width * dotsPerMm);
         const heightDots = Math.round(state.size.height * dotsPerMm);
         const commands = ['^XA', `^PW${widthDots}`, `^LL${heightDots}`, '^CI28'];
-        const barcodeText = onlyBarcodeText(state.codigo);
 
         commands.push(`^FO${Math.max(Math.round(widthDots / 2) - 58, 20)},${state.size.brandY}^A0N,40,34^FDD'lima^FS`);
         if (state.showNome && state.nome) {
@@ -442,12 +431,6 @@
         }
         if (state.cor) {
             commands.push(`^FO20,${state.size.colorY}^A0N,32,26^FDCOR: ${state.cor.toUpperCase()}^FS`);
-        }
-        if (state.showBarcode && state.codigo) {
-            commands.push(`^FO20,${state.size.barcodeY}^BCN,${state.size.barcodeHeight},N,N,N^FD${barcodeText}^FS`);
-            commands.push(`^FO20,${state.size.barcodeY + state.size.barcodeHeight + 8}^A0N,24,20^FD${barcodeText}^FS`);
-            commands.push(`^FO20,${state.size.secondBarcodeY}^BCN,${state.size.secondBarcodeHeight},N,N,N^FD${barcodeText}^FS`);
-            commands.push(`^FO20,${state.size.secondBarcodeY + state.size.secondBarcodeHeight + 8}^A0N,24,20^FD${barcodeText}^FS`);
         }
         if (state.showPreco && state.preco) {
             commands.push(`^FO20,${state.size.priceY}^A0N,44,38^FDR$^FS`);
@@ -473,11 +456,6 @@
         const codeNode = etiquetaPreview.querySelector('[data-preview-code]');
         const sizeNode = etiquetaPreview.querySelector('[data-preview-size]');
         const colorNode = etiquetaPreview.querySelector('[data-preview-color]');
-        const barcodeNode = etiquetaPreview.querySelector('[data-preview-barcode]');
-        const barcodeTextNode = etiquetaPreview.querySelector('[data-preview-barcode-text]');
-        const secondBarcodeNode = etiquetaPreview.querySelector('[data-preview-barcode-second]');
-        const secondBarcodeTextNode = etiquetaPreview.querySelector('[data-preview-barcode-text-second]');
-        const barcodeText = onlyBarcodeText(state.codigo);
 
         etiquetaPreview.dataset.size = state.sizeKey;
         if (nameNode) {
@@ -500,20 +478,6 @@
         }
         if (colorNode) {
             colorNode.textContent = `COR: ${(state.cor || 'PRETO').toUpperCase()}`;
-        }
-        if (barcodeNode) {
-            barcodeNode.hidden = !state.showBarcode;
-        }
-        if (barcodeTextNode) {
-            barcodeTextNode.textContent = barcodeText;
-            barcodeTextNode.hidden = !state.showBarcode;
-        }
-        if (secondBarcodeNode) {
-            secondBarcodeNode.hidden = !state.showBarcode;
-        }
-        if (secondBarcodeTextNode) {
-            secondBarcodeTextNode.textContent = barcodeText;
-            secondBarcodeTextNode.hidden = !state.showBarcode;
         }
 
         if (etiquetaCommandPreview) {
@@ -800,7 +764,6 @@
         etiquetaOptions.nome,
         etiquetaOptions.preco,
         etiquetaOptions.codigo,
-        etiquetaOptions.barcode,
     ].forEach(input => {
         if (input) {
             input.addEventListener('input', atualizarPreviewEtiqueta);
