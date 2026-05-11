@@ -1,11 +1,11 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260510-80mm-1';
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260511-piprinter-1';
     const DEFAULT_RECEIPT_WIDTH = 48;
     const MIN_RECEIPT_WIDTH = 48;
     const MAX_RECEIPT_WIDTH = 48;
     const DEFAULT_ENCODING = 'CP860';
-    const DEFAULT_PRINTER_NAME = 'ELGIN i9(USB)';
-    const DEFAULT_SEARCH_TERMS = ['ELGIN i9(USB)', 'ELGIN', 'I9', 'POS-58', 'BEMATECH'];
+    const DEFAULT_PRINTER_NAME = 'PIPrinter';
+    const DEFAULT_SEARCH_TERMS = ['PIPrinter', 'ELGIN i9(USB)', 'ELGIN', 'I9', 'POS-58', 'BEMATECH'];
 
     const ESC = '\x1B';
     const GS = '\x1D';

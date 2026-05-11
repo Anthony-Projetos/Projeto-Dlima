@@ -16,8 +16,8 @@ DEFAULT_RECEIPT_SETTINGS = {
     "store_name": "Dlima Store",
     "store_address": "AV. CONRRADI SEGUNDO",
     "receipt_width": 48,
-    "printer_name": "ELGIN i9(USB)",
-    "printer_search_terms": ["ELGIN i9(USB)", "ELGIN", "I9", "POS-58", "BEMATECH"],
+    "printer_name": "PIPrinter",
+    "printer_search_terms": ["PIPrinter", "ELGIN i9(USB)", "ELGIN", "I9", "POS-58", "BEMATECH"],
     "receipt_encoding": "CP860",
     "open_cash_drawer": False,
 }
