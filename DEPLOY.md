@@ -61,7 +61,7 @@ GRANT ALL PRIVILEGES ON DATABASE dlima_vendas TO dlima_user;
 ```bash
 source venv/bin/activate
 python manage.py migrate
-python manage.py collectstatic --noinput
+python manage.py collectstatic --clear --noinput
 python manage.py check --deploy
 ```
 
@@ -104,7 +104,9 @@ A impressao acontece no computador do caixa, via navegador + QZ Tray local.
 
 - Instale e deixe o QZ Tray aberto no Windows do caixa.
 - Instale a impressora termica, por exemplo `ELGIN i9(USB)`.
-- O template carrega `qz-tray.js` e `static/js/vendas/print.js`.
+- O template carrega `qz-tray.js` e `static/js/vendas/print.js` via `{% static %}`.
+- Em producao, `ManifestStaticFilesStorage` gera nomes versionados para JS/CSS, por exemplo `print.<hash>.js`.
+- Depois de qualquer alteracao em JS/CSS, rode `collectstatic` e reinicie Gunicorn/Nginx para publicar o novo manifesto.
 - O recibo e enviado em RAW ESC/POS, com codepage `CP860`, sem HTML, PDF, canvas ou `window.print()`.
 
 Comandos uteis no console do navegador:
@@ -118,9 +120,25 @@ testarImpressao()
 Se `print.js` retornar 404, rode no servidor:
 
 ```bash
+source venv/bin/activate
 python manage.py collectstatic --clear --noinput
 sudo systemctl restart dlima-vendas
-sudo systemctl reload nginx
+sudo systemctl restart nginx
+```
+
+Se o seu service no systemd se chamar `gunicorn` em vez de `dlima-vendas`, use:
+
+```bash
+sudo systemctl restart gunicorn
+sudo systemctl restart nginx
+```
+
+Para diagnosticar cache antigo no navegador, abra o console e confira:
+
+```js
+window.PDV_PRINT_VERSION
+window.__PDV_PRINT_MODULE_LOADS
+navigator.serviceWorker?.getRegistrations?.().then(console.log)
 ```
 
 ## Comandos uteis

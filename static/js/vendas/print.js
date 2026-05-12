@@ -1,11 +1,66 @@
 (function () {
-    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260511-piprinter-1';
+    const PRINT_MODULE_VERSION = 'raw-escpos-qz-20260512-piprinter-prod-1';
     const DEFAULT_RECEIPT_WIDTH = 48;
     const MIN_RECEIPT_WIDTH = 48;
     const MAX_RECEIPT_WIDTH = 48;
     const DEFAULT_ENCODING = 'CP860';
     const DEFAULT_PRINTER_NAME = 'PIPrinter';
-    const DEFAULT_SEARCH_TERMS = ['PIPrinter', 'ELGIN i9(USB)', 'ELGIN', 'I9', 'POS-58', 'BEMATECH'];
+    const DEFAULT_SEARCH_TERMS = ['PIPrinter'];
+    const MANUAL_PRINTER_STORAGE_KEY = 'pdv.receipt.manualPrinterName';
+    const OFFLINE_STATUS_PATTERN = /offline|off-line|desconect|indisponivel|unavailable|not available|erro|error/i;
+    const currentScriptSrc = document.currentScript ? document.currentScript.src : 'unknown';
+
+    function logPrintEvent(level, message, context = {}) {
+        const method = console[level] ? level : 'log';
+        console[method](`[PDV_PRINT] ${message}`, {
+            moduleVersion: PRINT_MODULE_VERSION,
+            scriptSrc: currentScriptSrc,
+            ...context,
+        });
+    }
+
+    window.__PDV_PRINT_MODULE_LOADS = window.__PDV_PRINT_MODULE_LOADS || [];
+    window.__PDV_PRINT_MODULE_LOADS.push({
+        version: PRINT_MODULE_VERSION,
+        scriptSrc: currentScriptSrc,
+        loadedAt: new Date().toISOString(),
+    });
+
+    if (window.__PDV_PRINT_MODULE_LOADS.length > 1) {
+        logPrintEvent('warn', 'Mais de uma instancia do modulo de impressao foi carregada.', {
+            loads: window.__PDV_PRINT_MODULE_LOADS,
+        });
+    }
+
+    if (window.PDVReceiptPrinter && window.PDVReceiptPrinter.version !== PRINT_MODULE_VERSION) {
+        logPrintEvent('warn', 'Outra versao do modulo de impressao ja estava ativa.', {
+            activeVersion: window.PDVReceiptPrinter.version,
+        });
+    }
+
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        logPrintEvent('warn', 'A pagina esta controlada por Service Worker; ele pode interferir no cache dos assets.');
+    }
+
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+        navigator.serviceWorker.getRegistrations()
+            .then(registrations => {
+                if (registrations.length) {
+                    logPrintEvent('warn', 'Service Workers registrados neste navegador.', {
+                        scopes: registrations.map(registration => registration.scope),
+                    });
+                }
+            })
+            .catch(error => {
+                logPrintEvent('warn', 'Nao foi possivel verificar Service Workers.', {
+                    error: error.message,
+                });
+            });
+    }
+
+    logPrintEvent('info', 'Modulo de impressao carregado.', {
+        qzAvailable: Boolean(window.qz),
+    });
 
     const ESC = '\x1B';
     const GS = '\x1D';
@@ -80,10 +135,15 @@
 
     async function configureQZSecurity() {
         if (window.__pdvQzSecurityConfigured) {
+            logPrintEvent('debug', 'Seguranca do QZ Tray ja configurada.');
             return;
         }
 
         const config = getAppConfig();
+        logPrintEvent('info', 'Configurando seguranca do QZ Tray.', {
+            hasCertificateUrl: Boolean(config.qzCertificateUrl),
+            hasSignatureUrl: Boolean(config.qzSignatureUrl),
+        });
 
         if (config.qzCertificateUrl) {
             window.qz.security.setCertificatePromise((resolve, reject) => {
@@ -109,18 +169,35 @@
         }
 
         window.__pdvQzSecurityConfigured = true;
+        logPrintEvent('info', 'Seguranca do QZ Tray configurada.');
     }
 
     async function connectQZ() {
         if (!window.qz) {
+            logPrintEvent('error', 'QZ Tray nao esta disponivel em window.qz.');
             throw new Error('QZ Tray nao foi carregado. Confira o script qz-tray.js no template.');
         }
 
         await configureQZSecurity();
 
+        logPrintEvent('info', 'Verificando conexao com QZ Tray.', {
+            websocketActive: window.qz.websocket.isActive(),
+        });
+
         if (!window.qz.websocket.isActive()) {
-            await window.qz.websocket.connect({ retries: 3, delay: 1 });
+            try {
+                await window.qz.websocket.connect({ retries: 3, delay: 1 });
+            } catch (error) {
+                logPrintEvent('error', 'Falha ao conectar ao QZ Tray.', {
+                    error: error.message,
+                });
+                throw error;
+            }
         }
+
+        logPrintEvent('info', 'Conexao com QZ Tray pronta.', {
+            websocketActive: window.qz.websocket.isActive(),
+        });
 
         return window.qz.websocket.isActive();
     }
@@ -137,36 +214,207 @@
         return [];
     }
 
+    function normalizePrinterName(value) {
+        return String(value || '').trim().toLowerCase();
+    }
+
+    function getPrinterNameFromDetail(printer) {
+        if (typeof printer === 'string') {
+            return printer;
+        }
+
+        return printer?.name || printer?.printerName || printer?.displayName || '';
+    }
+
+    async function getPrinterDetailsSafe() {
+        try {
+            const details = await window.qz.printers.details();
+            const normalizedDetails = Array.isArray(details) ? details : [];
+            logPrintEvent('info', 'Impressoras retornadas pelo QZ Tray.', {
+                printers: normalizedDetails.map(printer => ({
+                    name: getPrinterNameFromDetail(printer),
+                    status: printer?.status || printer?.statusText || printer?.state || null,
+                    online: printer?.online ?? printer?.isOnline ?? null,
+                })),
+            });
+            return normalizedDetails;
+        } catch (error) {
+            logPrintEvent('warn', 'Nao foi possivel consultar detalhes das impressoras no QZ Tray.', {
+                error: error.message,
+            });
+            return [];
+        }
+    }
+
+    function findPrinterDetailByName(printerDetails, printerName) {
+        const expectedName = normalizePrinterName(printerName);
+        return printerDetails.find(printer => normalizePrinterName(getPrinterNameFromDetail(printer)) === expectedName) || null;
+    }
+
+    function getPrinterStatusDescription(printerDetail) {
+        if (!printerDetail || typeof printerDetail === 'string') {
+            return 'status nao informado pelo driver';
+        }
+
+        const statusParts = [
+            printerDetail.status,
+            printerDetail.statusText,
+            printerDetail.state,
+            printerDetail.message,
+        ].filter(Boolean);
+
+        if (printerDetail.online === false || printerDetail.isOnline === false) {
+            statusParts.push('offline');
+        }
+
+        return statusParts.length ? statusParts.join(' | ') : 'status nao informado pelo driver';
+    }
+
+    function validatePrinterOnline(printerName, printerDetail) {
+        const statusDescription = getPrinterStatusDescription(printerDetail);
+        const onlineFlag = printerDetail?.online ?? printerDetail?.isOnline;
+        const isOffline = onlineFlag === false || OFFLINE_STATUS_PATTERN.test(statusDescription);
+
+        logPrintEvent(isOffline ? 'error' : 'info', 'Validacao de status da impressora.', {
+            printerName,
+            status: statusDescription,
+            onlineFlag,
+            statusAvailable: Boolean(printerDetail),
+        });
+
+        if (isOffline) {
+            throw new Error(`A impressora "${printerName}" foi encontrada, mas parece estar offline ou indisponivel. Verifique se ela esta ligada, com papel e sem erro no Windows.`);
+        }
+
+        if (!printerDetail) {
+            logPrintEvent('warn', 'O QZ Tray encontrou a impressora, mas o driver nao retornou detalhes para validar status online.', {
+                printerName,
+            });
+        }
+    }
+
+    function getStoredManualPrinterName() {
+        try {
+            return window.localStorage.getItem(MANUAL_PRINTER_STORAGE_KEY) || '';
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function setStoredManualPrinterName(printerName) {
+        try {
+            window.localStorage.setItem(MANUAL_PRINTER_STORAGE_KEY, printerName);
+        } catch (error) {
+            logPrintEvent('warn', 'Nao foi possivel salvar a impressora manual no navegador.', {
+                error: error.message,
+            });
+        }
+    }
+
+    async function findPrinterByExactName(printerName, printerDetails = []) {
+        const detail = findPrinterDetailByName(printerDetails, printerName);
+        if (detail) {
+            const exactName = getPrinterNameFromDetail(detail);
+            validatePrinterOnline(exactName, detail);
+            return exactName;
+        }
+
+        const foundName = await window.qz.printers.find(printerName);
+        validatePrinterOnline(foundName, findPrinterDetailByName(printerDetails, foundName));
+        return foundName;
+    }
+
+    async function askManualPrinterSelection(printerDetails, reason) {
+        const printerNames = printerDetails
+            .map(getPrinterNameFromDetail)
+            .filter(Boolean);
+
+        if (!printerNames.length) {
+            throw new Error(`Nao encontrei a impressora "${DEFAULT_PRINTER_NAME}" e o QZ Tray nao retornou nenhuma impressora instalada. Verifique o driver no Windows e se o QZ Tray esta aberto.`);
+        }
+
+        const storedManualPrinter = getStoredManualPrinterName();
+        if (storedManualPrinter && printerNames.some(name => normalizePrinterName(name) === normalizePrinterName(storedManualPrinter))) {
+            logPrintEvent('warn', 'Usando impressora manual salva anteriormente.', {
+                storedManualPrinter,
+                reason,
+            });
+            return findPrinterByExactName(storedManualPrinter, printerDetails);
+        }
+
+        const printerList = printerNames.map((name, index) => `${index + 1} - ${name}`).join('\n');
+        const selected = window.prompt(
+            [
+                `Nao encontrei a impressora "${DEFAULT_PRINTER_NAME}".`,
+                reason,
+                '',
+                'Digite o numero ou o nome exato da impressora para esta impressao:',
+                printerList,
+            ].join('\n')
+        );
+
+        if (!selected) {
+            throw new Error(`Impressora "${DEFAULT_PRINTER_NAME}" nao encontrada. Configure a impressora no Windows com o nome exato PIPrinter ou selecione uma impressora manualmente.`);
+        }
+
+        const selectedIndex = Number.parseInt(selected, 10);
+        const selectedName = Number.isInteger(selectedIndex) && selectedIndex >= 1 && selectedIndex <= printerNames.length
+            ? printerNames[selectedIndex - 1]
+            : selected.trim();
+
+        const resolvedName = await findPrinterByExactName(selectedName, printerDetails);
+        setStoredManualPrinterName(resolvedName);
+        logPrintEvent('info', 'Impressora selecionada manualmente.', {
+            printerName: resolvedName,
+        });
+        return resolvedName;
+    }
+
     async function resolvePrinter(venda) {
         const config = getAppConfig();
         const printer = venda?.printer || {};
         const preferredName = printer.preferred_name || config.printerName || DEFAULT_PRINTER_NAME;
         const searchTerms = toArray(printer.search_terms || config.printerSearchTerms || DEFAULT_SEARCH_TERMS);
+        const printerDetails = await getPrinterDetailsSafe();
+
+        logPrintEvent('info', 'Resolvendo impressora termica.', {
+            preferredName,
+            searchTerms,
+        });
 
         if (preferredName) {
             try {
-                return await window.qz.printers.find(preferredName);
+                const foundPrinter = await findPrinterByExactName(preferredName, printerDetails);
+                logPrintEvent('info', 'Impressora preferencial encontrada.', {
+                    printerName: foundPrinter,
+                });
+                return foundPrinter;
             } catch (error) {
-                console.warn('Impressora preferencial nao encontrada:', preferredName);
+                logPrintEvent('warn', 'Impressora preferencial nao encontrada.', {
+                    preferredName,
+                    error: error.message,
+                });
             }
         }
 
         const normalizedTerms = searchTerms.map(term => String(term).toLowerCase());
-        const printerDetails = await window.qz.printers.details();
         const matchedPrinter = printerDetails.find(printer =>
-            normalizedTerms.some(term => String(printer.name).toLowerCase().includes(term))
+            normalizedTerms.some(term => normalizePrinterName(getPrinterNameFromDetail(printer)).includes(term))
         );
 
         if (matchedPrinter) {
-            return matchedPrinter.name;
+            const matchedPrinterName = getPrinterNameFromDetail(matchedPrinter);
+            validatePrinterOnline(matchedPrinterName, matchedPrinter);
+            logPrintEvent('info', 'Impressora encontrada por termo de busca.', {
+                printerName: matchedPrinterName,
+            });
+            return matchedPrinterName;
         }
 
-        const defaultPrinter = await window.qz.printers.getDefault();
-        if (defaultPrinter) {
-            return defaultPrinter;
-        }
-
-        throw new Error('Nenhuma impressora termica foi encontrada pelo QZ Tray.');
+        logPrintEvent('warn', 'Impressora PIPrinter nao encontrada automaticamente; solicitando selecao manual.', {
+            availablePrinters: printerDetails.map(getPrinterNameFromDetail).filter(Boolean),
+        });
+        return askManualPrinterSelection(printerDetails, 'A impressora PIPrinter nao apareceu na lista do QZ Tray.');
     }
 
     function getReceiptWidth(venda) {
@@ -260,6 +508,15 @@
             .replace(/[\u2013\u2014]/g, '-')
             .replace(/\u00A0/g, ' ')
             .replace(/[^\x09\x0A\x0D\x20-\x7E\u00C0-\u00FF]/g, '');
+    }
+
+    function escapeHtml(value) {
+        return sanitizeText(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     function formatMoney(value) {
@@ -526,9 +783,35 @@
         return `${lines.join('\n')}\n`;
     }
 
+    function buildHtmlReceiptPayload(venda) {
+        const receiptText = buildReceiptText(venda);
+
+        return [
+            '<!doctype html>',
+            '<html>',
+            '<head>',
+            '<meta charset="utf-8">',
+            '<style>',
+            '@page { margin: 0; size: 80mm auto; }',
+            'body { margin: 0; padding: 4mm 3mm; font-family: Consolas, "Courier New", monospace; font-size: 11px; color: #000; }',
+            'pre { margin: 0; white-space: pre-wrap; word-break: break-word; }',
+            '</style>',
+            '</head>',
+            '<body>',
+            `<pre>${escapeHtml(receiptText)}</pre>`,
+            '</body>',
+            '</html>',
+        ].join('');
+    }
+
     function buildEscPosPayload(venda) {
         const receipt = normalizeVenda(venda);
         const encoding = getEncoding(receipt);
+        logPrintEvent('debug', 'Montando payload ESC/POS.', {
+            encoding,
+            hasCutPaperCommand: true,
+            openDrawer: Boolean(receipt.printer.open_drawer),
+        });
         const commands = [
             ESC_POS.init,
             getCodePageCommand(encoding),
@@ -557,38 +840,141 @@
     }
 
     async function printReceipt(venda) {
-        await connectQZ();
+        logPrintEvent('info', 'Iniciando impressao do recibo.', {
+            saleNumber: venda?.sale?.numero || venda?.numero || venda?.id || null,
+            itemCount: venda?.sale?.itens?.length || venda?.itens?.length || 0,
+        });
 
-        const printerName = await resolvePrinter(venda);
-        const config = createQzConfig(printerName, venda);
-        const data = [{
-            type: 'raw',
-            format: 'command',
-            flavor: 'plain',
-            data: buildEscPosPayload(venda),
-        }];
+        let printerName = '';
+        let rawError = null;
 
-        await window.qz.print(config, data);
+        try {
+            await connectQZ();
+
+            printerName = await resolvePrinter(venda);
+            const payload = buildEscPosPayload(venda);
+            const config = createQzConfig(printerName, venda);
+            const data = [{
+                type: 'raw',
+                format: 'command',
+                flavor: 'plain',
+                data: payload,
+            }];
+
+            logPrintEvent('info', 'Enviando payload RAW para QZ Tray.', {
+                printerName,
+                payloadLength: payload.length,
+                encoding: getEncoding(venda),
+            });
+
+            await window.qz.print(config, data);
+
+            logPrintEvent('info', 'Recibo enviado para impressora com sucesso.', {
+                printerName,
+            });
+
+            return printerName;
+        } catch (error) {
+            rawError = error;
+            logPrintEvent('error', 'Falha na impressao do recibo.', {
+                error: error.message,
+                printerName,
+            });
+        }
+
+        const htmlFallbackEnabled = getAppConfig().receiptHtmlFallback !== false;
+        if (!printerName || !htmlFallbackEnabled) {
+            throw rawError;
+        }
+
+        try {
+            logPrintEvent('warn', 'Tentando fallback HTML pelo driver do Windows.', {
+                printerName,
+                rawError: rawError.message,
+            });
+
+            const config = window.qz.configs.create(printerName, {
+                copies: 1,
+                rasterize: true,
+            });
+            const data = [{
+                type: 'html',
+                format: 'plain',
+                data: buildHtmlReceiptPayload(venda),
+            }];
+
+            await window.qz.print(config, data);
+
+            logPrintEvent('info', 'Recibo enviado com fallback HTML.', {
+                printerName,
+            });
+
+            return `${printerName} (fallback HTML)`;
+        } catch (fallbackError) {
+            logPrintEvent('error', 'Fallback HTML tambem falhou.', {
+                printerName,
+                rawError: rawError.message,
+                fallbackError: fallbackError.message,
+            });
+            throw new Error(`Falha ao imprimir em RAW e no fallback HTML. RAW: ${rawError.message}. HTML: ${fallbackError.message}`);
+        }
     }
 
     async function testarImpressao() {
         return printReceipt(EXAMPLE_RECEIPT);
     }
 
+    async function printSimpleReceipt(lines = [], options = {}) {
+        const normalizedLines = Array.isArray(lines) ? lines : [lines];
+        const total = options.total || '0.00';
+        const simpleReceipt = {
+            store: {
+                name: options.storeName || getAppConfig().storeName || 'DLIMA STORE',
+                address: options.storeAddress || getAppConfig().storeAddress || '',
+            },
+            sale: {
+                numero: options.numero || '000000',
+                data: options.data || new Date().toLocaleDateString('pt-BR'),
+                cliente: options.cliente || 'CONSUMIDOR',
+                comprador: options.comprador || '',
+                vendedor: options.vendedor || '',
+                forma_pagamento: options.pagamento || '',
+                subtotal: total,
+                desconto: '0.00',
+                total,
+                observacao: normalizedLines.join(' | '),
+                itens: normalizedLines.map((line, index) => ({
+                    produto_id: index + 1,
+                    nome: sanitizeText(line),
+                    quantidade: 1,
+                    valor_unitario: '0.00',
+                    valor_total: '0.00',
+                })),
+            },
+            printer: options.printer || {},
+        };
+
+        return printReceipt(simpleReceipt);
+    }
+
     window.PDV_PRINT_VERSION = PRINT_MODULE_VERSION;
     window.connectQZ = connectQZ;
     window.testarImpressao = testarImpressao;
+    window.printSimpleReceipt = printSimpleReceipt;
     window.printReceipt = printReceipt;
     window.buildReceiptText = buildReceiptText;
     window.buildEscPosPayload = buildEscPosPayload;
+    window.buildHtmlReceiptPayload = buildHtmlReceiptPayload;
     window.PDVReceiptPrinter = {
         version: PRINT_MODULE_VERSION,
         connectQZ,
         testarImpressao,
+        printSimpleReceipt,
         printReceipt,
         print: printReceipt,
         buildReceiptText,
         buildEscPosPayload,
+        buildHtmlReceiptPayload,
         example: EXAMPLE_RECEIPT,
     };
 })();

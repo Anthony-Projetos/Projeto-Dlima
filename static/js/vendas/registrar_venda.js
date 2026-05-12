@@ -1,4 +1,5 @@
 (function () {
+    const REQUIRED_PRINT_MODULE_VERSION = 'raw-escpos-qz-20260512-piprinter-prod-1';
     const vendaForm = document.querySelector('.venda-form');
     const submitButton = vendaForm ? vendaForm.querySelector('button[type="submit"]') : null;
     const statusBox = document.getElementById('vendaStatus');
@@ -218,8 +219,19 @@
             throw new Error('Modulo de impressao nao foi carregado.');
         }
 
-        if (window.PDVReceiptPrinter.version !== 'raw-escpos-qz-20260510-80mm-1') {
-            throw new Error('Modulo de impressao antigo em cache. Atualize a pagina com Ctrl+F5.');
+        if (window.PDVReceiptPrinter.version !== REQUIRED_PRINT_MODULE_VERSION) {
+            console.error('[PDV_PRINT] Versao inesperada do modulo de impressao.', {
+                expectedVersion: REQUIRED_PRINT_MODULE_VERSION,
+                loadedVersion: window.PDVReceiptPrinter.version,
+                moduleLoads: window.__PDV_PRINT_MODULE_LOADS || [],
+            });
+            throw new Error(`Modulo de impressao antigo em cache (${window.PDVReceiptPrinter.version || 'sem versao'}). Atualize a pagina com Ctrl+F5.`);
+        }
+
+        if (window.__PDV_PRINT_MODULE_LOADS && window.__PDV_PRINT_MODULE_LOADS.length > 1) {
+            console.warn('[PDV_PRINT] Multiplas cargas do print.js detectadas.', {
+                moduleLoads: window.__PDV_PRINT_MODULE_LOADS,
+            });
         }
 
         return window.PDVReceiptPrinter.printReceipt(receipt);

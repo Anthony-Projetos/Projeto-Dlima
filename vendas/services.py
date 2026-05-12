@@ -17,7 +17,7 @@ DEFAULT_RECEIPT_SETTINGS = {
     "store_address": "AV. CONRRADI SEGUNDO",
     "receipt_width": 48,
     "printer_name": "PIPrinter",
-    "printer_search_terms": ["PIPrinter", "ELGIN i9(USB)", "ELGIN", "I9", "POS-58", "BEMATECH"],
+    "printer_search_terms": ["PIPrinter"],
     "receipt_encoding": "CP860",
     "open_cash_drawer": False,
 }

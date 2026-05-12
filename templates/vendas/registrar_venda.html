@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dlima Store | Registrar Venda</title>
 
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=raw-label-modelo-dlima-20260511-1">
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.5/qz-tray.js"></script>
@@ -273,14 +274,18 @@
         window.PDV_CONFIG = {
             finalizeSaleUrl: "{% url 'finalizar_venda_api' %}",
             productSearchUrl: "{% url 'buscar_produtos_api_root' %}",
+            printerName: "PIPrinter",
+            printerSearchTerms: ["PIPrinter"],
+            receiptEncoding: "CP860",
+            receiptHtmlFallback: true,
             labelPrinterName: "ELGIN",
             labelLanguage: "TSPL",
             qzCertificateUrl: "",
             qzSignatureUrl: ""
         };
     </script>
-    <script src="{% static 'js/vendas/print.js' %}?v=raw-escpos-qz-20260511-piprinter-1"></script>
-    <script src="{% static 'js/vendas/registrar_venda.js' %}?v=raw-label-modelo-dlima-20260511-1"></script>
+    <script src="{% static 'js/vendas/print.js' %}"></script>
+    <script src="{% static 'js/vendas/registrar_venda.js' %}"></script>
 
 </body>
 </html>

@@ -60,6 +60,15 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": STATICFILES_STORAGE,
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -74,7 +83,7 @@ PDV_RECEIPT_SETTINGS = {
     "printer_name": env("PDV_PRINTER_NAME", "PIPrinter"),
     "printer_search_terms": env_list(
         "PDV_PRINTER_SEARCH_TERMS",
-        ["PIPrinter", "ELGIN i9(USB)", "ELGIN", "I9", "POS-58", "BEMATECH"],
+        ["PIPrinter"],
     ),
     "receipt_encoding": env("PDV_RECEIPT_ENCODING", "CP860"),
     "open_cash_drawer": env_bool("PDV_OPEN_CASH_DRAWER", False),
