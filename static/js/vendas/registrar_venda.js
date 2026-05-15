@@ -27,7 +27,9 @@
         preco: document.getElementById('etiquetaMostrarPreco'),
         codigo: document.getElementById('etiquetaMostrarCodigo'),
     };
+    const LABEL_DOTS_PER_MM = 8;
     const labelSizes = {
+        '60x30': { width: 60, height: 30, gap: 2, vertical: true },
         '40x80': { width: 40, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
         '50x80': { width: 50, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
         '60x80': { width: 60, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
@@ -66,6 +68,44 @@
 
     function onlyBarcodeText(value) {
         return sanitizeLabelText(value).replace(/[^A-Za-z0-9\-_.]/g, '') || '00000';
+    }
+
+    function fitLabelText(value, maxLength) {
+        const text = sanitizeLabelText(value).toUpperCase();
+        if (text.length <= maxLength) {
+            return text;
+        }
+
+        return text.slice(0, Math.max(maxLength - 1, 1)).trimEnd();
+    }
+
+    function getVerticalLabelLines(state) {
+        const lines = [];
+        lines.push({ x: 14, font: '3', xMul: 1, yMul: 1, text: "D'lima" });
+
+        if (state.showNome && state.nome) {
+            lines.push({ x: 48, font: '2', xMul: 1, yMul: 1, text: fitLabelText(state.nome, 24) });
+        }
+
+        const details = [];
+        if (state.showCodigo && state.codigo) {
+            details.push(`REF: ${fitLabelText(state.codigo, 12)}`);
+        }
+        if (state.produtoTamanho) {
+            details.push(`TAM: ${fitLabelText(state.produtoTamanho, 5)}`);
+        }
+        if (details.length) {
+            lines.push({ x: 82, font: '2', xMul: 1, yMul: 1, text: details.join('  ') });
+        }
+
+        if (state.cor) {
+            lines.push({ x: 116, font: '2', xMul: 1, yMul: 1, text: `COR: ${fitLabelText(state.cor, 14)}` });
+        }
+        if (state.showPreco && state.preco) {
+            lines.push({ x: 156, font: '3', xMul: 2, yMul: 2, text: `R$ ${formatCurrency(parseMoney(state.preco))}` });
+        }
+
+        return lines;
     }
 
     function showStatus(message, type) {
@@ -348,12 +388,12 @@
 
     function getLabelState() {
         const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
-        const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '50x80';
+        const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '60x30';
 
         return {
             quantity,
             sizeKey,
-            size: labelSizes[sizeKey] || labelSizes['50x80'],
+            size: labelSizes[sizeKey] || labelSizes['60x30'],
             language: etiquetaLinguagem ? etiquetaLinguagem.value : 'TSPL',
             printerName: sanitizeLabelText(etiquetaPrinterName ? etiquetaPrinterName.value : getAppConfig().labelPrinterName || 'ELGIN'),
             nome: sanitizeLabelText(etiquetaNome ? etiquetaNome.value : ''),
@@ -399,7 +439,16 @@
             'REFERENCE 0,0',
             'CLS',
         ];
-        const labelWidth = Math.round(state.size.width * 8);
+        const labelWidth = Math.round(state.size.width * LABEL_DOTS_PER_MM);
+
+        if (state.size.vertical) {
+            const labelHeight = Math.round(state.size.height * LABEL_DOTS_PER_MM);
+            getVerticalLabelLines(state).forEach(line => {
+                commands.push(`TEXT ${line.x},${labelHeight - 18},"${line.font}",90,${line.xMul},${line.yMul},"${line.text}"`);
+            });
+            commands.push(`PRINT 1,${state.quantity}`);
+            return `${commands.join('\n')}\n`;
+        }
 
         commands.push(`TEXT ${Math.max(Math.round(labelWidth / 2) - 60, 20)},${state.size.brandY},"3",0,2,2,"D'lima"`);
         if (state.showNome && state.nome) {
@@ -426,10 +475,20 @@
     function buildZplLabelPayload() {
         const state = getLabelState();
         validateLabelState(state);
-        const dotsPerMm = 8;
+        const dotsPerMm = LABEL_DOTS_PER_MM;
         const widthDots = Math.round(state.size.width * dotsPerMm);
         const heightDots = Math.round(state.size.height * dotsPerMm);
         const commands = ['^XA', `^PW${widthDots}`, `^LL${heightDots}`, '^CI28'];
+
+        if (state.size.vertical) {
+            getVerticalLabelLines(state).forEach(line => {
+                const height = line.font === '3' ? 30 * line.yMul : 24 * line.yMul;
+                const width = line.font === '3' ? 24 * line.xMul : 22 * line.xMul;
+                commands.push(`^FO${line.x},${heightDots - 18}^A0R,${height},${width}^FD${line.text}^FS`);
+            });
+            commands.push(`^PQ${state.quantity}`, '^XZ');
+            return `${commands.join('\n')}\n`;
+        }
 
         commands.push(`^FO${Math.max(Math.round(widthDots / 2) - 58, 20)},${state.size.brandY}^A0N,40,34^FDD'lima^FS`);
         if (state.showNome && state.nome) {
@@ -613,7 +672,7 @@
             etiquetaQuantidade.value = '1';
         }
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = '50x80';
+            etiquetaTamanho.value = '60x30';
         }
         if (etiquetaLinguagem) {
             etiquetaLinguagem.value = getAppConfig().labelLanguage || 'TSPL';
