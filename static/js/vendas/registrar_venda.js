@@ -386,6 +386,15 @@
         }
     }
 
+    function handleProductSearchKeydown(event) {
+        if (event.key !== 'Enter') {
+            return;
+        }
+
+        event.preventDefault();
+        filterProducts();
+    }
+
     function getLabelState() {
         const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
         const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '60x30';
@@ -407,7 +416,17 @@
         };
     }
 
+    function normalizeLabelQuantity(state) {
+        const quantity = Math.max(parseInt(state.quantity, 10) || 0, 0);
+        if (etiquetaQuantidade) {
+            etiquetaQuantidade.value = quantity > 0 ? String(quantity) : '';
+        }
+
+        return quantity;
+    }
+
     function validateLabelState(state) {
+        state.quantity = normalizeLabelQuantity(state);
         if (state.quantity <= 0) {
             throw new Error('Informe uma quantidade de etiquetas maior que zero.');
         }
@@ -738,7 +757,7 @@
             }];
 
             await window.qz.print(config, data);
-            showEtiquetaStatus(`Etiquetas enviadas para ${printerName}.`, 'success');
+            showEtiquetaStatus(`${state.quantity} etiqueta${state.quantity === 1 ? '' : 's'} enviada${state.quantity === 1 ? '' : 's'} para ${printerName}.`, 'success');
         } catch (error) {
             const message = /websocket|connect|qz/i.test(error.message || '')
                 ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
@@ -784,6 +803,7 @@
     if (pesquisaProduto) {
         filterProducts();
         pesquisaProduto.addEventListener('input', filterProducts);
+        pesquisaProduto.addEventListener('keydown', handleProductSearchKeydown);
     }
 
     const openEtiquetasModal = document.getElementById('openEtiquetasModal');
