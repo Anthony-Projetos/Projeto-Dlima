@@ -186,10 +186,7 @@
                         <div class="form-group">
                             <label for="etiquetaTamanho">Dimensao da etiqueta</label>
                             <select id="etiquetaTamanho" class="label-input">
-                                <option value="60x30" selected>60x30mm vertical</option>
-                                <option value="50x80">50x80mm</option>
-                                <option value="40x80">40x80mm</option>
-                                <option value="60x80">60x80mm</option>
+                                <option value="60x40" selected>60x40mm vertical</option>
                             </select>
                         </div>
                     </div>
@@ -248,15 +245,39 @@
                 <div class="label-panel label-preview-panel">
                     <h3>Previa</h3>
                     <div class="label-preview-stage">
-                        <div class="label-preview" id="etiquetaPreview" data-size="60x30">
-                            <div class="label-preview-brand">D'lima</div>
-                            <strong data-preview-name>Produto</strong>
-                            <div class="label-preview-row">
-                                <small data-preview-code>Ref: 0000000</small>
-                                <small data-preview-size>TAM: G</small>
+                        <div class="label-preview" id="etiquetaPreview" data-size="60x40">
+                            <div class="label-preview-logo">
+                                <div class="label-preview-brand">D'lima</div>
+                                <span>store</span>
                             </div>
-                            <small data-preview-color>COR: PRETO</small>
-                            <span class="label-preview-price"><b>R$</b><em data-preview-price>0,00</em></span>
+                            <div class="label-preview-main">
+                                <div class="label-preview-info">
+                                    <div class="label-preview-field">
+                                        <small>PRODUTO</small>
+                                        <strong data-preview-name>Produto</strong>
+                                    </div>
+                                    <div class="label-preview-field">
+                                        <small>REF.</small>
+                                        <strong data-preview-code>0000000</strong>
+                                    </div>
+                                    <div class="label-preview-field">
+                                        <small>TAMANHO</small>
+                                        <strong data-preview-size>G</strong>
+                                    </div>
+                                </div>
+                                <div class="label-preview-value">
+                                    <small>VALOR</small>
+                                    <span class="label-preview-price"><b>R$</b><em data-preview-price>0,00</em></span>
+                                </div>
+                            </div>
+                            <div class="label-preview-quote">
+                                <span>&ldquo;Estilo n&atilde;o &eacute; seguir regras,</span>
+                                <span>&eacute; criar o seu caminho.&rdquo;</span>
+                            </div>
+                            <div class="label-preview-footer">
+                                <div class="label-preview-crown" aria-hidden="true"></div>
+                                <span>D L I M A&nbsp;&nbsp;S T O R E</span>
+                            </div>
                         </div>
                     </div>
                     <pre class="label-command-preview" id="etiquetaCommandPreview"></pre>

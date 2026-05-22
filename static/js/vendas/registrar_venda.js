@@ -28,7 +28,12 @@
         codigo: document.getElementById('etiquetaMostrarCodigo'),
     };
     const LABEL_DOTS_PER_MM = 8;
+    const DLIMA_LABEL_QUOTE_LINES = [
+        'Estilo n\u00E3o \u00E9 seguir regras,',
+        '\u00E9 criar o seu caminho.',
+    ];
     const labelSizes = {
+        '60x40': { width: 60, height: 40, gap: 2, designWidth: 40, designHeight: 60, layout: 'dlima-reference' },
         '60x30': { width: 60, height: 30, gap: 2, vertical: true },
         '40x80': { width: 40, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
         '50x80': { width: 50, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
@@ -106,6 +111,119 @@
         }
 
         return lines;
+    }
+
+    function shouldPrintVertically(size) {
+        const mediaAspect = size.width / size.height;
+        const designAspect = (size.designWidth || size.width) / (size.designHeight || size.height);
+        return mediaAspect > 1 && designAspect < 1;
+    }
+
+    function getLabelGeometry(size) {
+        const mediaWidthDots = Math.round(size.width * LABEL_DOTS_PER_MM);
+        const mediaHeightDots = Math.round(size.height * LABEL_DOTS_PER_MM);
+        const verticalPrint = shouldPrintVertically(size);
+
+        return {
+            mediaWidthDots,
+            mediaHeightDots,
+            designWidthDots: Math.round((size.designWidth || (verticalPrint ? size.height : size.width)) * LABEL_DOTS_PER_MM),
+            designHeightDots: Math.round((size.designHeight || (verticalPrint ? size.width : size.height)) * LABEL_DOTS_PER_MM),
+            verticalPrint,
+        };
+    }
+
+    function transformLabelPoint(geometry, x, y) {
+        if (!geometry.verticalPrint) {
+            return { x, y, rotation: 0, zplOrientation: 'N' };
+        }
+
+        return {
+            x: y,
+            y: geometry.designWidthDots - x,
+            rotation: 90,
+            zplOrientation: 'R',
+        };
+    }
+
+    function transformLabelRect(geometry, rect) {
+        if (!geometry.verticalPrint) {
+            return rect;
+        }
+
+        return {
+            x: rect.y,
+            y: geometry.designWidthDots - rect.x - rect.width,
+            width: rect.height,
+            height: rect.width,
+        };
+    }
+
+    function escapeZplText(value) {
+        return sanitizeLabelText(value).replace(/[\^~]/g, ' ');
+    }
+
+    function tsplTextCommand(geometry, item) {
+        const point = transformLabelPoint(geometry, item.x, item.y);
+        return `TEXT ${Math.round(point.x)},${Math.round(point.y)},"${item.font}",${point.rotation},${item.xMul},${item.yMul},"${sanitizeLabelText(item.text)}"`;
+    }
+
+    function zplTextCommand(geometry, item) {
+        const point = transformLabelPoint(geometry, item.x, item.y);
+        return `^FO${Math.round(point.x)},${Math.round(point.y)}^A0${point.zplOrientation},${item.zplHeight},${item.zplWidth}^FD${escapeZplText(item.text)}^FS`;
+    }
+
+    function tsplBarCommand(geometry, item) {
+        const rect = transformLabelRect(geometry, item);
+        return `BAR ${Math.round(rect.x)},${Math.round(rect.y)},${Math.max(Math.round(rect.width), 1)},${Math.max(Math.round(rect.height), 1)}`;
+    }
+
+    function zplBarCommand(geometry, item) {
+        const rect = transformLabelRect(geometry, item);
+        const width = Math.max(Math.round(rect.width), 1);
+        const height = Math.max(Math.round(rect.height), 1);
+        const thickness = Math.max(Math.min(width, height), 1);
+        return `^FO${Math.round(rect.x)},${Math.round(rect.y)}^GB${width},${height},${thickness},B,0^FS`;
+    }
+
+    function buildDlimaReferenceLayout(state) {
+        const productName = state.showNome && state.nome ? fitLabelText(state.nome, 18) : '';
+        const productCode = state.showCodigo && state.codigo ? fitLabelText(state.codigo, 12) : '';
+        const productSize = state.produtoTamanho ? fitLabelText(state.produtoTamanho, 4) : '';
+        const priceText = state.showPreco && state.preco ? `R$${formatCurrency(parseMoney(state.preco))}` : '';
+        const elements = [
+            { type: 'text', x: 28, y: 40, font: '3', xMul: 2, yMul: 3, zplHeight: 76, zplWidth: 44, text: "D'lima" },
+            { type: 'text', x: 208, y: 128, font: '1', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 18, text: 'store' },
+            { type: 'bar', x: 18, y: 190, width: 284, height: 2 },
+            { type: 'bar', x: 160, y: 190, width: 2, height: 150 },
+            { type: 'bar', x: 18, y: 340, width: 284, height: 2 },
+            { type: 'bar', x: 26, y: 252, width: 122, height: 2 },
+            { type: 'bar', x: 26, y: 300, width: 122, height: 2 },
+            { type: 'text', x: 24, y: 210, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'PRODUTO' },
+            { type: 'text', x: 24, y: 262, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'REF.' },
+            { type: 'text', x: 24, y: 310, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'TAMANHO' },
+            { type: 'text', x: 176, y: 210, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'VALOR' },
+            { type: 'bar', x: 18, y: 396, width: 284, height: 2 },
+            { type: 'text', x: 48, y: 356, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `"${DLIMA_LABEL_QUOTE_LINES[0]}` },
+            { type: 'text', x: 66, y: 376, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `${DLIMA_LABEL_QUOTE_LINES[1]}"` },
+            { type: 'text', x: 150, y: 414, font: '2', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 18, text: '^' },
+            { type: 'text', x: 44, y: 444, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'D L I M A   S T O R E' },
+        ];
+
+        if (productName) {
+            elements.push({ type: 'text', x: 24, y: 232, font: '1', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 13, text: productName });
+        }
+        if (productCode) {
+            elements.push({ type: 'text', x: 24, y: 282, font: '2', xMul: 1, yMul: 1, zplHeight: 26, zplWidth: 15, text: productCode });
+        }
+        if (productSize) {
+            elements.push({ type: 'text', x: 24, y: 330, font: '2', xMul: 1, yMul: 1, zplHeight: 26, zplWidth: 15, text: productSize });
+        }
+        if (priceText) {
+            elements.push({ type: 'text', x: 174, y: 270, font: '2', xMul: 1, yMul: 2, zplHeight: 44, zplWidth: 18, text: priceText });
+        }
+
+        return elements;
     }
 
     function showStatus(message, type) {
@@ -414,12 +532,12 @@
 
     function getLabelState() {
         const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
-        const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '60x30';
+        const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '60x40';
 
         return {
             quantity,
             sizeKey,
-            size: labelSizes[sizeKey] || labelSizes['60x30'],
+            size: labelSizes[sizeKey] || labelSizes['60x40'],
             language: etiquetaLinguagem ? etiquetaLinguagem.value : 'TSPL',
             printerName: sanitizeLabelText(etiquetaPrinterName ? etiquetaPrinterName.value : getAppConfig().labelPrinterName || 'ELGIN'),
             nome: sanitizeLabelText(etiquetaNome ? etiquetaNome.value : ''),
@@ -468,6 +586,24 @@
     function buildTsplLabelPayload() {
         const state = getLabelState();
         validateLabelState(state);
+        if (state.size.layout === 'dlima-reference') {
+            const geometry = getLabelGeometry(state.size);
+            const commands = [
+                `SIZE ${state.size.width} mm,${state.size.height} mm`,
+                `GAP ${state.size.gap} mm,0 mm`,
+                'DIRECTION 1',
+                'REFERENCE 0,0',
+                'CLS',
+            ];
+
+            buildDlimaReferenceLayout(state).forEach(item => {
+                commands.push(item.type === 'bar' ? tsplBarCommand(geometry, item) : tsplTextCommand(geometry, item));
+            });
+
+            commands.push(`PRINT 1,${state.quantity}`);
+            return `${commands.join('\n')}\n`;
+        }
+
         const commands = [
             `SIZE ${state.size.width} mm,${state.size.height} mm`,
             `GAP ${state.size.gap} mm,0 mm`,
@@ -515,6 +651,16 @@
         const widthDots = Math.round(state.size.width * dotsPerMm);
         const heightDots = Math.round(state.size.height * dotsPerMm);
         const commands = ['^XA', `^PW${widthDots}`, `^LL${heightDots}`, '^CI28'];
+
+        if (state.size.layout === 'dlima-reference') {
+            const geometry = getLabelGeometry(state.size);
+            buildDlimaReferenceLayout(state).forEach(item => {
+                commands.push(item.type === 'bar' ? zplBarCommand(geometry, item) : zplTextCommand(geometry, item));
+            });
+
+            commands.push(`^PQ${state.quantity}`, '^XZ');
+            return `${commands.join('\n')}\n`;
+        }
 
         if (state.size.vertical) {
             getVerticalLabelLines(state).forEach(line => {
@@ -565,8 +711,9 @@
         const colorNode = etiquetaPreview.querySelector('[data-preview-color]');
 
         etiquetaPreview.dataset.size = state.sizeKey;
+        etiquetaPreview.dataset.orientation = shouldPrintVertically(state.size) ? 'vertical' : 'horizontal';
         if (nameNode) {
-            nameNode.textContent = state.nome || 'Produto';
+            nameNode.textContent = state.nome ? fitLabelText(state.nome, 18) : 'Produto';
             nameNode.hidden = !state.showNome;
         }
         if (priceNode) {
@@ -577,11 +724,11 @@
             }
         }
         if (codeNode) {
-            codeNode.textContent = `Ref: ${state.codigo || '0000000'}`;
+            codeNode.textContent = state.codigo ? fitLabelText(state.codigo, 12) : '0000000';
             codeNode.hidden = !state.showCodigo;
         }
         if (sizeNode) {
-            sizeNode.textContent = `TAM: ${state.produtoTamanho || 'G'}`;
+            sizeNode.textContent = state.produtoTamanho ? fitLabelText(state.produtoTamanho, 4) : 'G';
         }
         if (colorNode) {
             colorNode.textContent = `COR: ${(state.cor || 'PRETO').toUpperCase()}`;
@@ -708,7 +855,7 @@
             etiquetaQuantidade.value = '1';
         }
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = '60x30';
+            etiquetaTamanho.value = '60x40';
         }
         if (etiquetaLinguagem) {
             etiquetaLinguagem.value = getAppConfig().labelLanguage || 'TSPL';

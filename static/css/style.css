@@ -637,17 +637,15 @@ body.label-modal-open {
 }
 
 .label-preview {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 7px;
+    display: grid;
+    grid-template-rows: 155px 136px 56px 1fr;
     position: relative;
     background:
         linear-gradient(180deg, #ffffff, #f6f6f6);
     color: #111111;
     border: 1px solid #d8d8d8;
-    border-radius: 4px;
-    padding: 14px 16px;
+    border-radius: 18px;
+    padding: 20px 20px 18px;
     box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
     overflow: hidden;
 }
@@ -655,21 +653,20 @@ body.label-modal-open {
 .label-preview::before {
     content: "";
     position: absolute;
-    inset: 7px;
-    border: 1px dashed rgba(0, 0, 0, 0.14);
-    border-radius: 3px;
+    inset: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 15px;
     pointer-events: none;
+}
+
+.label-preview[data-size="60x40"] {
+    width: 280px;
+    height: 420px;
 }
 
 .label-preview[data-size="40x80"] {
     width: 240px;
     height: 480px;
-}
-
-.label-preview[data-size="60x30"] {
-    width: 180px;
-    height: 360px;
-    padding: 12px 10px;
 }
 
 .label-preview[data-size="50x80"] {
@@ -682,42 +679,109 @@ body.label-modal-open {
     height: 480px;
 }
 
-.label-preview-brand {
-    min-height: 54px;
-    margin-bottom: 10px;
-    color: #111111;
-    font-size: 38px;
-    font-weight: 700;
-    font-style: italic;
-    line-height: 1;
-    text-align: center;
+.label-preview-logo,
+.label-preview-main,
+.label-preview-quote,
+.label-preview-footer {
     position: relative;
     z-index: 1;
+}
+
+.label-preview-logo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 13px;
+}
+
+.label-preview-brand {
+    color: #111111;
+    font-family: "Brush Script MT", "Segoe Script", cursive;
+    font-size: 66px;
+    font-weight: 700;
+    font-style: italic;
+    line-height: 0.88;
+    text-align: center;
+}
+
+.label-preview-logo span {
+    align-self: flex-end;
+    margin-right: 43px;
+    margin-top: 8px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1;
 }
 
 .label-preview strong {
-    font-size: 22px;
-    line-height: 1.1;
+    display: block;
+    width: max-content;
+    font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1;
     text-transform: uppercase;
-    overflow-wrap: anywhere;
-    position: relative;
-    z-index: 1;
+    white-space: nowrap;
+    transform: scaleX(0.62);
+    transform-origin: left center;
 }
 
-.label-preview span {
-    margin-top: auto;
-    font-weight: 800;
+.label-preview-main {
+    display: grid;
+    grid-template-columns: 1fr 1.16fr;
+    border-top: 2px solid #111111;
+    border-bottom: 2px solid #111111;
+}
+
+.label-preview-info {
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr;
+    border-right: 2px solid #111111;
+}
+
+.label-preview-field,
+.label-preview-value {
+    min-width: 0;
+    padding: 12px 10px 8px;
+}
+
+.label-preview-field + .label-preview-field {
+    border-top: 2px solid #111111;
+}
+
+.label-preview-value {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 25px;
+    padding-left: 15px;
+}
+
+.label-preview small,
+.label-preview-value > small {
+    display: block;
+    margin-bottom: 7px;
+    font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 500;
     line-height: 1;
-    position: relative;
-    z-index: 1;
+    color: #111111;
+    text-transform: uppercase;
 }
 
 .label-preview-price {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    width: 100%;
+    gap: 6px;
+    width: max-content;
+    max-width: none;
+    font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
+    font-weight: 900;
+    line-height: 0.86;
+    transform: scaleX(0.48);
+    transform-origin: left center;
+    white-space: nowrap;
 }
 
 .label-preview-price b,
@@ -726,66 +790,68 @@ body.label-modal-open {
 }
 
 .label-preview-price b {
-    font-size: 34px;
+    font-size: 38px;
 }
 
 .label-preview-price em {
     font-size: 46px;
 }
 
-.label-preview small {
-    font-size: 20px;
-    font-weight: 700;
-    color: #333333;
-    position: relative;
-    z-index: 1;
-}
-
-.label-preview-row {
+.label-preview-quote {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    justify-content: center;
+    border-bottom: 2px solid #111111;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    font-style: italic;
+    line-height: 1.25;
+    text-align: center;
+}
+
+.label-preview-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    padding-bottom: 2px;
+}
+
+.label-preview-crown {
     position: relative;
-    z-index: 1;
+    width: 46px;
+    height: 24px;
 }
 
-.label-preview[data-size="60x30"] {
-    justify-content: space-between;
-    gap: 5px;
+.label-preview-crown::before,
+.label-preview-crown::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    border-bottom: 2px solid #111111;
 }
 
-.label-preview[data-size="60x30"] .label-preview-brand {
-    min-height: 28px;
-    margin-bottom: 0;
-    font-size: 28px;
+.label-preview-crown::before {
+    bottom: 4px;
+    height: 17px;
+    border-left: 2px solid #111111;
+    border-right: 2px solid #111111;
+    transform: skewX(-14deg);
 }
 
-.label-preview[data-size="60x30"] strong {
-    font-size: 16px;
-    line-height: 1.05;
+.label-preview-crown::after {
+    bottom: 1px;
+    transform: rotate(-10deg);
 }
 
-.label-preview[data-size="60x30"] small {
-    font-size: 13px;
-    line-height: 1.1;
-}
-
-.label-preview[data-size="60x30"] .label-preview-row {
-    display: grid;
-    gap: 4px;
-}
-
-.label-preview[data-size="60x30"] .label-preview-price {
-    gap: 8px;
-}
-
-.label-preview[data-size="60x30"] .label-preview-price b {
-    font-size: 22px;
-}
-
-.label-preview[data-size="60x30"] .label-preview-price em {
-    font-size: 30px;
+.label-preview-footer span {
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .label-command-preview {
