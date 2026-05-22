@@ -29,8 +29,8 @@
     };
     const LABEL_DOTS_PER_MM = 8;
     const DLIMA_LABEL_QUOTE_LINES = [
-        'Estilo n\u00E3o \u00E9 seguir regras,',
-        '\u00E9 criar o seu caminho.',
+        'N\u00E3o seja copia,',
+        'seja referencia',
     ];
     const labelSizes = {
         '60x40': { width: 60, height: 40, gap: 2, designWidth: 40, designHeight: 60, layout: 'dlima-reference' },
@@ -532,13 +532,14 @@
     function getLabelState() {
         const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
         const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '60x40';
+        const configuredPrinterName = etiquetaPrinterName ? etiquetaPrinterName.value : '';
 
         return {
             quantity,
             sizeKey,
             size: labelSizes[sizeKey] || labelSizes['60x40'],
             language: etiquetaLinguagem ? etiquetaLinguagem.value : 'TSPL',
-            printerName: sanitizeLabelText(etiquetaPrinterName ? etiquetaPrinterName.value : getAppConfig().labelPrinterName || 'ELGIN'),
+            printerName: sanitizeLabelText(configuredPrinterName || getAppConfig().labelPrinterName || 'ELGIN'),
             nome: sanitizeLabelText(etiquetaNome ? etiquetaNome.value : ''),
             preco: sanitizeLabelText(etiquetaPreco ? etiquetaPreco.value : ''),
             codigo: sanitizeLabelText(etiquetaCodigo ? etiquetaCodigo.value : ''),
@@ -592,6 +593,7 @@
                 `GAP ${state.size.gap} mm,0 mm`,
                 'DIRECTION 1',
                 'REFERENCE 0,0',
+                'CODEPAGE UTF-8',
                 'CLS',
             ];
 
@@ -608,6 +610,7 @@
             `GAP ${state.size.gap} mm,0 mm`,
             'DIRECTION 1',
             'REFERENCE 0,0',
+            'CODEPAGE UTF-8',
             'CLS',
         ];
         const labelWidth = Math.round(state.size.width * LABEL_DOTS_PER_MM);
@@ -902,16 +905,29 @@
         }
     }
 
+    function setLabelPrintButtonState(isPrinting) {
+        if (!imprimirEtiquetasButton) {
+            return;
+        }
+
+        imprimirEtiquetasButton.disabled = isPrinting;
+        imprimirEtiquetasButton.textContent = isPrinting ? 'Imprimindo...' : 'Imprimir etiquetas';
+    }
+
     async function printLabels() {
         clearEtiquetaStatus();
+        setLabelPrintButtonState(true);
 
         try {
             const state = getLabelState();
             validateLabelState(state);
+            showEtiquetaStatus('Enviando etiqueta para a impressora...', 'info');
             const payload = buildLabelPayload();
             await connectQzForLabels();
             const printerName = await resolveLabelPrinter(state.printerName);
-            const config = window.qz.configs.create(printerName);
+            const config = window.qz.configs.create(printerName, {
+                encoding: 'UTF-8',
+            });
             const data = [{
                 type: 'raw',
                 format: 'command',
@@ -926,6 +942,8 @@
                 ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
                 : error.message;
             showEtiquetaStatus(message, 'error');
+        } finally {
+            setLabelPrintButtonState(false);
         }
     }
 
