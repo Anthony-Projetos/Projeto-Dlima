@@ -680,24 +680,23 @@ body.label-modal-open {
 
 .label-preview-logo,
 .label-preview-main,
-.label-preview-quote,
-.label-preview-footer {
+.label-preview-quote {
     position: absolute;
     z-index: 1;
 }
 
 .label-preview-logo {
-    left: 28px;
-    top: 34px;
-    width: 264px;
-    height: 134px;
+    left: 42px;
+    top: 38px;
+    width: 236px;
+    height: 100px;
 }
 
 .label-preview-brand {
     position: relative;
     color: #111111;
     font-family: "Brush Script MT", "Segoe Script", cursive;
-    font-size: 76px;
+    font-size: 60px;
     font-weight: 700;
     font-style: italic;
     line-height: 0.9;
@@ -708,19 +707,19 @@ body.label-modal-open {
 
 .label-preview-logo span {
     position: absolute;
-    right: 42px;
-    top: 91px;
+    right: 44px;
+    top: 72px;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 23px;
+    font-size: 19px;
     font-weight: 500;
     line-height: 1;
 }
 
 .label-preview-main {
     left: 18px;
-    top: 190px;
+    top: 160px;
     width: 284px;
-    height: 150px;
+    height: 170px;
     display: grid;
     grid-template-columns: 142px 142px;
     border-top: 2px solid #111111;
@@ -806,67 +805,20 @@ body.label-modal-open {
 
 .label-preview-quote {
     left: 18px;
-    top: 340px;
+    top: 356px;
     width: 284px;
-    height: 58px;
+    height: 76px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    border-top: 2px solid #111111;
     border-bottom: 2px solid #111111;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 17px;
     font-style: italic;
     line-height: 1.25;
     text-align: center;
-}
-
-.label-preview-footer {
-    left: 18px;
-    top: 398px;
-    width: 284px;
-    height: 68px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 7px;
-    padding-bottom: 2px;
-}
-
-.label-preview-crown {
-    position: relative;
-    width: 46px;
-    height: 24px;
-}
-
-.label-preview-crown::before,
-.label-preview-crown::after {
-    content: "";
-    position: absolute;
-    left: 6px;
-    right: 6px;
-    border-bottom: 2px solid #111111;
-}
-
-.label-preview-crown::before {
-    bottom: 4px;
-    height: 17px;
-    border-left: 2px solid #111111;
-    border-right: 2px solid #111111;
-    transform: skewX(-14deg);
-}
-
-.label-preview-crown::after {
-    bottom: 1px;
-    transform: rotate(-10deg);
-}
-
-.label-preview-footer span {
-    font-family: Arial, sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1;
 }
 
 .label-command-preview {

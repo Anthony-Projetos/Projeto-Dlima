@@ -192,35 +192,34 @@
         const productSize = state.produtoTamanho ? fitLabelText(state.produtoTamanho, 4) : '';
         const priceText = state.showPreco && state.preco ? `R$${formatCurrency(parseMoney(state.preco))}` : '';
         const elements = [
-            { type: 'text', x: 28, y: 40, font: '3', xMul: 2, yMul: 3, zplHeight: 76, zplWidth: 44, text: "D'lima" },
-            { type: 'text', x: 208, y: 128, font: '1', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 18, text: 'store' },
-            { type: 'bar', x: 18, y: 190, width: 284, height: 2 },
-            { type: 'bar', x: 160, y: 190, width: 2, height: 150 },
-            { type: 'bar', x: 18, y: 340, width: 284, height: 2 },
-            { type: 'bar', x: 26, y: 252, width: 122, height: 2 },
-            { type: 'bar', x: 26, y: 300, width: 122, height: 2 },
-            { type: 'text', x: 24, y: 210, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'PRODUTO' },
-            { type: 'text', x: 24, y: 262, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'REF.' },
-            { type: 'text', x: 24, y: 310, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'TAMANHO' },
-            { type: 'text', x: 176, y: 210, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'VALOR' },
-            { type: 'bar', x: 18, y: 396, width: 284, height: 2 },
-            { type: 'text', x: 48, y: 356, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `"${DLIMA_LABEL_QUOTE_LINES[0]}` },
-            { type: 'text', x: 66, y: 376, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `${DLIMA_LABEL_QUOTE_LINES[1]}"` },
-            { type: 'text', x: 150, y: 414, font: '2', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 18, text: '^' },
-            { type: 'text', x: 44, y: 444, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'D L I M A   S T O R E' },
+            { type: 'text', x: 54, y: 48, font: '3', xMul: 2, yMul: 2, zplHeight: 58, zplWidth: 36, text: "D'lima" },
+            { type: 'text', x: 210, y: 112, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 16, text: 'store' },
+            { type: 'bar', x: 18, y: 160, width: 284, height: 2 },
+            { type: 'bar', x: 160, y: 160, width: 2, height: 170 },
+            { type: 'bar', x: 18, y: 330, width: 284, height: 2 },
+            { type: 'bar', x: 26, y: 217, width: 122, height: 2 },
+            { type: 'bar', x: 26, y: 274, width: 122, height: 2 },
+            { type: 'text', x: 24, y: 178, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'PRODUTO' },
+            { type: 'text', x: 24, y: 235, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'REF.' },
+            { type: 'text', x: 24, y: 292, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'TAMANHO' },
+            { type: 'text', x: 176, y: 178, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'VALOR' },
+            { type: 'bar', x: 18, y: 356, width: 284, height: 2 },
+            { type: 'bar', x: 18, y: 432, width: 284, height: 2 },
+            { type: 'text', x: 50, y: 384, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `"${DLIMA_LABEL_QUOTE_LINES[0]}` },
+            { type: 'text', x: 68, y: 406, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `${DLIMA_LABEL_QUOTE_LINES[1]}"` },
         ];
 
         if (productName) {
-            elements.push({ type: 'text', x: 24, y: 232, font: '1', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 13, text: productName });
+            elements.push({ type: 'text', x: 24, y: 201, font: '1', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 13, text: productName });
         }
         if (productCode) {
-            elements.push({ type: 'text', x: 24, y: 282, font: '2', xMul: 1, yMul: 1, zplHeight: 26, zplWidth: 15, text: productCode });
+            elements.push({ type: 'text', x: 24, y: 258, font: '2', xMul: 1, yMul: 1, zplHeight: 26, zplWidth: 15, text: productCode });
         }
         if (productSize) {
-            elements.push({ type: 'text', x: 24, y: 330, font: '2', xMul: 1, yMul: 1, zplHeight: 26, zplWidth: 15, text: productSize });
+            elements.push({ type: 'text', x: 24, y: 315, font: '2', xMul: 1, yMul: 1, zplHeight: 26, zplWidth: 15, text: productSize });
         }
         if (priceText) {
-            elements.push({ type: 'text', x: 174, y: 270, font: '2', xMul: 1, yMul: 2, zplHeight: 44, zplWidth: 18, text: priceText });
+            elements.push({ type: 'text', x: 174, y: 238, font: '2', xMul: 1, yMul: 2, zplHeight: 44, zplWidth: 18, text: priceText });
         }
 
         return elements;
