@@ -637,15 +637,14 @@ body.label-modal-open {
 }
 
 .label-preview {
-    display: grid;
-    grid-template-rows: 155px 136px 56px 1fr;
+    display: block;
     position: relative;
     background:
         linear-gradient(180deg, #ffffff, #f6f6f6);
     color: #111111;
     border: 1px solid #d8d8d8;
     border-radius: 18px;
-    padding: 20px 20px 18px;
+    padding: 0;
     box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
     overflow: hidden;
 }
@@ -660,8 +659,8 @@ body.label-modal-open {
 }
 
 .label-preview[data-size="60x40"] {
-    width: 280px;
-    height: 420px;
+    width: 320px;
+    height: 480px;
 }
 
 .label-preview[data-size="40x80"] {
@@ -683,79 +682,70 @@ body.label-modal-open {
 .label-preview-main,
 .label-preview-quote,
 .label-preview-footer {
-    position: relative;
+    position: absolute;
     z-index: 1;
 }
 
 .label-preview-logo {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding-bottom: 13px;
+    left: 28px;
+    top: 34px;
+    width: 264px;
+    height: 134px;
 }
 
 .label-preview-brand {
+    position: relative;
     color: #111111;
     font-family: "Brush Script MT", "Segoe Script", cursive;
-    font-size: 66px;
+    font-size: 76px;
     font-weight: 700;
     font-style: italic;
-    line-height: 0.88;
+    line-height: 0.9;
     text-align: center;
+    transform: scaleX(1.08);
+    transform-origin: center top;
 }
 
 .label-preview-logo span {
-    align-self: flex-end;
-    margin-right: 43px;
-    margin-top: 8px;
+    position: absolute;
+    right: 42px;
+    top: 91px;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 20px;
+    font-size: 23px;
     font-weight: 500;
     line-height: 1;
 }
 
-.label-preview strong {
-    display: block;
-    width: max-content;
-    font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
-    font-size: 17px;
-    line-height: 1;
-    text-transform: uppercase;
-    white-space: nowrap;
-    transform: scaleX(0.62);
-    transform-origin: left center;
-}
-
 .label-preview-main {
+    left: 18px;
+    top: 190px;
+    width: 284px;
+    height: 150px;
     display: grid;
-    grid-template-columns: 1fr 1.16fr;
+    grid-template-columns: 142px 142px;
     border-top: 2px solid #111111;
     border-bottom: 2px solid #111111;
 }
 
 .label-preview-info {
     display: grid;
-    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-rows: repeat(3, 1fr);
     border-right: 2px solid #111111;
-}
-
-.label-preview-field,
-.label-preview-value {
-    min-width: 0;
-    padding: 12px 10px 8px;
 }
 
 .label-preview-field + .label-preview-field {
     border-top: 2px solid #111111;
 }
 
+.label-preview-field {
+    min-width: 0;
+    padding: 11px 8px 0 10px;
+}
+
 .label-preview-value {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 25px;
-    padding-left: 15px;
+    position: relative;
+    min-width: 0;
+    padding: 14px 10px 0 18px;
 }
 
 .label-preview small,
@@ -763,23 +753,40 @@ body.label-modal-open {
     display: block;
     margin-bottom: 7px;
     font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 500;
     line-height: 1;
     color: #111111;
     text-transform: uppercase;
 }
 
+.label-preview strong {
+    display: block;
+    width: max-content;
+    max-width: none;
+    font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transform: scaleX(0.64);
+    transform-origin: left center;
+}
+
 .label-preview-price {
+    position: absolute;
+    left: 18px;
+    top: 75px;
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    gap: 4px;
     width: max-content;
     max-width: none;
     font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
     font-weight: 900;
     line-height: 0.86;
-    transform: scaleX(0.48);
+    transform: scaleX(0.54);
     transform-origin: left center;
     white-space: nowrap;
 }
@@ -790,14 +797,18 @@ body.label-modal-open {
 }
 
 .label-preview-price b {
-    font-size: 38px;
+    font-size: 42px;
 }
 
 .label-preview-price em {
-    font-size: 46px;
+    font-size: 52px;
 }
 
 .label-preview-quote {
+    left: 18px;
+    top: 340px;
+    width: 284px;
+    height: 58px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -811,6 +822,10 @@ body.label-modal-open {
 }
 
 .label-preview-footer {
+    left: 18px;
+    top: 398px;
+    width: 284px;
+    height: 68px;
     display: flex;
     flex-direction: column;
     align-items: center;
