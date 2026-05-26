@@ -38,8 +38,10 @@ body.page-dashboard {
     border: 1px solid rgba(255, 255, 255, .1);
     backdrop-filter: blur(16px);
     box-shadow: 0 25px 80px rgba(0, 0, 0, .55);
+    overflow: hidden;
 }
 
+/* TOPO */
 .topbar {
     display: flex;
     justify-content: space-between;
@@ -68,6 +70,7 @@ body.page-dashboard {
 .topbar p {
     color: rgba(255, 255, 255, .68);
     font-size: 16px;
+    max-width: 700px;
 }
 
 .topbar-actions {
@@ -77,6 +80,7 @@ body.page-dashboard {
     gap: 12px;
 }
 
+/* BOTÕES */
 .btn-primary,
 .btn-secondary,
 .btn-cancel {
@@ -106,9 +110,10 @@ body.page-dashboard {
 .btn-secondary:hover,
 .btn-cancel:hover {
     transform: translateY(-2px);
-    opacity: .9;
+    opacity: .92;
 }
 
+/* CARDS */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -128,7 +133,11 @@ body.page-dashboard {
 }
 
 .stat-card.destaque {
-    background: linear-gradient(135deg, rgba(130, 0, 0, .5), rgba(255, 255, 255, .07));
+    background: linear-gradient(
+        135deg,
+        rgba(130, 0, 0, .5),
+        rgba(255, 255, 255, .07)
+    );
 }
 
 .stat-card span {
@@ -142,25 +151,29 @@ body.page-dashboard {
     word-break: break-word;
 }
 
-.content-grid {
+/* GRID */
+.content-grid,
+.graficos-grid {
     display: grid;
-    grid-template-columns: 1.25fr .95fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 22px;
     margin-bottom: 22px;
+    align-items: stretch;
 }
 
+/* PAINÉIS */
 .panel {
-    margin-bottom: 22px;
     padding: 24px;
     border-radius: 26px;
     background: rgba(255, 255, 255, .055);
     border: 1px solid rgba(255, 255, 255, .09);
+    overflow: hidden;
 }
 
 .panel-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 16px;
     margin-bottom: 18px;
 }
@@ -172,8 +185,10 @@ body.page-dashboard {
 .panel-header span {
     color: rgba(255, 255, 255, .55);
     font-size: 13px;
+    text-align: right;
 }
 
+/* TABELAS */
 .table-wrap {
     overflow-x: auto;
 }
@@ -181,7 +196,7 @@ body.page-dashboard {
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 680px;
+    min-width: 650px;
 }
 
 th {
@@ -214,6 +229,7 @@ tbody tr:hover {
     color: rgba(255, 255, 255, .55);
 }
 
+/* RANKING */
 .ranking-list {
     display: flex;
     flex-direction: column;
@@ -255,7 +271,61 @@ tbody tr:hover {
     white-space: nowrap;
 }
 
-/* Modal */
+/* FORM FILTRO */
+.filter-form {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 260px)) auto;
+    align-items: end;
+    gap: 18px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 800;
+    color: rgba(255,255,255,.75);
+}
+
+.filter-group input {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.08);
+    color: #fff;
+    outline: none;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* GRÁFICOS */
+.chart-panel {
+    min-height: 390px;
+}
+
+.chart-box {
+    position: relative;
+    width: 100%;
+    height: 290px;
+}
+
+.chart-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* MODAL */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -331,13 +401,18 @@ tbody tr:hover {
     margin-top: 8px;
 }
 
-/* Responsivo */
+/* RESPONSIVO */
 @media (max-width: 1180px) {
     .stats-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .content-grid {
+    .content-grid,
+    .graficos-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-form {
         grid-template-columns: 1fr;
     }
 }
@@ -387,71 +462,27 @@ tbody tr:hover {
         grid-column: 2;
     }
 
-    .filter-form {
-    display: flex;
-    align-items: flex-end;
-    gap: 14px;
-    flex-wrap: wrap;
-    }
-
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .filter-group label {
-        font-size: 13px;
-        font-weight: 800;
-        color: rgba(255, 255, 255, .72);
-    }
-
-    .filter-group input {
-        height: 52px;
-        min-width: 210px;
-        padding: 0 14px;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, .12);
-        background: rgba(255, 255, 255, .08);
-        color: #fff;
-        outline: none;
-    }
-
+    .filter-form,
     .filter-actions {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .chart-panel {
-        min-height: 430px;
-    }
-
-    .chart-box {
-        position: relative;
-        height: 330px;
         width: 100%;
     }
 
-    @media (max-width: 760px) {
-        .filter-form,
-        .filter-actions {
-            width: 100%;
-        }
+    .filter-group,
+    .filter-group input,
+    .filter-actions a,
+    .filter-actions button {
+        width: 100%;
+    }
 
-        .filter-group,
-        .filter-group input,
-        .filter-actions a,
-        .filter-actions button {
-            width: 100%;
-        }
+    .chart-panel {
+        min-height: 360px;
+    }
 
-        .chart-panel {
-            min-height: 360px;
-        }
+    .chart-box {
+        height: 280px;
+    }
 
-        .chart-box {
-            height: 280px;
-        }
+    table {
+        min-width: 520px;
     }
 }
