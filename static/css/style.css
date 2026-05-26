@@ -659,8 +659,8 @@ body.label-modal-open {
 }
 
 .label-preview[data-size="60x40"] {
-    width: 480px;
-    height: 320px;
+    width: 320px;
+    height: 480px;
 }
 
 .label-preview[data-size="40x80"] {
@@ -686,17 +686,17 @@ body.label-modal-open {
 }
 
 .label-preview-logo {
-    left: 24px;
-    top: 18px;
-    width: 184px;
-    height: 72px;
+    left: 42px;
+    top: 38px;
+    width: 236px;
+    height: 100px;
 }
 
 .label-preview-brand {
     position: relative;
     color: #111111;
     font-family: "Brush Script MT", "Segoe Script", cursive;
-    font-size: 50px;
+    font-size: 60px;
     font-weight: 700;
     font-style: italic;
     line-height: 0.9;
@@ -707,8 +707,8 @@ body.label-modal-open {
 
 .label-preview-logo span {
     position: absolute;
-    right: 26px;
-    top: 52px;
+    right: 44px;
+    top: 72px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 19px;
     font-weight: 500;
@@ -717,11 +717,11 @@ body.label-modal-open {
 
 .label-preview-main {
     left: 18px;
-    top: 98px;
-    width: 444px;
-    height: 154px;
+    top: 160px;
+    width: 284px;
+    height: 170px;
     display: grid;
-    grid-template-columns: 212px 232px;
+    grid-template-columns: 142px 142px;
     border-top: 2px solid #111111;
     border-bottom: 2px solid #111111;
 }
@@ -738,13 +738,13 @@ body.label-modal-open {
 
 .label-preview-field {
     min-width: 0;
-    padding: 10px 8px 0 10px;
+    padding: 11px 8px 0 10px;
 }
 
 .label-preview-value {
     position: relative;
     min-width: 0;
-    padding: 12px 10px 0 18px;
+    padding: 14px 10px 0 18px;
 }
 
 .label-preview small,
@@ -752,7 +752,7 @@ body.label-modal-open {
     display: block;
     margin-bottom: 7px;
     font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 500;
     line-height: 1;
     color: #111111;
@@ -776,7 +776,7 @@ body.label-modal-open {
 .label-preview-price {
     position: absolute;
     left: 18px;
-    top: 58px;
+    top: 75px;
     display: flex;
     align-items: baseline;
     gap: 4px;
@@ -785,7 +785,7 @@ body.label-modal-open {
     font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
     font-weight: 900;
     line-height: 0.86;
-    transform: scaleX(0.62);
+    transform: scaleX(0.54);
     transform-origin: left center;
     white-space: nowrap;
 }
@@ -796,27 +796,26 @@ body.label-modal-open {
 }
 
 .label-preview-price b {
-    font-size: 40px;
+    font-size: 42px;
 }
 
 .label-preview-price em {
-    font-size: 48px;
+    font-size: 52px;
 }
 
 .label-preview-quote {
     left: 18px;
-    top: 272px;
-    width: 444px;
-    height: 34px;
+    top: 356px;
+    width: 284px;
+    height: 76px;
     display: flex;
-    flex-direction: row;
-    gap: 4px;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     border-top: 2px solid #111111;
     border-bottom: 2px solid #111111;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 16px;
+    font-size: 17px;
     font-style: italic;
     line-height: 1.25;
     text-align: center;
