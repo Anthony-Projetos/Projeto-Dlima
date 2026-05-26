@@ -33,7 +33,7 @@
         'seja referencia',
     ];
     const labelSizes = {
-        '60x40': { width: 60, height: 40, gap: 2, designWidth: 40, designHeight: 60, layout: 'dlima-reference' },
+        '60x40': { width: 40, height: 60, gap: 2, layout: 'dlima-reference' },
         '60x30': { width: 60, height: 30, gap: 2, vertical: true },
         '40x80': { width: 40, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
         '50x80': { width: 50, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
