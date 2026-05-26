@@ -386,4 +386,72 @@ tbody tr:hover {
     .ranking-value {
         grid-column: 2;
     }
+
+    .filter-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-group label {
+        font-size: 13px;
+        font-weight: 800;
+        color: rgba(255, 255, 255, .72);
+    }
+
+    .filter-group input {
+        height: 52px;
+        min-width: 210px;
+        padding: 0 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, .12);
+        background: rgba(255, 255, 255, .08);
+        color: #fff;
+        outline: none;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .chart-panel {
+        min-height: 430px;
+    }
+
+    .chart-box {
+        position: relative;
+        height: 330px;
+        width: 100%;
+    }
+
+    @media (max-width: 760px) {
+        .filter-form,
+        .filter-actions {
+            width: 100%;
+        }
+
+        .filter-group,
+        .filter-group input,
+        .filter-actions a,
+        .filter-actions button {
+            width: 100%;
+        }
+
+        .chart-panel {
+            min-height: 360px;
+        }
+
+        .chart-box {
+            height: 280px;
+        }
+    }
 }

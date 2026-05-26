@@ -9,105 +9,133 @@
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="page-dashboard">
 
+<body class="page-dashboard">
 <div class="bg-overlay"></div>
 
 <main class="dashboard-wrapper">
     <section class="dashboard-shell">
 
         <header class="topbar">
-            <div>
+            <div class="topbar-info">
                 <span class="brand-badge">Dlima Store</span>
                 <h1>Gráficos de vendas</h1>
-                <p>Veja os produtos mais vendidos e o desempenho por vendedor.</p>
+                <p>Analise produtos mais vendidos, desempenho dos vendedores e resultados por período.</p>
             </div>
 
             <div class="topbar-actions">
-                <a href="{% url 'dashboard_gerente' %}" class="btn-secondary">Voltar</a>
+                <a href="{% url 'dashboard_gerente' %}" class="btn-secondary">Voltar ao dashboard</a>
             </div>
         </header>
 
-        <section class="panel" style="margin-bottom: 20px;">
-            <h2>Filtrar período</h2>
+        <section class="panel">
+            <div class="panel-header">
+                <h2>Filtrar período</h2>
+                <span>Escolha o intervalo das vendas</span>
+            </div>
 
-            <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px;">
-                <div>
-                    <label>Data inicial</label><br>
-                    <input type="date" name="data_inicial" value="{{ data_inicial }}" class="modal-input">
+            <form method="get" class="filter-form">
+                <div class="filter-group">
+                    <label>Data inicial</label>
+                    <input type="date" name="data_inicial" value="{{ data_inicial }}">
                 </div>
 
-                <div>
-                    <label>Data final</label><br>
-                    <input type="date" name="data_final" value="{{ data_final }}" class="modal-input">
+                <div class="filter-group">
+                    <label>Data final</label>
+                    <input type="date" name="data_final" value="{{ data_final }}">
                 </div>
 
-                <div style="display: flex; align-items: end;">
+                <div class="filter-actions">
                     <button type="submit" class="btn-primary">Filtrar</button>
+                    <a href="{% url 'graficos_vendas' %}" class="btn-secondary">Limpar</a>
                 </div>
             </form>
         </section>
 
         <section class="content-grid">
-            <div class="panel">
-                <h2>Produtos mais vendidos</h2>
-                <canvas id="graficoProdutos"></canvas>
-            </div>
+            <article class="panel chart-panel">
+                <div class="panel-header">
+                    <h2>Produtos mais vendidos</h2>
+                    <span>Quantidade vendida</span>
+                </div>
 
-            <div class="panel">
-                <h2>Vendedores que mais venderam</h2>
-                <canvas id="graficoVendedores"></canvas>
-            </div>
+                <div class="chart-box">
+                    <canvas id="graficoProdutos"></canvas>
+                </div>
+            </article>
+
+            <article class="panel chart-panel">
+                <div class="panel-header">
+                    <h2>Vendedores que mais venderam</h2>
+                    <span>Total em reais</span>
+                </div>
+
+                <div class="chart-box">
+                    <canvas id="graficoVendedores"></canvas>
+                </div>
+            </article>
         </section>
 
-        <section class="content-grid" style="margin-top: 20px;">
-            <div class="panel">
-                <h2>Tabela de produtos</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Produto</th>
-                            <th>Quantidade vendida</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in produtos_tabela %}
-                        <tr>
-                            <td>{{ item.produto__nome }}</td>
-                            <td>{{ item.total_quantidade }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="2">Nenhum dado encontrado</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <section class="content-grid">
+            <article class="panel">
+                <div class="panel-header">
+                    <h2>Tabela de produtos</h2>
+                    <span>Ranking por quantidade</span>
+                </div>
 
-            <div class="panel">
-                <h2>Tabela de vendedores</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Vendedor</th>
-                            <th>Total vendido</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in vendedores_tabela %}
-                        <tr>
-                            <td>{{ item.vendedor__nome }}</td>
-                            <td>R$ {{ item.total_vendido|floatformat:2 }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="2">Nenhum dado encontrado</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Quantidade vendida</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in produtos_tabela %}
+                                <tr>
+                                    <td>{{ item.produto__nome }}</td>
+                                    <td class="valor-destaque">{{ item.total_quantidade }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="2" class="empty-row">Nenhum dado encontrado.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="panel">
+                <div class="panel-header">
+                    <h2>Tabela de vendedores</h2>
+                    <span>Ranking por faturamento</span>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Vendedor</th>
+                                <th>Total vendido</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in vendedores_tabela %}
+                                <tr>
+                                    <td>{{ item.vendedor__nome }}</td>
+                                    <td class="valor-destaque">R$ {{ item.total_vendido|floatformat:2 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="2" class="empty-row">Nenhum dado encontrado.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </article>
         </section>
 
     </section>
@@ -119,75 +147,103 @@
 {{ vendedores_valores|json_script:"vendedores-valores" }}
 
 <script>
-    const produtosLabels = JSON.parse(document.getElementById('produtos-labels').textContent);
-    const produtosValores = JSON.parse(document.getElementById('produtos-valores').textContent);
+    const produtosLabels = JSON.parse(document.getElementById("produtos-labels").textContent);
+    const produtosValores = JSON.parse(document.getElementById("produtos-valores").textContent);
 
-    const vendedoresLabels = JSON.parse(document.getElementById('vendedores-labels').textContent);
-    const vendedoresValores = JSON.parse(document.getElementById('vendedores-valores').textContent);
+    const vendedoresLabels = JSON.parse(document.getElementById("vendedores-labels").textContent);
+    const vendedoresValores = JSON.parse(document.getElementById("vendedores-valores").textContent);
 
-    new Chart(document.getElementById('graficoProdutos'), {
-        type: 'bar',
-        data: {
-            labels: produtosLabels,
-            datasets: [{
-                label: 'Quantidade vendida',
-                data: produtosValores,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: 'white'
+    const chartTextColor = "rgba(255,255,255,0.78)";
+    const chartGridColor = "rgba(255,255,255,0.08)";
+
+    function criarGraficoBarra(id, labels, valores, label, prefixo = "") {
+        const ctx = document.getElementById(id);
+
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: valores,
+                    borderWidth: 1,
+                    borderRadius: 12,
+                    backgroundColor: "rgba(255,255,255,0.82)",
+                    borderColor: "rgba(255,255,255,1)",
+                    hoverBackgroundColor: "rgba(130,0,0,0.9)"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: chartTextColor,
+                            font: {
+                                weight: "bold"
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: "rgba(10,10,10,0.95)",
+                        titleColor: "#ffffff",
+                        bodyColor: "#ffffff",
+                        borderColor: "rgba(255,255,255,0.12)",
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                const valor = context.raw || 0;
+
+                                if (prefixo === "R$") {
+                                    return ` ${label}: R$ ${Number(valor).toFixed(2)}`;
+                                }
+
+                                return ` ${label}: ${valor}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: chartTextColor,
+                            maxRotation: 35,
+                            minRotation: 0
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: chartTextColor
+                        },
+                        grid: {
+                            color: chartGridColor
+                        }
                     }
                 }
-            },
-            scales: {
-                x: {
-                    ticks: { color: 'white' },
-                    grid: { color: 'rgba(255,255,255,0.08)' }
-                },
-                y: {
-                    ticks: { color: 'white' },
-                    grid: { color: 'rgba(255,255,255,0.08)' }
-                }
             }
-        }
-    });
+        });
+    }
 
-    new Chart(document.getElementById('graficoVendedores'), {
-        type: 'bar',
-        data: {
-            labels: vendedoresLabels,
-            datasets: [{
-                label: 'Total vendido',
-                data: vendedoresValores,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: 'white'
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: { color: 'white' },
-                    grid: { color: 'rgba(255,255,255,0.08)' }
-                },
-                y: {
-                    ticks: { color: 'white' },
-                    grid: { color: 'rgba(255,255,255,0.08)' }
-                }
-            }
-        }
-    });
+    criarGraficoBarra(
+        "graficoProdutos",
+        produtosLabels,
+        produtosValores,
+        "Quantidade vendida"
+    );
+
+    criarGraficoBarra(
+        "graficoVendedores",
+        vendedoresLabels,
+        vendedoresValores,
+        "Total vendido",
+        "R$"
+    );
 </script>
 
 </body>
