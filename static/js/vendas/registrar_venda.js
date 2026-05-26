@@ -33,7 +33,7 @@
         'seja referencia',
     ];
     const labelSizes = {
-        '60x40': { width: 40, height: 60, gap: 2, layout: 'dlima-reference' },
+        '60x40': { width: 60, height: 40, gap: 2, layout: 'dlima-reference' },
         '60x30': { width: 60, height: 30, gap: 2, vertical: true },
         '40x80': { width: 40, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
         '50x80': { width: 50, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
@@ -187,39 +187,38 @@
     }
 
     function buildDlimaReferenceLayout(state) {
-        const productName = state.showNome && state.nome ? fitLabelText(state.nome, 18) : '';
+        const productName = state.showNome && state.nome ? fitLabelText(state.nome, 22) : '';
         const productCode = state.showCodigo && state.codigo ? fitLabelText(state.codigo, 12) : '';
         const productSize = state.produtoTamanho ? fitLabelText(state.produtoTamanho, 4) : '';
         const priceText = state.showPreco && state.preco ? `R$${formatCurrency(parseMoney(state.preco))}` : '';
         const elements = [
-            { type: 'text', x: 54, y: 48, font: '3', xMul: 2, yMul: 2, zplHeight: 58, zplWidth: 36, text: "D'lima" },
-            { type: 'text', x: 210, y: 112, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 16, text: 'store' },
-            { type: 'bar', x: 18, y: 160, width: 284, height: 2 },
-            { type: 'bar', x: 160, y: 160, width: 2, height: 170 },
-            { type: 'bar', x: 18, y: 330, width: 284, height: 2 },
-            { type: 'bar', x: 26, y: 217, width: 122, height: 2 },
-            { type: 'bar', x: 26, y: 274, width: 122, height: 2 },
-            { type: 'text', x: 24, y: 178, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'PRODUTO' },
-            { type: 'text', x: 24, y: 235, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'REF.' },
-            { type: 'text', x: 24, y: 292, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'TAMANHO' },
-            { type: 'text', x: 176, y: 178, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'VALOR' },
-            { type: 'bar', x: 18, y: 356, width: 284, height: 2 },
-            { type: 'bar', x: 18, y: 432, width: 284, height: 2 },
-            { type: 'text', x: 50, y: 384, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `"${DLIMA_LABEL_QUOTE_LINES[0]}` },
-            { type: 'text', x: 68, y: 406, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `${DLIMA_LABEL_QUOTE_LINES[1]}"` },
+            { type: 'text', x: 24, y: 18, font: '3', xMul: 2, yMul: 2, zplHeight: 54, zplWidth: 34, text: "D'lima" },
+            { type: 'text', x: 148, y: 72, font: '1', xMul: 1, yMul: 1, zplHeight: 20, zplWidth: 14, text: 'store' },
+            { type: 'bar', x: 18, y: 98, width: 444, height: 2 },
+            { type: 'bar', x: 230, y: 98, width: 2, height: 154 },
+            { type: 'bar', x: 18, y: 252, width: 444, height: 2 },
+            { type: 'bar', x: 26, y: 150, width: 190, height: 2 },
+            { type: 'bar', x: 26, y: 202, width: 190, height: 2 },
+            { type: 'text', x: 26, y: 112, font: '1', xMul: 1, yMul: 1, zplHeight: 20, zplWidth: 13, text: 'PRODUTO' },
+            { type: 'text', x: 26, y: 164, font: '1', xMul: 1, yMul: 1, zplHeight: 20, zplWidth: 13, text: 'REF.' },
+            { type: 'text', x: 26, y: 216, font: '1', xMul: 1, yMul: 1, zplHeight: 20, zplWidth: 13, text: 'TAMANHO' },
+            { type: 'text', x: 250, y: 112, font: '1', xMul: 1, yMul: 1, zplHeight: 20, zplWidth: 13, text: 'VALOR' },
+            { type: 'bar', x: 18, y: 272, width: 444, height: 2 },
+            { type: 'bar', x: 18, y: 306, width: 444, height: 2 },
+            { type: 'text', x: 116, y: 282, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `"${DLIMA_LABEL_QUOTE_LINES[0]} ${DLIMA_LABEL_QUOTE_LINES[1]}"` },
         ];
 
         if (productName) {
-            elements.push({ type: 'text', x: 24, y: 201, font: '1', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 13, text: productName });
+            elements.push({ type: 'text', x: 26, y: 134, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 12, text: productName });
         }
         if (productCode) {
-            elements.push({ type: 'text', x: 24, y: 258, font: '2', xMul: 1, yMul: 1, zplHeight: 26, zplWidth: 15, text: productCode });
+            elements.push({ type: 'text', x: 26, y: 184, font: '2', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 14, text: productCode });
         }
         if (productSize) {
-            elements.push({ type: 'text', x: 24, y: 315, font: '2', xMul: 1, yMul: 1, zplHeight: 26, zplWidth: 15, text: productSize });
+            elements.push({ type: 'text', x: 26, y: 236, font: '2', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 14, text: productSize });
         }
         if (priceText) {
-            elements.push({ type: 'text', x: 174, y: 238, font: '2', xMul: 1, yMul: 2, zplHeight: 44, zplWidth: 18, text: priceText });
+            elements.push({ type: 'text', x: 248, y: 164, font: '3', xMul: 1, yMul: 2, zplHeight: 48, zplWidth: 22, text: priceText });
         }
 
         return elements;
