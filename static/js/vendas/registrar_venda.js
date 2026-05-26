@@ -138,9 +138,10 @@
             return { x, y, rotation: 0, zplOrientation: 'N' };
         }
 
+        const rotatedTextInsetDots = 42;
         return {
             x: y,
-            y: geometry.designWidthDots - x,
+            y: geometry.designWidthDots - x - rotatedTextInsetDots,
             rotation: 90,
             zplOrientation: 'R',
         };
