@@ -35,15 +35,14 @@
         '2': 12,
         '3': 16,
     };
-    const DLIMA_LABEL_STORE_NAME = 'Dlima Store';
     const DLIMA_LABEL_QUOTE_LINES = [
-        'Nao seja copia,',
+        'N\u00E3o seja copia,',
         'seja referencia',
     ];
     const labelSizes = {
-        '40x60': { width: 40, height: 60, gap: 2, layout: 'dlima-clothing' },
-        '60x40': { width: 60, height: 40, gap: 2, layout: 'dlima-clothing' },
-        '40x30': { width: 40, height: 30, gap: 2, layout: 'dlima-clothing' },
+        '40x60': { width: 40, height: 60, gap: 2, layout: 'dlima-reference' },
+        '60x40': { width: 60, height: 40, gap: 2, designWidth: 40, designHeight: 60, layout: 'dlima-reference' },
+        '40x30': { width: 40, height: 30, gap: 2, layout: 'dlima-reference' },
         '60x30': { width: 60, height: 30, gap: 2, vertical: true },
         '40x80': { width: 40, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
         '50x80': { width: 50, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
@@ -282,124 +281,85 @@
         return `^FO${Math.round(rect.x)},${Math.round(rect.y)}^GB${width},${height},${thickness},B,0^FS`;
     }
 
-    function buildDlimaClothingLayout(state) {
+    function centerTextInsideArea(areaX, areaWidth, text, font, xMul) {
+        const textWidth = getEstimatedTextWidth(text, font, xMul);
+        return clampLabelValue(
+            Math.round(areaX + ((areaWidth - textWidth) / 2)),
+            areaX,
+            Math.max(areaX, areaX + areaWidth - textWidth)
+        );
+    }
+
+    function buildDlimaReferenceLayout(state) {
         const geometry = getLabelGeometry(state.size);
         const labelWidth = geometry.designWidthDots;
         const labelHeight = geometry.designHeightDots;
-        const contentWidth = Math.max(labelWidth - (LABEL_SAFE_MARGIN_DOTS * 2), 1);
         const compact = labelHeight <= 260;
-        const productFont = compact ? '1' : '2';
-        const productMaxLines = compact ? 1 : 2;
-        const productMaxChars = getMaxCharsForWidth(productFont, 1, contentWidth);
-        const productLines = state.showNome && state.nome
-            ? splitLabelText(state.nome, productMaxChars, productMaxLines)
-            : [];
-        const details = [];
+        const scaleY = labelHeight / 480;
+        const y = value => Math.round(value * scaleY);
+        const safeX = compact ? 18 : LABEL_SAFE_MARGIN_DOTS;
+        const contentWidth = Math.max(labelWidth - (safeX * 2), 1);
+        const leftColumnWidth = Math.round(contentWidth * 0.48);
+        const rightColumnX = safeX + leftColumnWidth;
+        const rightColumnWidth = contentWidth - leftColumnWidth;
+        const fieldValueWidth = Math.max(leftColumnWidth - 18, 1);
+        const productName = state.showNome && state.nome ? fitLabelText(state.nome, compact ? 14 : 18) : '';
+        const productCode = state.showCodigo && state.codigo ? fitLabelText(state.codigo, compact ? 10 : 12) : '';
+        const productSize = state.produtoTamanho ? fitLabelText(state.produtoTamanho, compact ? 4 : 4) : '';
+        const priceText = state.showPreco && state.preco ? `R$${formatCurrency(parseMoney(state.preco))}` : '';
+        const footerLines = compact
+            ? [DLIMA_LABEL_QUOTE_LINES.join(' ')]
+            : [`"${DLIMA_LABEL_QUOTE_LINES[0]}`, `${DLIMA_LABEL_QUOTE_LINES[1]}"`];
+        const priceFont = compact ? '2' : '2';
+        const priceXMul = 1;
+        const priceYMul = compact ? 1 : 2;
+        const priceX = priceText
+            ? centerTextInsideArea(rightColumnX + 8, Math.max(rightColumnWidth - 16, 1), priceText, priceFont, priceXMul)
+            : rightColumnX + 8;
         const elements = [
-            {
-                type: 'text',
-                align: 'center',
-                x: 0,
-                y: Math.round(labelHeight * 0.06),
-                font: '3',
-                xMul: 1,
-                yMul: 1,
-                zplHeight: compact ? 28 : 34,
-                zplWidth: compact ? 24 : 28,
-                maxWidth: contentWidth,
-                noFit: true,
-                text: DLIMA_LABEL_STORE_NAME,
-            },
+            { type: 'text', x: compact ? 74 : 54, y: y(48), font: '3', xMul: compact ? 1 : 2, yMul: compact ? 1 : 2, zplHeight: compact ? 34 : 58, zplWidth: compact ? 26 : 36, text: "D'lima" },
+            { type: 'text', x: compact ? 198 : 210, y: y(112), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 18 : 22, zplWidth: compact ? 12 : 16, text: 'store' },
+            { type: 'bar', x: safeX, y: y(160), width: contentWidth, height: 2 },
+            { type: 'bar', x: rightColumnX, y: y(160), width: 2, height: Math.max(y(330) - y(160), 1) },
+            { type: 'bar', x: safeX, y: y(330), width: contentWidth, height: 2 },
+            { type: 'bar', x: safeX + 8, y: y(217), width: Math.max(leftColumnWidth - 20, 1), height: 2 },
+            { type: 'bar', x: safeX + 8, y: y(274), width: Math.max(leftColumnWidth - 20, 1), height: 2 },
+            { type: 'text', x: safeX + 6, y: y(178), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 16 : 22, zplWidth: compact ? 12 : 14, text: 'PRODUTO' },
+            { type: 'text', x: safeX + 6, y: y(235), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 16 : 22, zplWidth: compact ? 12 : 14, text: 'REF.' },
+            { type: 'text', x: safeX + 6, y: y(292), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 16 : 22, zplWidth: compact ? 12 : 14, text: 'TAMANHO' },
+            { type: 'text', x: rightColumnX + 14, y: y(178), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 16 : 22, zplWidth: compact ? 12 : 14, text: 'VALOR' },
+            { type: 'bar', x: safeX, y: y(356), width: contentWidth, height: 2 },
+            { type: 'bar', x: safeX, y: y(432), width: contentWidth, height: 2 },
         ];
 
-        productLines.forEach((line, index) => {
+        footerLines.forEach((line, index) => {
             elements.push({
                 type: 'text',
                 align: 'center',
                 x: 0,
-                y: Math.round(labelHeight * 0.20) + (index * (compact ? 18 : 28)),
-                font: productFont,
+                y: compact ? y(388) : y(384 + (index * 22)),
+                font: '0',
                 xMul: 1,
                 yMul: 1,
-                zplHeight: compact ? 20 : 26,
-                zplWidth: compact ? 18 : 22,
+                zplHeight: compact ? 14 : 18,
+                zplWidth: compact ? 10 : 12,
                 maxWidth: contentWidth,
+                noFit: true,
                 text: line,
             });
         });
 
-        if (state.showCodigo && state.codigo) {
-            details.push(`REF: ${fitLabelText(state.codigo, compact ? 12 : 16)}`);
+        if (productName) {
+            elements.push({ type: 'text', x: safeX + 6, y: y(201), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 16 : 24, zplWidth: compact ? 12 : 13, maxWidth: fieldValueWidth, text: productName });
         }
-        if (state.produtoTamanho) {
-            details.push(`TAM: ${fitLabelText(state.produtoTamanho, compact ? 4 : 6)}`);
+        if (productCode) {
+            elements.push({ type: 'text', x: safeX + 6, y: y(258), font: '2', xMul: 1, yMul: 1, zplHeight: compact ? 18 : 26, zplWidth: compact ? 12 : 15, maxWidth: fieldValueWidth, text: productCode });
         }
-        if (details.length) {
-            elements.push({
-                type: 'text',
-                align: 'center',
-                x: 0,
-                y: Math.round(labelHeight * 0.34),
-                font: '1',
-                xMul: 1,
-                yMul: 1,
-                zplHeight: compact ? 18 : 22,
-                zplWidth: compact ? 14 : 16,
-                maxWidth: contentWidth,
-                text: details.join('   '),
-            });
+        if (productSize) {
+            elements.push({ type: 'text', x: safeX + 6, y: y(315), font: '2', xMul: 1, yMul: 1, zplHeight: compact ? 18 : 26, zplWidth: compact ? 12 : 15, maxWidth: fieldValueWidth, text: productSize });
         }
-
-        if (state.showPreco && state.preco) {
-            elements.push({
-                type: 'text',
-                align: 'center',
-                x: 0,
-                y: Math.round(labelHeight * 0.48),
-                font: '3',
-                xMul: 1,
-                yMul: compact ? 1 : 2,
-                zplHeight: compact ? 34 : 54,
-                zplWidth: compact ? 28 : 36,
-                maxWidth: contentWidth,
-                noFit: true,
-                text: formatLabelPrice(state.preco),
-            });
-        }
-
-        const footerY = Math.round(labelHeight * 0.82);
-        if (compact) {
-            elements.push({
-                type: 'text',
-                align: 'center',
-                x: 0,
-                y: footerY,
-                font: '1',
-                xMul: 1,
-                yMul: 1,
-                zplHeight: 18,
-                zplWidth: 14,
-                maxWidth: contentWidth,
-                noFit: true,
-                text: DLIMA_LABEL_QUOTE_LINES.join(' '),
-            });
-        } else {
-            DLIMA_LABEL_QUOTE_LINES.forEach((line, index) => {
-                elements.push({
-                    type: 'text',
-                    align: 'center',
-                    x: 0,
-                    y: footerY + (index * 22),
-                    font: '1',
-                    xMul: 1,
-                    yMul: 1,
-                    zplHeight: 20,
-                    zplWidth: 14,
-                    maxWidth: contentWidth,
-                    noFit: true,
-                    text: index === 0 ? `"${line}` : `${line}"`,
-                });
-            });
+        if (priceText) {
+            elements.push({ type: 'text', x: priceX, y: y(238), font: priceFont, xMul: priceXMul, yMul: priceYMul, zplHeight: compact ? 24 : 44, zplWidth: compact ? 14 : 18, maxWidth: Math.max(rightColumnWidth - 16, 1), noFit: true, text: priceText });
         }
 
         return elements;
@@ -752,7 +712,7 @@
             state.showCodigo && state.codigo,
             state.produtoTamanho,
         ];
-        if (state.size.layout !== 'dlima-clothing') {
+        if (state.size.layout !== 'dlima-reference') {
             printableFields.push(state.cor);
         }
         const hasContent = printableFields.some(Boolean);
@@ -769,7 +729,7 @@
     function buildTsplLabelPayload() {
         const state = getLabelState();
         validateLabelState(state);
-        if (state.size.layout === 'dlima-clothing') {
+        if (state.size.layout === 'dlima-reference') {
             const geometry = getLabelGeometry(state.size);
             const commands = [
                 `SIZE ${state.size.width} mm,${state.size.height} mm`,
@@ -780,7 +740,7 @@
                 'CLS',
             ];
 
-            buildDlimaClothingLayout(state).forEach(item => {
+            buildDlimaReferenceLayout(state).forEach(item => {
                 commands.push(item.type === 'bar' ? tsplBarCommand(geometry, item) : tsplTextCommand(geometry, item));
             });
 
@@ -837,9 +797,9 @@
         const heightDots = Math.round(state.size.height * dotsPerMm);
         const commands = ['^XA', `^PW${widthDots}`, `^LL${heightDots}`, '^CI28'];
 
-        if (state.size.layout === 'dlima-clothing') {
+        if (state.size.layout === 'dlima-reference') {
             const geometry = getLabelGeometry(state.size);
-            buildDlimaClothingLayout(state).forEach(item => {
+            buildDlimaReferenceLayout(state).forEach(item => {
                 commands.push(item.type === 'bar' ? zplBarCommand(geometry, item) : zplTextCommand(geometry, item));
             });
 
@@ -898,7 +858,7 @@
         etiquetaPreview.dataset.size = state.sizeKey;
         etiquetaPreview.dataset.orientation = shouldPrintVertically(state.size) ? 'vertical' : 'horizontal';
         if (nameNode) {
-            nameNode.textContent = state.nome ? splitLabelText(state.nome, 24, 2).join(' ') : 'Produto';
+            nameNode.textContent = state.nome ? fitLabelText(state.nome, 18) : 'Produto';
             nameNode.hidden = !state.showNome;
         }
         if (priceNode) {
@@ -909,11 +869,11 @@
             }
         }
         if (codeNode) {
-            codeNode.textContent = state.codigo ? `REF: ${fitLabelText(state.codigo, 16)}` : 'REF: 0000000';
+            codeNode.textContent = state.codigo ? fitLabelText(state.codigo, 12) : '0000000';
             codeNode.hidden = !state.showCodigo;
         }
         if (sizeNode) {
-            sizeNode.textContent = state.produtoTamanho ? `TAM: ${fitLabelText(state.produtoTamanho, 6)}` : 'TAM: G';
+            sizeNode.textContent = state.produtoTamanho ? fitLabelText(state.produtoTamanho, 4) : 'G';
         }
         if (colorNode) {
             colorNode.textContent = `COR: ${(state.cor || 'PRETO').toUpperCase()}`;
