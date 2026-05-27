@@ -746,7 +746,7 @@
             const commands = [
                 `SIZE ${state.size.width} mm,${state.size.height} mm`,
                 `GAP ${state.size.gap} mm,0 mm`,
-                'DIRECTION 1',
+                'DIRECTION 0',
                 'REFERENCE 0,0',
                 'OFFSET 0 mm',
                 'CODEPAGE UTF-8',
@@ -766,7 +766,7 @@
         const commands = [
             `SIZE ${state.size.width} mm,${state.size.height} mm`,
             `GAP ${state.size.gap} mm,0 mm`,
-            'DIRECTION 1',
+            'DIRECTION 0',
             'REFERENCE 0,0',
             'CODEPAGE UTF-8',
             'CLS',
