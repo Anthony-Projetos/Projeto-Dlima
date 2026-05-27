@@ -664,28 +664,20 @@ body.label-modal-open {
 }
 
 .label-preview[data-size="60x40"] {
+    width: 480px;
+    height: 320px;
+}
+
+.label-preview-canvas {
+    position: absolute;
+    inset: 0 auto auto 0;
     width: 320px;
     height: 480px;
+    transform-origin: left top;
 }
 
-.label-preview[data-size="40x30"] {
-    width: 320px;
-    height: 240px;
-}
-
-.label-preview[data-size="40x80"] {
-    width: 240px;
-    height: 480px;
-}
-
-.label-preview[data-size="50x80"] {
-    width: 300px;
-    height: 480px;
-}
-
-.label-preview[data-size="60x80"] {
-    width: 340px;
-    height: 480px;
+.label-preview[data-orientation="vertical"] .label-preview-canvas {
+    transform: translateX(480px) rotate(90deg);
 }
 
 .label-preview-logo,
@@ -696,9 +688,9 @@ body.label-modal-open {
 }
 
 .label-preview-logo {
-    left: 42px;
+    left: 34px;
     top: 38px;
-    width: 236px;
+    width: 252px;
     height: 100px;
 }
 
@@ -717,8 +709,8 @@ body.label-modal-open {
 
 .label-preview-logo span {
     position: absolute;
-    right: 44px;
-    top: 72px;
+    right: 38px;
+    top: 64px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 19px;
     font-weight: 500;
@@ -726,12 +718,12 @@ body.label-modal-open {
 }
 
 .label-preview-main {
-    left: 24px;
+    left: 20px;
     top: 158px;
-    width: 272px;
+    width: 280px;
     height: 168px;
     display: grid;
-    grid-template-columns: 131px 141px;
+    grid-template-columns: 140px 140px;
     border-top: 2px solid #111111;
     border-bottom: 2px solid #111111;
 }
@@ -748,13 +740,13 @@ body.label-modal-open {
 
 .label-preview-field {
     min-width: 0;
-    padding: 11px 8px 0 8px;
+    padding: 11px 8px 0 10px;
 }
 
 .label-preview-value {
     position: relative;
     min-width: 0;
-    padding: 14px 8px 0 10px;
+    padding: 14px 8px 0 16px;
 }
 
 .label-preview small,
@@ -786,7 +778,7 @@ body.label-modal-open {
 .label-preview-price {
     position: absolute;
     left: 50%;
-    top: 75px;
+    top: 66px;
     display: flex;
     align-items: baseline;
     gap: 4px;
@@ -814,9 +806,9 @@ body.label-modal-open {
 }
 
 .label-preview-quote {
-    left: 24px;
+    left: 20px;
     top: 356px;
-    width: 272px;
+    width: 280px;
     height: 76px;
     display: flex;
     flex-direction: column;
@@ -829,49 +821,6 @@ body.label-modal-open {
     font-style: italic;
     line-height: 1.25;
     text-align: center;
-}
-
-.label-preview[data-size="40x30"] .label-preview-logo {
-    top: 14px;
-    transform: scale(0.68);
-    transform-origin: left top;
-}
-
-.label-preview[data-size="40x30"] .label-preview-main {
-    top: 78px;
-    height: 86px;
-}
-
-.label-preview[data-size="40x30"] .label-preview-field {
-    padding-top: 4px;
-}
-
-.label-preview[data-size="40x30"] .label-preview small,
-.label-preview[data-size="40x30"] .label-preview-value > small {
-    margin-bottom: 2px;
-    font-size: 11px;
-}
-
-.label-preview[data-size="40x30"] .label-preview strong {
-    font-size: 11px;
-}
-
-.label-preview[data-size="40x30"] .label-preview-price {
-    top: 36px;
-}
-
-.label-preview[data-size="40x30"] .label-preview-price b {
-    font-size: 24px;
-}
-
-.label-preview[data-size="40x30"] .label-preview-price em {
-    font-size: 30px;
-}
-
-.label-preview[data-size="40x30"] .label-preview-quote {
-    top: 178px;
-    height: 42px;
-    font-size: 11px;
 }
 
 .label-command-preview {

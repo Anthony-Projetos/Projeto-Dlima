@@ -186,9 +186,8 @@
                         <div class="form-group">
                             <label for="etiquetaTamanho">Dimensao da etiqueta</label>
                             <select id="etiquetaTamanho" class="label-input">
-                                <option value="40x60" selected>40x60mm vertical</option>
-                                <option value="60x40">60x40mm vertical rotacionada</option>
-                                <option value="40x30">40x30mm pequena</option>
+                                <option value="60x40" selected>60x40mm vertical rotacionada</option>
+                                <option value="40x60">40x60mm vertical direta</option>
                             </select>
                         </div>
                     </div>
@@ -247,34 +246,36 @@
                 <div class="label-panel label-preview-panel">
                     <h3>Previa</h3>
                     <div class="label-preview-stage">
-                        <div class="label-preview" id="etiquetaPreview" data-size="40x60">
-                            <div class="label-preview-logo">
-                                <div class="label-preview-brand">D'lima</div>
-                                <span>store</span>
-                            </div>
-                            <div class="label-preview-main">
-                                <div class="label-preview-info">
-                                    <div class="label-preview-field">
-                                        <small>PRODUTO</small>
-                                        <strong data-preview-name>Produto</strong>
+                        <div class="label-preview" id="etiquetaPreview" data-size="60x40" data-orientation="vertical">
+                            <div class="label-preview-canvas">
+                                <div class="label-preview-logo">
+                                    <div class="label-preview-brand">D'lima</div>
+                                    <span>store</span>
+                                </div>
+                                <div class="label-preview-main">
+                                    <div class="label-preview-info">
+                                        <div class="label-preview-field">
+                                            <small>PRODUTO</small>
+                                            <strong data-preview-name>Produto</strong>
+                                        </div>
+                                        <div class="label-preview-field">
+                                            <small>REF.</small>
+                                            <strong data-preview-code>0000000</strong>
+                                        </div>
+                                        <div class="label-preview-field">
+                                            <small>TAMANHO</small>
+                                            <strong data-preview-size>G</strong>
+                                        </div>
                                     </div>
-                                    <div class="label-preview-field">
-                                        <small>REF.</small>
-                                        <strong data-preview-code>0000000</strong>
-                                    </div>
-                                    <div class="label-preview-field">
-                                        <small>TAMANHO</small>
-                                        <strong data-preview-size>G</strong>
+                                    <div class="label-preview-value">
+                                        <small>VALOR</small>
+                                        <span class="label-preview-price"><b>R$</b><em data-preview-price>0,00</em></span>
                                     </div>
                                 </div>
-                                <div class="label-preview-value">
-                                    <small>VALOR</small>
-                                    <span class="label-preview-price"><b>R$</b><em data-preview-price>0,00</em></span>
+                                <div class="label-preview-quote">
+                                    <span>&ldquo;N&atilde;o seja copia,</span>
+                                    <span>seja refer&ecirc;ncia&rdquo;</span>
                                 </div>
-                            </div>
-                            <div class="label-preview-quote">
-                                <span>&ldquo;N&atilde;o seja copia,</span>
-                                <span>seja referencia&rdquo;</span>
                             </div>
                         </div>
                     </div>
