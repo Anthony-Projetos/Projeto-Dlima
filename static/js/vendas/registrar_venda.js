@@ -28,12 +28,22 @@
         codigo: document.getElementById('etiquetaMostrarCodigo'),
     };
     const LABEL_DOTS_PER_MM = 8;
+    const LABEL_SAFE_MARGIN_DOTS = 24;
+    const LABEL_FONT_WIDTHS = {
+        '0': 8,
+        '1': 8,
+        '2': 12,
+        '3': 16,
+    };
+    const DLIMA_LABEL_STORE_NAME = 'Dlima Store';
     const DLIMA_LABEL_QUOTE_LINES = [
-        'N\u00E3o seja copia,',
+        'Nao seja copia,',
         'seja referencia',
     ];
     const labelSizes = {
-        '60x40': { width: 60, height: 40, gap: 2, designWidth: 40, designHeight: 60, layout: 'dlima-reference' },
+        '40x60': { width: 40, height: 60, gap: 2, layout: 'dlima-clothing' },
+        '60x40': { width: 60, height: 40, gap: 2, layout: 'dlima-clothing' },
+        '40x30': { width: 40, height: 30, gap: 2, layout: 'dlima-clothing' },
         '60x30': { width: 60, height: 30, gap: 2, vertical: true },
         '40x80': { width: 40, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
         '50x80': { width: 50, height: 80, gap: 2, brandY: 38, nameY: 170, detailsY: 260, colorY: 335, priceY: 520 },
@@ -82,6 +92,81 @@
         }
 
         return text.slice(0, Math.max(maxLength - 1, 1)).trimEnd();
+    }
+
+    function clampLabelValue(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+    }
+
+    function getFontCharWidth(font) {
+        return LABEL_FONT_WIDTHS[String(font)] || LABEL_FONT_WIDTHS['1'];
+    }
+
+    function getEstimatedTextWidth(text, font, xMul) {
+        return sanitizeLabelText(text).length * getFontCharWidth(font) * (xMul || 1);
+    }
+
+    function getMaxCharsForWidth(font, xMul, maxWidth) {
+        const charWidth = getFontCharWidth(font) * (xMul || 1);
+        return Math.max(Math.floor(maxWidth / charWidth), 1);
+    }
+
+    function splitLabelText(value, maxChars, maxLines) {
+        const source = sanitizeLabelText(value).toUpperCase();
+        if (!source) {
+            return [];
+        }
+
+        const words = source.split(/\s+/).filter(Boolean);
+        const lines = [];
+        let currentLine = '';
+
+        words.forEach(word => {
+            const pending = currentLine ? `${currentLine} ${word}` : word;
+            if (pending.length <= maxChars) {
+                currentLine = pending;
+                return;
+            }
+
+            if (currentLine) {
+                lines.push(currentLine);
+                currentLine = '';
+            }
+
+            if (word.length > maxChars) {
+                lines.push(fitLabelText(word, maxChars));
+            } else {
+                currentLine = word;
+            }
+        });
+
+        if (currentLine) {
+            lines.push(currentLine);
+        }
+
+        return lines.slice(0, maxLines).map(line => fitLabelText(line, maxChars));
+    }
+
+    function fitTextForCommand(item, text) {
+        if (!item.maxWidth || item.noFit) {
+            return sanitizeLabelText(text);
+        }
+
+        return fitLabelText(text, getMaxCharsForWidth(item.font, item.xMul, item.maxWidth));
+    }
+
+    function getAlignedTextX(geometry, item, text) {
+        if (item.align !== 'center') {
+            return item.x;
+        }
+
+        const maxWidth = item.maxWidth || (geometry.designWidthDots - (LABEL_SAFE_MARGIN_DOTS * 2));
+        const textWidth = getEstimatedTextWidth(text, item.font, item.xMul);
+        const centeredX = Math.round((geometry.designWidthDots - textWidth) / 2);
+        const minX = Math.max(Math.round((geometry.designWidthDots - maxWidth) / 2), 0);
+        const maxX = Math.max(geometry.designWidthDots - LABEL_SAFE_MARGIN_DOTS - textWidth, minX);
+
+        return clampLabelValue(centeredX, minX, maxX);
     }
 
     function getVerticalLabelLines(state) {
@@ -165,13 +250,23 @@
     }
 
     function tsplTextCommand(geometry, item) {
-        const point = transformLabelPoint(geometry, item.x, item.y);
-        return `TEXT ${Math.round(point.x)},${Math.round(point.y)},"${item.font}",${point.rotation},${item.xMul},${item.yMul},"${sanitizeLabelText(item.text)}"`;
+        const text = fitTextForCommand(item, item.text);
+        const x = getAlignedTextX(geometry, item, text);
+        const point = transformLabelPoint(geometry, x, item.y);
+        return `TEXT ${Math.round(point.x)},${Math.round(point.y)},"${item.font}",${point.rotation},${item.xMul},${item.yMul},"${text}"`;
     }
 
     function zplTextCommand(geometry, item) {
-        const point = transformLabelPoint(geometry, item.x, item.y);
-        return `^FO${Math.round(point.x)},${Math.round(point.y)}^A0${point.zplOrientation},${item.zplHeight},${item.zplWidth}^FD${escapeZplText(item.text)}^FS`;
+        const text = fitTextForCommand(item, item.text);
+        const x = getAlignedTextX(geometry, item, text);
+        const point = transformLabelPoint(geometry, x, item.y);
+        if (item.align === 'center' && !geometry.verticalPrint) {
+            const blockWidth = Math.round(item.maxWidth || (geometry.designWidthDots - (LABEL_SAFE_MARGIN_DOTS * 2)));
+            const blockX = Math.round((geometry.designWidthDots - blockWidth) / 2);
+            return `^FO${blockX},${Math.round(point.y)}^A0N,${item.zplHeight},${item.zplWidth}^FB${blockWidth},1,0,C,0^FD${escapeZplText(text)}^FS`;
+        }
+
+        return `^FO${Math.round(point.x)},${Math.round(point.y)}^A0${point.zplOrientation},${item.zplHeight},${item.zplWidth}^FD${escapeZplText(text)}^FS`;
     }
 
     function tsplBarCommand(geometry, item) {
@@ -187,40 +282,124 @@
         return `^FO${Math.round(rect.x)},${Math.round(rect.y)}^GB${width},${height},${thickness},B,0^FS`;
     }
 
-    function buildDlimaReferenceLayout(state) {
-        const productName = state.showNome && state.nome ? fitLabelText(state.nome, 18) : '';
-        const productCode = state.showCodigo && state.codigo ? fitLabelText(state.codigo, 12) : '';
-        const productSize = state.produtoTamanho ? fitLabelText(state.produtoTamanho, 4) : '';
-        const priceText = state.showPreco && state.preco ? `R$${formatCurrency(parseMoney(state.preco))}` : '';
+    function buildDlimaClothingLayout(state) {
+        const geometry = getLabelGeometry(state.size);
+        const labelWidth = geometry.designWidthDots;
+        const labelHeight = geometry.designHeightDots;
+        const contentWidth = Math.max(labelWidth - (LABEL_SAFE_MARGIN_DOTS * 2), 1);
+        const compact = labelHeight <= 260;
+        const productFont = compact ? '1' : '2';
+        const productMaxLines = compact ? 1 : 2;
+        const productMaxChars = getMaxCharsForWidth(productFont, 1, contentWidth);
+        const productLines = state.showNome && state.nome
+            ? splitLabelText(state.nome, productMaxChars, productMaxLines)
+            : [];
+        const details = [];
         const elements = [
-            { type: 'text', x: 54, y: 48, font: '3', xMul: 2, yMul: 2, zplHeight: 58, zplWidth: 36, text: "D'lima" },
-            { type: 'text', x: 210, y: 112, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 16, text: 'store' },
-            { type: 'bar', x: 18, y: 160, width: 284, height: 2 },
-            { type: 'bar', x: 160, y: 160, width: 2, height: 170 },
-            { type: 'bar', x: 18, y: 330, width: 284, height: 2 },
-            { type: 'bar', x: 26, y: 217, width: 122, height: 2 },
-            { type: 'bar', x: 26, y: 274, width: 122, height: 2 },
-            { type: 'text', x: 24, y: 178, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'PRODUTO' },
-            { type: 'text', x: 24, y: 235, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'REF.' },
-            { type: 'text', x: 24, y: 292, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'TAMANHO' },
-            { type: 'text', x: 176, y: 178, font: '1', xMul: 1, yMul: 1, zplHeight: 22, zplWidth: 14, text: 'VALOR' },
-            { type: 'bar', x: 18, y: 356, width: 284, height: 2 },
-            { type: 'bar', x: 18, y: 432, width: 284, height: 2 },
-            { type: 'text', x: 50, y: 384, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `"${DLIMA_LABEL_QUOTE_LINES[0]}` },
-            { type: 'text', x: 68, y: 406, font: '0', xMul: 1, yMul: 1, zplHeight: 18, zplWidth: 12, text: `${DLIMA_LABEL_QUOTE_LINES[1]}"` },
+            {
+                type: 'text',
+                align: 'center',
+                x: 0,
+                y: Math.round(labelHeight * 0.06),
+                font: '3',
+                xMul: 1,
+                yMul: 1,
+                zplHeight: compact ? 28 : 34,
+                zplWidth: compact ? 24 : 28,
+                maxWidth: contentWidth,
+                noFit: true,
+                text: DLIMA_LABEL_STORE_NAME,
+            },
         ];
 
-        if (productName) {
-            elements.push({ type: 'text', x: 24, y: 201, font: '1', xMul: 1, yMul: 1, zplHeight: 24, zplWidth: 13, text: productName });
+        productLines.forEach((line, index) => {
+            elements.push({
+                type: 'text',
+                align: 'center',
+                x: 0,
+                y: Math.round(labelHeight * 0.20) + (index * (compact ? 18 : 28)),
+                font: productFont,
+                xMul: 1,
+                yMul: 1,
+                zplHeight: compact ? 20 : 26,
+                zplWidth: compact ? 18 : 22,
+                maxWidth: contentWidth,
+                text: line,
+            });
+        });
+
+        if (state.showCodigo && state.codigo) {
+            details.push(`REF: ${fitLabelText(state.codigo, compact ? 12 : 16)}`);
         }
-        if (productCode) {
-            elements.push({ type: 'text', x: 24, y: 258, font: '2', xMul: 1, yMul: 1, zplHeight: 26, zplWidth: 15, text: productCode });
+        if (state.produtoTamanho) {
+            details.push(`TAM: ${fitLabelText(state.produtoTamanho, compact ? 4 : 6)}`);
         }
-        if (productSize) {
-            elements.push({ type: 'text', x: 24, y: 315, font: '2', xMul: 1, yMul: 1, zplHeight: 26, zplWidth: 15, text: productSize });
+        if (details.length) {
+            elements.push({
+                type: 'text',
+                align: 'center',
+                x: 0,
+                y: Math.round(labelHeight * 0.34),
+                font: '1',
+                xMul: 1,
+                yMul: 1,
+                zplHeight: compact ? 18 : 22,
+                zplWidth: compact ? 14 : 16,
+                maxWidth: contentWidth,
+                text: details.join('   '),
+            });
         }
-        if (priceText) {
-            elements.push({ type: 'text', x: 174, y: 238, font: '2', xMul: 1, yMul: 2, zplHeight: 44, zplWidth: 18, text: priceText });
+
+        if (state.showPreco && state.preco) {
+            elements.push({
+                type: 'text',
+                align: 'center',
+                x: 0,
+                y: Math.round(labelHeight * 0.48),
+                font: '3',
+                xMul: 1,
+                yMul: compact ? 1 : 2,
+                zplHeight: compact ? 34 : 54,
+                zplWidth: compact ? 28 : 36,
+                maxWidth: contentWidth,
+                noFit: true,
+                text: formatLabelPrice(state.preco),
+            });
+        }
+
+        const footerY = Math.round(labelHeight * 0.82);
+        if (compact) {
+            elements.push({
+                type: 'text',
+                align: 'center',
+                x: 0,
+                y: footerY,
+                font: '1',
+                xMul: 1,
+                yMul: 1,
+                zplHeight: 18,
+                zplWidth: 14,
+                maxWidth: contentWidth,
+                noFit: true,
+                text: DLIMA_LABEL_QUOTE_LINES.join(' '),
+            });
+        } else {
+            DLIMA_LABEL_QUOTE_LINES.forEach((line, index) => {
+                elements.push({
+                    type: 'text',
+                    align: 'center',
+                    x: 0,
+                    y: footerY + (index * 22),
+                    font: '1',
+                    xMul: 1,
+                    yMul: 1,
+                    zplHeight: 20,
+                    zplWidth: 14,
+                    maxWidth: contentWidth,
+                    noFit: true,
+                    text: index === 0 ? `"${line}` : `${line}"`,
+                });
+            });
         }
 
         return elements;
@@ -532,13 +711,13 @@
 
     function getLabelState() {
         const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
-        const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '60x40';
+        const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '40x60';
         const configuredPrinterName = etiquetaPrinterName ? etiquetaPrinterName.value : '';
 
         return {
             quantity,
             sizeKey,
-            size: labelSizes[sizeKey] || labelSizes['60x40'],
+            size: labelSizes[sizeKey] || labelSizes['40x60'],
             language: etiquetaLinguagem ? etiquetaLinguagem.value : 'TSPL',
             printerName: sanitizeLabelText(configuredPrinterName || getAppConfig().labelPrinterName || 'ELGIN'),
             nome: sanitizeLabelText(etiquetaNome ? etiquetaNome.value : ''),
@@ -567,13 +746,16 @@
             throw new Error('Informe uma quantidade de etiquetas maior que zero.');
         }
 
-        const hasContent = [
+        const printableFields = [
             state.showNome && state.nome,
             state.showPreco && state.preco,
             state.showCodigo && state.codigo,
             state.produtoTamanho,
-            state.cor,
-        ].some(Boolean);
+        ];
+        if (state.size.layout !== 'dlima-clothing') {
+            printableFields.push(state.cor);
+        }
+        const hasContent = printableFields.some(Boolean);
 
         if (!hasContent) {
             throw new Error('Informe ao menos um conteudo para imprimir na etiqueta.');
@@ -587,7 +769,7 @@
     function buildTsplLabelPayload() {
         const state = getLabelState();
         validateLabelState(state);
-        if (state.size.layout === 'dlima-reference') {
+        if (state.size.layout === 'dlima-clothing') {
             const geometry = getLabelGeometry(state.size);
             const commands = [
                 `SIZE ${state.size.width} mm,${state.size.height} mm`,
@@ -598,7 +780,7 @@
                 'CLS',
             ];
 
-            buildDlimaReferenceLayout(state).forEach(item => {
+            buildDlimaClothingLayout(state).forEach(item => {
                 commands.push(item.type === 'bar' ? tsplBarCommand(geometry, item) : tsplTextCommand(geometry, item));
             });
 
@@ -655,9 +837,9 @@
         const heightDots = Math.round(state.size.height * dotsPerMm);
         const commands = ['^XA', `^PW${widthDots}`, `^LL${heightDots}`, '^CI28'];
 
-        if (state.size.layout === 'dlima-reference') {
+        if (state.size.layout === 'dlima-clothing') {
             const geometry = getLabelGeometry(state.size);
-            buildDlimaReferenceLayout(state).forEach(item => {
+            buildDlimaClothingLayout(state).forEach(item => {
                 commands.push(item.type === 'bar' ? zplBarCommand(geometry, item) : zplTextCommand(geometry, item));
             });
 
@@ -716,7 +898,7 @@
         etiquetaPreview.dataset.size = state.sizeKey;
         etiquetaPreview.dataset.orientation = shouldPrintVertically(state.size) ? 'vertical' : 'horizontal';
         if (nameNode) {
-            nameNode.textContent = state.nome ? fitLabelText(state.nome, 18) : 'Produto';
+            nameNode.textContent = state.nome ? splitLabelText(state.nome, 24, 2).join(' ') : 'Produto';
             nameNode.hidden = !state.showNome;
         }
         if (priceNode) {
@@ -727,11 +909,11 @@
             }
         }
         if (codeNode) {
-            codeNode.textContent = state.codigo ? fitLabelText(state.codigo, 12) : '0000000';
+            codeNode.textContent = state.codigo ? `REF: ${fitLabelText(state.codigo, 16)}` : 'REF: 0000000';
             codeNode.hidden = !state.showCodigo;
         }
         if (sizeNode) {
-            sizeNode.textContent = state.produtoTamanho ? fitLabelText(state.produtoTamanho, 4) : 'G';
+            sizeNode.textContent = state.produtoTamanho ? `TAM: ${fitLabelText(state.produtoTamanho, 6)}` : 'TAM: G';
         }
         if (colorNode) {
             colorNode.textContent = `COR: ${(state.cor || 'PRETO').toUpperCase()}`;
@@ -858,7 +1040,7 @@
             etiquetaQuantidade.value = '1';
         }
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = '60x40';
+            etiquetaTamanho.value = '40x60';
         }
         if (etiquetaLinguagem) {
             etiquetaLinguagem.value = getAppConfig().labelLanguage || 'TSPL';

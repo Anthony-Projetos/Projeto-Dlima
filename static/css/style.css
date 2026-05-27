@@ -658,9 +658,19 @@ body.label-modal-open {
     pointer-events: none;
 }
 
-.label-preview[data-size="60x40"] {
+.label-preview[data-size="40x60"] {
     width: 320px;
     height: 480px;
+}
+
+.label-preview[data-size="60x40"] {
+    width: 480px;
+    height: 320px;
+}
+
+.label-preview[data-size="40x30"] {
+    width: 320px;
+    height: 240px;
 }
 
 .label-preview[data-size="40x80"] {
@@ -678,115 +688,74 @@ body.label-modal-open {
     height: 480px;
 }
 
-.label-preview-logo,
-.label-preview-main,
+.label-preview-brand,
+.label-preview-product,
+.label-preview-details,
+.label-preview-value,
 .label-preview-quote {
     position: absolute;
     z-index: 1;
-}
-
-.label-preview-logo {
-    left: 42px;
-    top: 38px;
-    width: 236px;
-    height: 100px;
+    left: 24px;
+    right: 24px;
+    min-width: 0;
+    text-align: center;
 }
 
 .label-preview-brand {
-    position: relative;
+    top: 6%;
     color: #111111;
-    font-family: "Brush Script MT", "Segoe Script", cursive;
-    font-size: 60px;
-    font-weight: 700;
-    font-style: italic;
-    line-height: 0.9;
-    text-align: center;
-    transform: scaleX(1.08);
-    transform-origin: center top;
-}
-
-.label-preview-logo span {
-    position: absolute;
-    right: 44px;
-    top: 72px;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 19px;
-    font-weight: 500;
+    font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
+    font-size: 32px;
+    font-weight: 900;
     line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
-.label-preview-main {
-    left: 18px;
-    top: 160px;
-    width: 284px;
-    height: 170px;
-    display: grid;
-    grid-template-columns: 142px 142px;
-    border-top: 2px solid #111111;
-    border-bottom: 2px solid #111111;
+.label-preview-product {
+    top: 20%;
+    max-height: 58px;
+    overflow: hidden;
+    color: #111111;
+    font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
+    font-size: 23px;
+    font-weight: 900;
+    line-height: 1.16;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
 }
 
-.label-preview-info {
-    display: grid;
-    grid-template-rows: repeat(3, 1fr);
-    border-right: 2px solid #111111;
-}
-
-.label-preview-field + .label-preview-field {
-    border-top: 2px solid #111111;
-}
-
-.label-preview-field {
-    min-width: 0;
-    padding: 11px 8px 0 10px;
-}
-
-.label-preview-value {
-    position: relative;
-    min-width: 0;
-    padding: 14px 10px 0 18px;
-}
-
-.label-preview small,
-.label-preview-value > small {
-    display: block;
-    margin-bottom: 7px;
+.label-preview-details {
+    top: 34%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: #111111;
     font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
     font-size: 18px;
-    font-weight: 500;
-    line-height: 1;
-    color: #111111;
-    text-transform: uppercase;
-}
-
-.label-preview strong {
-    display: block;
-    width: max-content;
-    max-width: none;
-    font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
-    font-size: 16px;
     font-weight: 800;
     line-height: 1;
     text-transform: uppercase;
     white-space: nowrap;
-    transform: scaleX(0.64);
-    transform-origin: left center;
+}
+
+.label-preview-value {
+    top: 47%;
+    display: flex;
+    justify-content: center;
 }
 
 .label-preview-price {
-    position: absolute;
-    left: 18px;
-    top: 75px;
-    display: flex;
+    display: inline-flex;
     align-items: baseline;
-    gap: 4px;
-    width: max-content;
-    max-width: none;
+    justify-content: center;
+    gap: 5px;
+    max-width: 100%;
+    color: #111111;
     font-family: "Arial Narrow", "Segoe UI Condensed", Arial, sans-serif;
     font-weight: 900;
-    line-height: 0.86;
-    transform: scaleX(0.54);
-    transform-origin: left center;
+    line-height: 0.9;
     white-space: nowrap;
 }
 
@@ -796,29 +765,53 @@ body.label-modal-open {
 }
 
 .label-preview-price b {
-    font-size: 42px;
+    font-size: 38px;
 }
 
 .label-preview-price em {
-    font-size: 52px;
+    font-size: 48px;
 }
 
 .label-preview-quote {
-    left: 18px;
-    top: 356px;
-    width: 284px;
-    height: 76px;
+    top: 82%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-top: 2px solid #111111;
-    border-bottom: 2px solid #111111;
+    color: #111111;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 17px;
     font-style: italic;
     line-height: 1.25;
     text-align: center;
+}
+
+.label-preview[data-size="40x30"] .label-preview-brand {
+    font-size: 24px;
+}
+
+.label-preview[data-size="40x30"] .label-preview-product {
+    max-height: 24px;
+    font-size: 18px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.label-preview[data-size="40x30"] .label-preview-details {
+    gap: 10px;
+    font-size: 14px;
+}
+
+.label-preview[data-size="40x30"] .label-preview-price b {
+    font-size: 28px;
+}
+
+.label-preview[data-size="40x30"] .label-preview-price em {
+    font-size: 36px;
+}
+
+.label-preview[data-size="40x30"] .label-preview-quote {
+    font-size: 12px;
 }
 
 .label-command-preview {
