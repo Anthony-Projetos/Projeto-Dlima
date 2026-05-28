@@ -534,6 +534,16 @@ body.label-modal-open {
     margin-bottom: 0;
 }
 
+.label-test-action {
+    display: flex;
+    flex-direction: column;
+}
+
+.label-test-action .btn-secondary {
+    width: 100%;
+    min-height: 48px;
+}
+
 .label-input {
     width: 100%;
     min-height: 48px;
