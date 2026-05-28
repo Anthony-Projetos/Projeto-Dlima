@@ -207,18 +207,6 @@
                         </div>
                     </div>
 
-                    <div class="form-grid label-form-grid label-test-controls">
-                        <div class="form-group">
-                            <label for="etiquetaTesteTexto">Teste de centro</label>
-                            <input id="etiquetaTesteTexto" type="text" class="label-input" value="TESTE" maxlength="14">
-                        </div>
-
-                        <div class="form-group label-test-action">
-                            <label>&nbsp;</label>
-                            <button type="button" class="btn-secondary" id="imprimirTesteCentralizado">Teste centro</button>
-                        </div>
-                    </div>
-
                     <div class="label-options">
                         <label><input type="checkbox" id="etiquetaMostrarNome" checked> Nome do produto</label>
                         <label><input type="checkbox" id="etiquetaMostrarPreco" checked> Preco</label>
@@ -296,9 +284,19 @@
             </div>
 
             <div class="label-modal-actions">
-                <button type="button" class="btn-secondary" id="limparEtiquetas">Limpar</button>
-                <button type="button" class="btn-secondary" id="fecharEtiquetas">Fechar</button>
-                <button type="button" class="btn-primary" id="imprimirEtiquetas">Imprimir etiquetas</button>
+                <div class="label-center-test">
+                    <label for="etiquetaTesteTexto">Teste de centro</label>
+                    <div class="label-center-test-row">
+                        <input id="etiquetaTesteTexto" type="text" class="label-input" value="TESTE" maxlength="14">
+                        <button type="button" class="btn-secondary" id="imprimirTesteCentralizado">Teste centro</button>
+                    </div>
+                </div>
+
+                <div class="label-action-buttons">
+                    <button type="button" class="btn-secondary" id="limparEtiquetas">Limpar</button>
+                    <button type="button" class="btn-secondary" id="fecharEtiquetas">Fechar</button>
+                    <button type="button" class="btn-primary" id="imprimirEtiquetas">Imprimir etiquetas</button>
+                </div>
             </div>
         </section>
     </div>

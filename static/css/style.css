@@ -534,14 +534,32 @@ body.label-modal-open {
     margin-bottom: 0;
 }
 
-.label-test-action {
+.label-center-test {
     display: flex;
     flex-direction: column;
+    gap: 6px;
+    width: min(320px, 100%);
+    margin-right: auto;
 }
 
-.label-test-action .btn-secondary {
-    width: 100%;
-    min-height: 48px;
+.label-center-test label {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 13px;
+}
+
+.label-center-test-row,
+.label-action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.label-center-test-row .label-input {
+    min-width: 128px;
+}
+
+.label-center-test-row .btn-secondary {
+    white-space: nowrap;
 }
 
 .label-input {
@@ -865,6 +883,18 @@ body.label-modal-open {
     .label-modal-grid,
     .label-options {
         grid-template-columns: 1fr;
+    }
+
+    .label-modal-actions,
+    .label-center-test-row,
+    .label-action-buttons {
+        align-items: stretch;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .label-center-test {
+        width: 100%;
     }
 
     .total-box {
