@@ -41,7 +41,6 @@ def registrar_venda(request):
         'receiptHtmlFallback': True,
         'labelPrinterName': label_settings['printer_name'],
         'labelPrinterSearchTerms': label_settings['printer_search_terms'],
-        'labelLanguage': label_settings['language'],
         'qzCertificateUrl': '',
         'qzSignatureUrl': '',
     }

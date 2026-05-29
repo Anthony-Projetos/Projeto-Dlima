@@ -154,9 +154,9 @@
         <section class="label-modal" role="dialog" aria-modal="true" aria-labelledby="etiquetasModalTitle">
             <div class="label-modal-header">
                 <div>
-                    <span class="brand-badge label-badge">Impressao RAW</span>
+                    <span class="brand-badge label-badge">Pixel HTML</span>
                     <h2 id="etiquetasModalTitle">Etiquetas adesivas</h2>
-                    <p>Monte, confira a previa e envie comandos TSPL/ZPL direto para a Elgin.</p>
+                    <p>Monte, confira a previa e envie HTML/CSS pelo QZ Tray.</p>
                 </div>
                 <button type="button" class="label-icon-button" id="closeEtiquetasModal" aria-label="Fechar">&times;</button>
             </div>
@@ -185,22 +185,11 @@
 
                         <div class="form-group">
                             <label for="etiquetaTamanho">Dimensao da etiqueta</label>
-                            <select id="etiquetaTamanho" class="label-input">
-                                <option value="60x40" selected>60x40mm vertical rotacionada</option>
-                                <option value="40x60">40x60mm vertical direta</option>
-                            </select>
+                            <input id="etiquetaTamanho" type="text" class="label-input" value="60x40" readonly>
                         </div>
                     </div>
 
                     <div class="form-grid label-form-grid">
-                        <div class="form-group">
-                            <label for="etiquetaLinguagem">Linguagem</label>
-                            <select id="etiquetaLinguagem" class="label-input">
-                                <option value="TSPL" {% if pdv_config.labelLanguage == "TSPL" %}selected{% endif %}>TSPL / TSC</option>
-                                <option value="ZPL" {% if pdv_config.labelLanguage == "ZPL" %}selected{% endif %}>ZPL</option>
-                            </select>
-                        </div>
-
                         <div class="form-group">
                             <label for="etiquetaPrinterName">Impressora QZ</label>
                             <input id="etiquetaPrinterName" type="text" class="label-input" value="{{ pdv_config.labelPrinterName }}" placeholder="Nome da impressora">
@@ -211,6 +200,7 @@
                         <label><input type="checkbox" id="etiquetaMostrarNome" checked> Nome do produto</label>
                         <label><input type="checkbox" id="etiquetaMostrarPreco" checked> Preco</label>
                         <label><input type="checkbox" id="etiquetaMostrarCodigo" checked> Codigo/referencia</label>
+                        <label><input type="checkbox" id="etiquetaBordaTeste"> Borda vermelha</label>
                     </div>
 
                     <div class="form-group">
@@ -246,40 +236,9 @@
                 <div class="label-panel label-preview-panel">
                     <h3>Previa</h3>
                     <div class="label-preview-stage">
-                        <div class="label-preview" id="etiquetaPreview" data-size="60x40" data-orientation="vertical">
-                            <div class="label-preview-canvas">
-                                <div class="label-preview-logo">
-                                    <div class="label-preview-brand">D'lima</div>
-                                    <span>store</span>
-                                </div>
-                                <div class="label-preview-main">
-                                    <div class="label-preview-info">
-                                        <div class="label-preview-field">
-                                            <small>PRODUTO</small>
-                                            <strong data-preview-name>Produto</strong>
-                                        </div>
-                                        <div class="label-preview-field">
-                                            <small>REF.</small>
-                                            <strong data-preview-code>0000000</strong>
-                                        </div>
-                                        <div class="label-preview-field">
-                                            <small>TAMANHO</small>
-                                            <strong data-preview-size>G</strong>
-                                        </div>
-                                    </div>
-                                    <div class="label-preview-value">
-                                        <small>VALOR</small>
-                                        <span class="label-preview-price"><b>R$</b><em data-preview-price>0,00</em></span>
-                                    </div>
-                                </div>
-                                <div class="label-preview-quote">
-                                    <span>&ldquo;N&atilde;o seja copia,</span>
-                                    <span>seja refer&ecirc;ncia&rdquo;</span>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="label-preview" id="etiquetaPreview" data-size="60x40"></div>
                     </div>
-                    <pre class="label-command-preview" id="etiquetaCommandPreview"></pre>
+                    <pre class="label-html-preview" id="etiquetaHtmlPreview"></pre>
                 </div>
             </div>
 

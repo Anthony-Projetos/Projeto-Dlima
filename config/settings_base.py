@@ -95,7 +95,6 @@ PDV_LABEL_SETTINGS = {
         "PDV_LABEL_PRINTER_SEARCH_TERMS",
         ["ELGIN L42PRO FULL", "ELGIN", "L42"],
     ),
-    "language": env("PDV_LABEL_LANGUAGE", "TSPL"),
 }
 
 

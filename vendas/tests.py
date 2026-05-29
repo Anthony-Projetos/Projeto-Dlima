@@ -1,5 +1,7 @@
 import json
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -56,7 +58,6 @@ class RegistrarVendaBuscaTests(TestCase):
     @override_settings(PDV_LABEL_SETTINGS={
         'printer_name': 'ELGIN L42PRO FULL',
         'printer_search_terms': ['ELGIN L42PRO FULL', 'ELGIN', 'L42'],
-        'language': 'TSPL',
     })
     def test_registrar_venda_expoe_configuracao_da_impressora_de_etiquetas(self):
         response = self.client.get(reverse('registrar_venda'))
@@ -64,6 +65,7 @@ class RegistrarVendaBuscaTests(TestCase):
         self.assertContains(response, '"labelPrinterName": "ELGIN L42PRO FULL"')
         self.assertContains(response, '"labelPrinterSearchTerms": ["ELGIN L42PRO FULL", "ELGIN", "L42"]')
         self.assertContains(response, 'value="ELGIN L42PRO FULL"')
+        self.assertContains(response, 'id="etiquetaBordaTeste"')
 
     def test_finalizar_venda_retorna_dados_para_impressao(self):
         produto = Produto.objects.get(nome='Camisa Polo Azul')
@@ -94,6 +96,29 @@ class RegistrarVendaBuscaTests(TestCase):
         self.assertIn('receipt', data)
         self.assertEqual(data['receipt']['sale']['numero'], data['sale']['numero'])
         self.assertEqual(data['receipt']['printer']['encoding'], 'CP860')
+
+
+class LabelPrintingFrontendTests(TestCase):
+    def test_js_de_etiquetas_usa_qz_pixel_html_60x40(self):
+        source = Path(settings.BASE_DIR / 'static/js/vendas/registrar_venda.js').read_text(encoding='utf-8')
+
+        self.assertIn("type: 'pixel'", source)
+        self.assertIn("format: 'html'", source)
+        self.assertIn("flavor: 'plain'", source)
+        self.assertIn("units: 'mm'", source)
+        self.assertIn("size: { width: 60, height: 40 }", source)
+        self.assertIn("margins: 0", source)
+        self.assertIn("density: 203", source)
+        self.assertIn('@page {', source)
+        self.assertIn('size: 60mm 40mm;', source)
+        self.assertIn('width: 60mm;', source)
+        self.assertIn('height: 40mm;', source)
+        self.assertIn('padding: 2mm;', source)
+        self.assertNotIn("type: 'raw'", source)
+        self.assertNotIn("format: 'command'", source)
+        self.assertNotIn('buildRawLabelDocument', source)
+        self.assertNotIn('buildZpl', source)
+        self.assertNotIn('buildTspl', source)
 
 
 class ReceiptPayloadTests(TestCase):

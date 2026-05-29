@@ -13,7 +13,6 @@
     const etiquetaResultadosProduto = document.getElementById('etiquetaResultadosProduto');
     const etiquetaQuantidade = document.getElementById('etiquetaQuantidade');
     const etiquetaTamanho = document.getElementById('etiquetaTamanho');
-    const etiquetaLinguagem = document.getElementById('etiquetaLinguagem');
     const etiquetaPrinterName = document.getElementById('etiquetaPrinterName');
     const etiquetaNome = document.getElementById('etiquetaNome');
     const etiquetaPreco = document.getElementById('etiquetaPreco');
@@ -21,35 +20,23 @@
     const etiquetaProdutoTamanho = document.getElementById('etiquetaProdutoTamanho');
     const etiquetaCor = document.getElementById('etiquetaCor');
     const etiquetaTesteTexto = document.getElementById('etiquetaTesteTexto');
+    const etiquetaBordaTeste = document.getElementById('etiquetaBordaTeste');
     const etiquetaPreview = document.getElementById('etiquetaPreview');
-    const etiquetaCommandPreview = document.getElementById('etiquetaCommandPreview');
+    const etiquetaHtmlPreview = document.getElementById('etiquetaHtmlPreview');
     const etiquetaOptions = {
         nome: document.getElementById('etiquetaMostrarNome'),
         preco: document.getElementById('etiquetaMostrarPreco'),
         codigo: document.getElementById('etiquetaMostrarCodigo'),
     };
-    const LABEL_DOTS_PER_MM = 8;
-    const LABEL_SAFE_MARGIN_DOTS = 24;
-    const LABEL_FONT_WIDTHS = {
-        '0': 8,
-        '1': 8,
-        '2': 12,
-        '3': 16,
-    };
-    const LABEL_FONT_HEIGHTS = {
-        '0': 12,
-        '1': 16,
-        '2': 20,
-        '3': 24,
-    };
+    const LABEL_WIDTH_MM = 60;
+    const LABEL_HEIGHT_MM = 40;
     const DLIMA_LABEL_QUOTE_LINES = [
         'N\u00E3o seja copia,',
         'seja refer\u00EAncia',
     ];
     const CENTER_TEST_DEFAULT_TEXT = 'TESTE';
     const labelSizes = {
-        '60x40': { width: 60, height: 40, gap: 2, designWidth: 40, designHeight: 60, layout: 'dlima-reference' },
-        '40x60': { width: 40, height: 60, gap: 2, layout: 'dlima-reference' },
+        '60x40': { width: LABEL_WIDTH_MM, height: LABEL_HEIGHT_MM },
     };
 
     function getAppConfig() {
@@ -107,10 +94,6 @@
             .trim();
     }
 
-    function onlyBarcodeText(value) {
-        return sanitizeLabelText(value).replace(/[^A-Za-z0-9\-_.]/g, '') || '00000';
-    }
-
     function fitLabelText(value, maxLength) {
         const text = sanitizeLabelText(value).toUpperCase();
         if (text.length <= maxLength) {
@@ -120,365 +103,263 @@
         return text.slice(0, Math.max(maxLength - 1, 1)).trimEnd();
     }
 
-    function clampLabelValue(value, min, max) {
-        return Math.min(Math.max(value, min), max);
+    function escapeHtml(value) {
+        return sanitizeLabelText(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
-    function getFontCharWidth(font) {
-        return LABEL_FONT_WIDTHS[String(font)] || LABEL_FONT_WIDTHS['1'];
-    }
-
-    function getFontCharHeight(font) {
-        return LABEL_FONT_HEIGHTS[String(font)] || LABEL_FONT_HEIGHTS['1'];
-    }
-
-    function getEstimatedTextWidth(text, font, xMul) {
-        return sanitizeLabelText(text).length * getFontCharWidth(font) * (xMul || 1);
-    }
-
-    function getEstimatedTextHeight(item) {
-        return Math.max(
-            Number(item.zplHeight || 0),
-            getFontCharHeight(item.font) * (item.yMul || 1)
-        );
-    }
-
-    function getMaxCharsForWidth(font, xMul, maxWidth) {
-        const charWidth = getFontCharWidth(font) * (xMul || 1);
-        return Math.max(Math.floor(maxWidth / charWidth), 1);
-    }
-
-    function splitLabelText(value, maxChars, maxLines) {
-        const source = sanitizeLabelText(value).toUpperCase();
-        if (!source) {
-            return [];
+    function buildLabelField(label, value) {
+        if (!value) {
+            return '';
         }
 
-        const words = source.split(/\s+/).filter(Boolean);
-        const lines = [];
-        let currentLine = '';
+        return [
+            '<div class="label-field">',
+            `<span class="label-kicker">${escapeHtml(label)}</span>`,
+            `<strong class="label-value">${escapeHtml(value)}</strong>`,
+            '</div>',
+        ].join('');
+    }
 
-        words.forEach(word => {
-            const pending = currentLine ? `${currentLine} ${word}` : word;
-            if (pending.length <= maxChars) {
-                currentLine = pending;
-                return;
-            }
+    function buildLabelMarkup(state, options = {}) {
+        const testBorderClass = state.testBorder ? ' label--test-border' : '';
 
-            if (currentLine) {
-                lines.push(currentLine);
-                currentLine = '';
-            }
-
-            if (word.length > maxChars) {
-                lines.push(fitLabelText(word, maxChars));
-            } else {
-                currentLine = word;
-            }
-        });
-
-        if (currentLine) {
-            lines.push(currentLine);
+        if (options.centerText) {
+            return [
+                `<div class="label label--center-test${testBorderClass}">`,
+                `<div class="label-center-word">${escapeHtml(fitLabelText(options.centerText, 18))}</div>`,
+                '</div>',
+            ].join('');
         }
 
-        return lines.slice(0, maxLines).map(line => fitLabelText(line, maxChars));
+        const productName = state.showNome && state.nome ? fitLabelText(state.nome, 28) : '';
+        const productCode = state.showCodigo && state.codigo ? fitLabelText(state.codigo, 18) : '';
+        const productSize = state.produtoTamanho ? fitLabelText(state.produtoTamanho, 8) : '';
+        const productColor = state.cor ? fitLabelText(state.cor, 14) : '';
+        const priceText = state.showPreco && state.preco ? formatCurrency(parseMoney(state.preco)) : '';
+        const fields = [
+            buildLabelField('PRODUTO', productName),
+            buildLabelField('REF.', productCode),
+            buildLabelField('TAMANHO', productSize),
+            buildLabelField('COR', productColor),
+        ].filter(Boolean).join('');
+
+        return [
+            `<div class="label${testBorderClass}">`,
+            '<header class="label-header">',
+            '<div class="label-brand">D&#39;lima <span>store</span></div>',
+            '</header>',
+            '<main class="label-main">',
+            `<section class="label-fields">${fields || buildLabelField('PRODUTO', 'Produto')}</section>`,
+            '<section class="label-price">',
+            '<span class="label-kicker">VALOR</span>',
+            priceText ? `<strong class="label-price-value"><small>R$</small><span>${escapeHtml(priceText)}</span></strong>` : '',
+            '</section>',
+            '</main>',
+            '<footer class="label-footer">',
+            `<span>&quot;${escapeHtml(DLIMA_LABEL_QUOTE_LINES[0])}</span>`,
+            `<span>${escapeHtml(DLIMA_LABEL_QUOTE_LINES[1])}&quot;</span>`,
+            '</footer>',
+            '</div>',
+        ].join('');
     }
 
-    function fitTextForCommand(item, text) {
-        if (!item.maxWidth || item.noFit) {
-            return sanitizeLabelText(text);
-        }
+    function buildLabelPrintCss() {
+        return `
+@page {
+  size: 60mm 40mm;
+  margin: 0;
+}
 
-        return fitLabelText(text, getMaxCharsForWidth(item.font, item.xMul, item.maxWidth));
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 60mm;
+  height: 40mm;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.label {
+  width: 60mm;
+  height: 40mm;
+  padding: 2mm;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+  color: #000;
+  background: #fff;
+  overflow: hidden;
+}
+
+.label--test-border {
+  outline: 0.5mm solid #e00000;
+  outline-offset: -0.5mm;
+}
+
+.label-header {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  min-height: 7mm;
+  padding-bottom: 1mm;
+  border-bottom: 0.25mm solid #000;
+}
+
+.label-brand {
+  font-size: 5mm;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
+.label-brand span {
+  display: block;
+  margin-top: 0.2mm;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.8mm;
+  font-weight: 500;
+}
+
+.label-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(18mm, 0.8fr);
+  gap: 1.4mm;
+  padding: 1.2mm 0;
+  border-bottom: 0.25mm solid #000;
+}
+
+.label-fields {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6mm;
+}
+
+.label-field {
+  min-width: 0;
+  padding-bottom: 0.45mm;
+  border-bottom: 0.2mm solid #000;
+}
+
+.label-field:last-child {
+  border-bottom: 0;
+}
+
+.label-price {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 1.1mm;
+  border-left: 0.25mm solid #000;
+}
+
+.label-kicker {
+  display: block;
+  margin-bottom: 0.35mm;
+  font-size: 1.8mm;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.label-value {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 2.5mm;
+  font-weight: 800;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.label-price-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7mm;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 4.8mm;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.label-price-value small {
+  font-size: 2.7mm;
+}
+
+.label-price-value span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.label-footer {
+  flex: 0 0 auto;
+  min-height: 4.6mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.9mm;
+  font-style: italic;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.label--center-test {
+  justify-content: center;
+  align-items: center;
+}
+
+.label-center-word {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 9mm;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+`;
     }
 
-    function getAlignedTextX(geometry, item, text) {
-        if (item.align !== 'center') {
-            return item.x;
-        }
-
-        const maxWidth = item.maxWidth || (geometry.designWidthDots - (LABEL_SAFE_MARGIN_DOTS * 2));
-        const textWidth = getEstimatedTextWidth(text, item.font, item.xMul);
-        const centeredX = Math.round((geometry.designWidthDots - textWidth) / 2);
-        const minX = Math.max(Math.round((geometry.designWidthDots - maxWidth) / 2), 0);
-        const maxX = Math.max(geometry.designWidthDots - LABEL_SAFE_MARGIN_DOTS - textWidth, minX);
-
-        return clampLabelValue(centeredX, minX, maxX);
+    function buildLabelHtmlDocument(state, options = {}) {
+        return [
+            '<!doctype html>',
+            '<html>',
+            '<head>',
+            '<meta charset="utf-8">',
+            `<style>${buildLabelPrintCss()}</style>`,
+            '</head>',
+            '<body>',
+            buildLabelMarkup(state, options),
+            '</body>',
+            '</html>',
+        ].join('');
     }
 
-    function getVerticalLabelLines(state) {
-        const lines = [];
-        lines.push({ x: 14, font: '3', xMul: 1, yMul: 1, text: "D'lima" });
-
-        if (state.showNome && state.nome) {
-            lines.push({ x: 48, font: '2', xMul: 1, yMul: 1, text: fitLabelText(state.nome, 24) });
-        }
-
-        const details = [];
-        if (state.showCodigo && state.codigo) {
-            details.push(`REF: ${fitLabelText(state.codigo, 12)}`);
-        }
-        if (state.produtoTamanho) {
-            details.push(`TAM: ${fitLabelText(state.produtoTamanho, 5)}`);
-        }
-        if (details.length) {
-            lines.push({ x: 82, font: '2', xMul: 1, yMul: 1, text: details.join('  ') });
-        }
-
-        if (state.cor) {
-            lines.push({ x: 116, font: '2', xMul: 1, yMul: 1, text: `COR: ${fitLabelText(state.cor, 14)}` });
-        }
-        if (state.showPreco && state.preco) {
-            lines.push({ x: 156, font: '3', xMul: 2, yMul: 2, text: `R$ ${formatCurrency(parseMoney(state.preco))}` });
-        }
-
-        return lines;
-    }
-
-    function shouldPrintVertically(size) {
-        const mediaAspect = size.width / size.height;
-        const designAspect = (size.designWidth || size.width) / (size.designHeight || size.height);
-        return mediaAspect > 1 && designAspect < 1;
-    }
-
-    function getLabelGeometry(size) {
-        const mediaWidthDots = Math.round(size.width * LABEL_DOTS_PER_MM);
-        const mediaHeightDots = Math.round(size.height * LABEL_DOTS_PER_MM);
-        const verticalPrint = shouldPrintVertically(size);
-
-        return {
-            mediaWidthDots,
-            mediaHeightDots,
-            designWidthDots: Math.round((size.designWidth || (verticalPrint ? size.height : size.width)) * LABEL_DOTS_PER_MM),
-            designHeightDots: Math.round((size.designHeight || (verticalPrint ? size.width : size.height)) * LABEL_DOTS_PER_MM),
-            verticalPrint,
-        };
-    }
-
-    function transformLabelPoint(geometry, x, y, item) {
-        if (!geometry.verticalPrint) {
-            return { x, y, rotation: 0, zplOrientation: 'N' };
-        }
-
-        const rotatedTextInsetDots = item ? getEstimatedTextHeight(item) : 42;
-        return {
-            x: y,
-            y: geometry.designWidthDots - x - rotatedTextInsetDots,
-            rotation: 90,
-            zplOrientation: 'R',
-        };
-    }
-
-    function transformLabelRect(geometry, rect) {
-        if (!geometry.verticalPrint) {
-            return rect;
-        }
-
-        return {
-            x: rect.y,
-            y: geometry.designWidthDots - rect.x - rect.width,
-            width: rect.height,
-            height: rect.width,
-        };
-    }
-
-    function escapeZplText(value) {
-        return sanitizeLabelText(value).replace(/[\^~]/g, ' ');
-    }
-
-    function tsplTextCommand(geometry, item) {
-        const text = fitTextForCommand(item, item.text);
-        const x = getAlignedTextX(geometry, item, text);
-        const point = transformLabelPoint(geometry, x, item.y, item);
-        return `TEXT ${Math.round(point.x)},${Math.round(point.y)},"${item.font}",${point.rotation},${item.xMul},${item.yMul},"${text}"`;
-    }
-
-    function zplTextCommand(geometry, item) {
-        const text = fitTextForCommand(item, item.text);
-        const x = getAlignedTextX(geometry, item, text);
-        const point = transformLabelPoint(geometry, x, item.y, item);
-        if (item.align === 'center' && !geometry.verticalPrint) {
-            const blockWidth = Math.round(item.maxWidth || (geometry.designWidthDots - (LABEL_SAFE_MARGIN_DOTS * 2)));
-            const blockX = Math.round((geometry.designWidthDots - blockWidth) / 2);
-            return `^FO${blockX},${Math.round(point.y)}^A0N,${item.zplHeight},${item.zplWidth}^FB${blockWidth},1,0,C,0^FD${escapeZplText(text)}^FS`;
-        }
-
-        return `^FO${Math.round(point.x)},${Math.round(point.y)}^A0${point.zplOrientation},${item.zplHeight},${item.zplWidth}^FD${escapeZplText(text)}^FS`;
-    }
-
-    function tsplBarCommand(geometry, item) {
-        const rect = transformLabelRect(geometry, item);
-        return `BAR ${Math.round(rect.x)},${Math.round(rect.y)},${Math.max(Math.round(rect.width), 1)},${Math.max(Math.round(rect.height), 1)}`;
-    }
-
-    function zplBarCommand(geometry, item) {
-        const rect = transformLabelRect(geometry, item);
-        const width = Math.max(Math.round(rect.width), 1);
-        const height = Math.max(Math.round(rect.height), 1);
-        const thickness = Math.max(Math.min(width, height), 1);
-        return `^FO${Math.round(rect.x)},${Math.round(rect.y)}^GB${width},${height},${thickness},B,0^FS`;
-    }
-
-    function buildTsplDocument(size, items, quantity) {
-        const geometry = getLabelGeometry(size);
-        const commands = [
-            `SIZE ${size.width} mm,${size.height} mm`,
-            `GAP ${size.gap} mm,0 mm`,
-            'DIRECTION 0',
-            'REFERENCE 0,0',
-            'OFFSET 0 mm',
-            'CODEPAGE UTF-8',
-            'DENSITY 8',
-            'SPEED 3',
-            'CLS',
-        ];
-
-        items.forEach(item => {
-            commands.push(item.type === 'bar' ? tsplBarCommand(geometry, item) : tsplTextCommand(geometry, item));
-        });
-        commands.push(`PRINT 1,${quantity}`);
-        return `${commands.join('\n')}\n`;
-    }
-
-    function buildZplDocument(size, items, quantity) {
-        const geometry = getLabelGeometry(size);
-        const widthDots = Math.round(size.width * LABEL_DOTS_PER_MM);
-        const heightDots = Math.round(size.height * LABEL_DOTS_PER_MM);
-        const commands = ['^XA', `^PW${widthDots}`, `^LL${heightDots}`, '^LH0,0', '^LS0', '^CI28'];
-
-        items.forEach(item => {
-            commands.push(item.type === 'bar' ? zplBarCommand(geometry, item) : zplTextCommand(geometry, item));
-        });
-        commands.push(`^PQ${quantity}`, '^XZ');
-        return `${commands.join('\n')}\n`;
-    }
-
-    function buildRawLabelDocument(size, items, quantity, language) {
-        return language === 'ZPL'
-            ? buildZplDocument(size, items, quantity)
-            : buildTsplDocument(size, items, quantity);
-    }
-
-    function centerTextInsideArea(areaX, areaWidth, text, font, xMul) {
-        const textWidth = getEstimatedTextWidth(text, font, xMul);
-        return clampLabelValue(
-            Math.round(areaX + ((areaWidth - textWidth) / 2)),
-            areaX,
-            Math.max(areaX, areaX + areaWidth - textWidth)
-        );
-    }
-
-    function buildDlimaReferenceLayout(state) {
-        const geometry = getLabelGeometry(state.size);
-        const labelWidth = geometry.designWidthDots;
-        const labelHeight = geometry.designHeightDots;
-        const compact = labelHeight < 420;
-        const scaleY = labelHeight / 480;
-        const y = value => Math.round(value * scaleY);
-        const safeX = compact ? 18 : 20;
-        const contentWidth = Math.max(labelWidth - (safeX * 2), 1);
-        const leftColumnWidth = Math.round(contentWidth * 0.50);
-        const rightColumnX = safeX + leftColumnWidth;
-        const rightColumnWidth = contentWidth - leftColumnWidth;
-        const fieldValueWidth = Math.max(leftColumnWidth - 22, 1);
-        const productName = state.showNome && state.nome ? fitLabelText(state.nome, compact ? 13 : 15) : '';
-        const productCode = state.showCodigo && state.codigo ? fitLabelText(state.codigo, compact ? 10 : 12) : '';
-        const productSize = state.produtoTamanho ? fitLabelText(state.produtoTamanho, compact ? 4 : 4) : '';
-        const priceText = state.showPreco && state.preco ? `R$${formatCurrency(parseMoney(state.preco))}` : '';
-        const footerLines = compact
-            ? [DLIMA_LABEL_QUOTE_LINES.join(' ')]
-            : [`"${DLIMA_LABEL_QUOTE_LINES[0]}`, `${DLIMA_LABEL_QUOTE_LINES[1]}"`];
-        const priceFont = compact ? '2' : '2';
-        const priceXMul = 1;
-        const priceYMul = compact ? 1 : 2;
-        const priceX = priceText
-            ? centerTextInsideArea(rightColumnX + 6, Math.max(rightColumnWidth - 12, 1), priceText, priceFont, priceXMul)
-            : rightColumnX + 6;
-        const elements = [
-            { type: 'text', x: compact ? 70 : 44, y: y(44), font: '3', xMul: compact ? 1 : 2, yMul: compact ? 1 : 2, zplHeight: compact ? 34 : 58, zplWidth: compact ? 26 : 36, text: "D'lima" },
-            { type: 'text', x: compact ? 198 : 208, y: y(102), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 18 : 22, zplWidth: compact ? 12 : 16, text: 'store' },
-            { type: 'bar', x: safeX, y: y(160), width: contentWidth, height: 2 },
-            { type: 'bar', x: rightColumnX, y: y(160), width: 2, height: Math.max(y(330) - y(160), 1) },
-            { type: 'bar', x: safeX, y: y(330), width: contentWidth, height: 2 },
-            { type: 'bar', x: safeX + 8, y: y(217), width: Math.max(leftColumnWidth - 20, 1), height: 2 },
-            { type: 'bar', x: safeX + 8, y: y(274), width: Math.max(leftColumnWidth - 20, 1), height: 2 },
-            { type: 'text', x: safeX + 10, y: y(178), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 16 : 22, zplWidth: compact ? 12 : 14, text: 'PRODUTO' },
-            { type: 'text', x: safeX + 10, y: y(235), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 16 : 22, zplWidth: compact ? 12 : 14, text: 'REF.' },
-            { type: 'text', x: safeX + 10, y: y(292), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 16 : 22, zplWidth: compact ? 12 : 14, text: 'TAMANHO' },
-            { type: 'text', x: rightColumnX + 18, y: y(178), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 16 : 22, zplWidth: compact ? 12 : 14, text: 'VALOR' },
-            { type: 'bar', x: safeX, y: y(356), width: contentWidth, height: 2 },
-            { type: 'bar', x: safeX, y: y(432), width: contentWidth, height: 2 },
-        ];
-
-        footerLines.forEach((line, index) => {
-            elements.push({
-                type: 'text',
-                align: 'center',
-                x: 0,
-                y: compact ? y(388) : y(384 + (index * 22)),
-                font: '0',
-                xMul: 1,
-                yMul: 1,
-                zplHeight: compact ? 14 : 18,
-                zplWidth: compact ? 10 : 12,
-                maxWidth: contentWidth,
-                noFit: true,
-                text: line,
-            });
-        });
-
-        if (productName) {
-            elements.push({ type: 'text', x: safeX + 28, y: y(201), font: '1', xMul: 1, yMul: 1, zplHeight: compact ? 16 : 24, zplWidth: compact ? 12 : 13, maxWidth: fieldValueWidth, text: productName });
-        }
-        if (productCode) {
-            elements.push({ type: 'text', x: safeX + 28, y: y(258), font: '2', xMul: 1, yMul: 1, zplHeight: compact ? 18 : 26, zplWidth: compact ? 12 : 15, maxWidth: fieldValueWidth, text: productCode });
-        }
-        if (productSize) {
-            elements.push({ type: 'text', x: safeX + 42, y: y(315), font: '2', xMul: 1, yMul: 1, zplHeight: compact ? 18 : 26, zplWidth: compact ? 12 : 15, maxWidth: fieldValueWidth, text: productSize });
-        }
-        if (priceText) {
-            elements.push({ type: 'text', x: priceX, y: y(228), font: priceFont, xMul: priceXMul, yMul: priceYMul, zplHeight: compact ? 24 : 44, zplWidth: compact ? 14 : 18, maxWidth: Math.max(rightColumnWidth - 12, 1), noFit: true, text: priceText });
-        }
-
-        return elements;
-    }
-
-    function getCenterTestSize() {
-        return { width: 60, height: 40, gap: 2, layout: 'center-test' };
-    }
-
-    function buildCenteredWordLayout(word) {
-        const size = getCenterTestSize();
-        const geometry = getLabelGeometry(size);
-        const maxWidth = geometry.designWidthDots - (LABEL_SAFE_MARGIN_DOTS * 2);
-        const maxChars = getMaxCharsForWidth('3', 2, maxWidth);
-        const text = fitLabelText(word || CENTER_TEST_DEFAULT_TEXT, maxChars);
-        const item = {
-            type: 'text',
-            align: 'center',
-            x: 0,
-            y: Math.round((geometry.designHeightDots - 48) / 2),
-            font: '3',
-            xMul: 2,
-            yMul: 2,
-            zplHeight: 48,
-            zplWidth: 34,
-            maxWidth,
-            noFit: true,
-            text,
-        };
-
-        return [item];
-    }
-
-    function buildCenteredWordTestPayload(state) {
+    function buildCenteredWordTestHtml(state) {
         const word = sanitizeLabelText(etiquetaTesteTexto ? etiquetaTesteTexto.value : '') || CENTER_TEST_DEFAULT_TEXT;
-        return buildRawLabelDocument(
-            getCenterTestSize(),
-            buildCenteredWordLayout(word),
-            Math.max(parseInt(state.quantity, 10) || 1, 1),
-            state.language
-        );
+        return buildLabelHtmlDocument(state, { centerText: word });
     }
 
     function showStatus(message, type) {
@@ -787,14 +668,16 @@
 
     function getLabelState() {
         const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
-        const sizeKey = etiquetaTamanho ? etiquetaTamanho.value : '60x40';
+        const sizeKey = '60x40';
         const configuredPrinterName = etiquetaPrinterName ? etiquetaPrinterName.value : '';
+        if (etiquetaTamanho) {
+            etiquetaTamanho.value = sizeKey;
+        }
 
         return {
             quantity,
             sizeKey,
             size: labelSizes[sizeKey] || labelSizes['60x40'],
-            language: etiquetaLinguagem ? etiquetaLinguagem.value : 'TSPL',
             printerName: sanitizeLabelText(configuredPrinterName || getAppConfig().labelPrinterName || 'ELGIN'),
             nome: sanitizeLabelText(etiquetaNome ? etiquetaNome.value : ''),
             preco: sanitizeLabelText(etiquetaPreco ? etiquetaPreco.value : ''),
@@ -804,6 +687,7 @@
             showNome: !etiquetaOptions.nome || etiquetaOptions.nome.checked,
             showPreco: !etiquetaOptions.preco || etiquetaOptions.preco.checked,
             showCodigo: !etiquetaOptions.codigo || etiquetaOptions.codigo.checked,
+            testBorder: Boolean(etiquetaBordaTeste && etiquetaBordaTeste.checked),
         };
     }
 
@@ -827,10 +711,8 @@
             state.showPreco && state.preco,
             state.showCodigo && state.codigo,
             state.produtoTamanho,
+            state.cor,
         ];
-        if (state.size.layout !== 'dlima-reference') {
-            printableFields.push(state.cor);
-        }
         const hasContent = printableFields.some(Boolean);
 
         if (!hasContent) {
@@ -842,20 +724,10 @@
         }
     }
 
-    function buildTsplLabelPayload() {
+    function buildLabelHtml() {
         const state = getLabelState();
         validateLabelState(state);
-        return buildRawLabelDocument(state.size, buildDlimaReferenceLayout(state), state.quantity, 'TSPL');
-    }
-
-    function buildZplLabelPayload() {
-        const state = getLabelState();
-        validateLabelState(state);
-        return buildRawLabelDocument(state.size, buildDlimaReferenceLayout(state), state.quantity, 'ZPL');
-    }
-
-    function buildLabelPayload() {
-        return getLabelState().language === 'ZPL' ? buildZplLabelPayload() : buildTsplLabelPayload();
+        return buildLabelHtmlDocument(state);
     }
 
     function atualizarPreviewEtiqueta() {
@@ -864,41 +736,15 @@
         }
 
         const state = getLabelState();
-        const nameNode = etiquetaPreview.querySelector('[data-preview-name]');
-        const priceNode = etiquetaPreview.querySelector('[data-preview-price]');
-        const codeNode = etiquetaPreview.querySelector('[data-preview-code]');
-        const sizeNode = etiquetaPreview.querySelector('[data-preview-size]');
-        const colorNode = etiquetaPreview.querySelector('[data-preview-color]');
-
         etiquetaPreview.dataset.size = state.sizeKey;
-        etiquetaPreview.dataset.orientation = shouldPrintVertically(state.size) ? 'vertical' : 'horizontal';
-        if (nameNode) {
-            nameNode.textContent = state.nome ? fitLabelText(state.nome, 18) : 'Produto';
-            nameNode.hidden = !state.showNome;
-        }
-        if (priceNode) {
-            priceNode.textContent = state.preco ? formatCurrency(parseMoney(state.preco)) : '0,00';
-            priceNode.hidden = !state.showPreco;
-            if (priceNode.parentElement) {
-                priceNode.parentElement.hidden = !state.showPreco;
-            }
-        }
-        if (codeNode) {
-            codeNode.textContent = state.codigo ? fitLabelText(state.codigo, 12) : '0000000';
-            codeNode.hidden = !state.showCodigo;
-        }
-        if (sizeNode) {
-            sizeNode.textContent = state.produtoTamanho ? fitLabelText(state.produtoTamanho, 4) : 'G';
-        }
-        if (colorNode) {
-            colorNode.textContent = `COR: ${(state.cor || 'PRETO').toUpperCase()}`;
-        }
 
-        if (etiquetaCommandPreview) {
+        etiquetaPreview.innerHTML = buildLabelMarkup(state);
+
+        if (etiquetaHtmlPreview) {
             try {
-                etiquetaCommandPreview.textContent = buildLabelPayload();
+                etiquetaHtmlPreview.textContent = buildLabelHtmlDocument(state);
             } catch (error) {
-                etiquetaCommandPreview.textContent = '';
+                etiquetaHtmlPreview.textContent = '';
             }
         }
     }
@@ -1020,9 +866,6 @@
         if (etiquetaTamanho) {
             etiquetaTamanho.value = '60x40';
         }
-        if (etiquetaLinguagem) {
-            etiquetaLinguagem.value = getAppConfig().labelLanguage || 'TSPL';
-        }
         if (etiquetaPrinterName) {
             etiquetaPrinterName.value = getAppConfig().labelPrinterName || 'ELGIN';
         }
@@ -1031,6 +874,9 @@
                 option.checked = true;
             }
         });
+        if (etiquetaBordaTeste) {
+            etiquetaBordaTeste.checked = false;
+        }
         if (etiquetaResultadosProduto) {
             etiquetaResultadosProduto.hidden = true;
             etiquetaResultadosProduto.innerHTML = '';
@@ -1064,8 +910,8 @@
 
         let details = [];
         try {
-            const rawDetails = await window.qz.printers.details();
-            details = Array.isArray(rawDetails) ? rawDetails : [];
+            const printerDetails = await window.qz.printers.details();
+            details = Array.isArray(printerDetails) ? printerDetails : [];
         } catch (error) {
             details = [];
         }
@@ -1112,23 +958,28 @@
         }
     }
 
-    async function sendLabelPayloadToPrinter(state, payload) {
+    async function sendLabelHtmlToPrinter(state, htmlEtiqueta) {
         await connectQzForLabels();
         const printerName = await resolveLabelPrinter(state.printerName);
         if (etiquetaPrinterName) {
             etiquetaPrinterName.value = printerName;
         }
         const config = window.qz.configs.create(printerName, {
-            encoding: 'UTF-8',
+            units: 'mm',
+            size: { width: 60, height: 40 },
+            margins: 0,
+            density: 203,
         });
         const data = [{
-            type: 'raw',
-            format: 'command',
+            type: 'pixel',
+            format: 'html',
             flavor: 'plain',
-            data: payload,
+            data: htmlEtiqueta,
         }];
 
-        await window.qz.print(config, data);
+        for (let copy = 0; copy < state.quantity; copy += 1) {
+            await window.qz.print(config, data);
+        }
         return printerName;
     }
 
@@ -1139,9 +990,10 @@
         try {
             const state = getLabelState();
             validateLabelState(state);
+            atualizarPreviewEtiqueta();
             showEtiquetaStatus('Enviando etiqueta para a impressora...', 'info');
-            const payload = buildLabelPayload();
-            const printerName = await sendLabelPayloadToPrinter(state, payload);
+            const htmlEtiqueta = buildLabelHtmlDocument(state);
+            const printerName = await sendLabelHtmlToPrinter(state, htmlEtiqueta);
             showEtiquetaStatus(`${state.quantity} etiqueta${state.quantity === 1 ? '' : 's'} enviada${state.quantity === 1 ? '' : 's'} para ${printerName}.`, 'success');
         } catch (error) {
             const message = /websocket|connect|qz/i.test(error.message || '')
@@ -1169,8 +1021,12 @@
 
             const word = sanitizeLabelText(etiquetaTesteTexto ? etiquetaTesteTexto.value : '') || CENTER_TEST_DEFAULT_TEXT;
             showEtiquetaStatus(`Enviando teste centralizado "${word}"...`, 'info');
-            const payload = buildCenteredWordTestPayload(state);
-            const printerName = await sendLabelPayloadToPrinter(state, payload);
+            etiquetaPreview.innerHTML = buildLabelMarkup(state, { centerText: word });
+            if (etiquetaHtmlPreview) {
+                etiquetaHtmlPreview.textContent = buildCenteredWordTestHtml(state);
+            }
+            const htmlEtiqueta = buildCenteredWordTestHtml(state);
+            const printerName = await sendLabelHtmlToPrinter(state, htmlEtiqueta);
             showEtiquetaStatus(`Teste centralizado enviado para ${printerName}.`, 'success');
         } catch (error) {
             const message = /websocket|connect|qz/i.test(error.message || '')
@@ -1265,7 +1121,6 @@
     [
         etiquetaQuantidade,
         etiquetaTamanho,
-        etiquetaLinguagem,
         etiquetaPrinterName,
         etiquetaNome,
         etiquetaPreco,
@@ -1273,6 +1128,7 @@
         etiquetaProdutoTamanho,
         etiquetaCor,
         etiquetaTesteTexto,
+        etiquetaBordaTeste,
         etiquetaOptions.nome,
         etiquetaOptions.preco,
         etiquetaOptions.codigo,
@@ -1295,8 +1151,8 @@
     window.fecharModalEtiquetas = fecharModalEtiquetas;
     window.buscarProdutoEtiqueta = buscarProdutoEtiqueta;
     window.atualizarPreviewEtiqueta = atualizarPreviewEtiqueta;
-    window.buildTsplLabelPayload = buildTsplLabelPayload;
-    window.buildCenteredWordTestPayload = buildCenteredWordTestPayload;
+    window.buildLabelHtml = buildLabelHtml;
+    window.buildCenteredWordTestHtml = buildCenteredWordTestHtml;
     window.printLabels = printLabels;
     window.printCenteredWordTest = printCenteredWordTest;
 })();

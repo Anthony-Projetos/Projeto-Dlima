@@ -25,7 +25,6 @@ DEFAULT_RECEIPT_SETTINGS = {
 DEFAULT_LABEL_SETTINGS = {
     "printer_name": "ELGIN L42PRO FULL",
     "printer_search_terms": ["ELGIN L42PRO FULL", "ELGIN", "L42"],
-    "language": "TSPL",
 }
 
 
