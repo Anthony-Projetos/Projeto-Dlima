@@ -113,14 +113,10 @@
     }
 
     function buildLabelField(label, value) {
-        if (!value) {
-            return '';
-        }
-
         return [
             '<div class="label-field">',
-            `<span class="label-kicker">${escapeHtml(label)}</span>`,
-            `<strong class="label-value">${escapeHtml(value)}</strong>`,
+            `<span class="label-field-title">${escapeHtml(label)}</span>`,
+            `<strong class="label-field-value">${escapeHtml(value)}</strong>`,
             '</div>',
         ].join('');
     }
@@ -136,34 +132,38 @@
             ].join('');
         }
 
-        const productName = state.showNome && state.nome ? fitLabelText(state.nome, 28) : '';
-        const productCode = state.showCodigo && state.codigo ? fitLabelText(state.codigo, 18) : '';
-        const productSize = state.produtoTamanho ? fitLabelText(state.produtoTamanho, 8) : '';
-        const productColor = state.cor ? fitLabelText(state.cor, 14) : '';
-        const priceText = state.showPreco && state.preco ? formatCurrency(parseMoney(state.preco)) : '';
+        const productName = state.showNome ? fitLabelText(state.nome || 'PRODUTO', 16) : '';
+        const productCode = state.showCodigo ? fitLabelText(state.codigo || '000000', 10) : '';
+        const productSize = fitLabelText(state.produtoTamanho || 'G', 4);
+        const priceText = state.showPreco ? formatCurrency(parseMoney(state.preco)) : '';
         const fields = [
             buildLabelField('PRODUTO', productName),
             buildLabelField('REF.', productCode),
             buildLabelField('TAMANHO', productSize),
-            buildLabelField('COR', productColor),
-        ].filter(Boolean).join('');
+        ].join('');
 
         return [
             `<div class="label${testBorderClass}">`,
-            '<header class="label-header">',
-            '<div class="label-brand">D&#39;lima <span>store</span></div>',
-            '</header>',
-            '<main class="label-main">',
-            `<section class="label-fields">${fields || buildLabelField('PRODUTO', 'Produto')}</section>`,
-            '<section class="label-price">',
-            '<span class="label-kicker">VALOR</span>',
-            priceText ? `<strong class="label-price-value"><small>R$</small><span>${escapeHtml(priceText)}</span></strong>` : '',
+            '<div class="label-reference">',
+            '<section class="label-logo-panel">',
+            '<strong class="label-logo-text">D&#39;lima</strong>',
+            '<span class="label-store-text">store</span>',
             '</section>',
-            '</main>',
-            '<footer class="label-footer">',
+            '<section class="label-info-panel">',
+            '<div class="label-price-panel">',
+            '<span class="label-price-title">VALOR</span>',
+            `<strong class="label-price-value">${priceText ? `R$${escapeHtml(priceText)}` : ''}</strong>`,
+            '</div>',
+            `<div class="label-fields-panel">${fields}</div>`,
+            '</section>',
+            '<div class="label-separator-panel"></div>',
+            '<section class="label-quote-panel">',
+            '<div class="label-quote-text">',
             `<span>&quot;${escapeHtml(DLIMA_LABEL_QUOTE_LINES[0])}</span>`,
             `<span>${escapeHtml(DLIMA_LABEL_QUOTE_LINES[1])}&quot;</span>`,
-            '</footer>',
+            '</div>',
+            '</section>',
+            '</div>',
             '</div>',
         ].join('');
     }
@@ -205,121 +205,145 @@ html, body {
   outline-offset: -0.5mm;
 }
 
-.label-header {
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: center;
-  min-height: 7mm;
-  padding-bottom: 1mm;
-  border-bottom: 0.25mm solid #000;
-}
-
-.label-brand {
-  font-size: 5mm;
-  font-weight: 800;
-  line-height: 1;
-  text-align: center;
-}
-
-.label-brand span {
-  display: block;
-  margin-top: 0.2mm;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.8mm;
-  font-weight: 500;
-}
-
-.label-main {
+.label-reference {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(18mm, 0.8fr);
-  gap: 1.4mm;
-  padding: 1.2mm 0;
-  border-bottom: 0.25mm solid #000;
+  grid-template-columns: 18fr 21fr 4fr 13fr;
 }
 
-.label-fields {
+.label-logo-panel,
+.label-info-panel,
+.label-separator-panel,
+.label-quote-panel {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6mm;
+  min-height: 0;
 }
 
-.label-field {
-  min-width: 0;
-  padding-bottom: 0.45mm;
-  border-bottom: 0.2mm solid #000;
+.label-logo-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4mm;
+  align-items: center;
+  justify-items: center;
+  border-right: 0.25mm solid #000;
 }
 
-.label-field:last-child {
-  border-bottom: 0;
-}
-
-.label-price {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-left: 1.1mm;
-  border-left: 0.25mm solid #000;
-}
-
-.label-kicker {
-  display: block;
-  margin-bottom: 0.35mm;
-  font-size: 1.8mm;
-  font-weight: 700;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.label-value {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 2.5mm;
+.label-logo-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: "Brush Script MT", "Segoe Script", cursive;
+  font-size: 11mm;
+  font-style: italic;
   font-weight: 800;
-  line-height: 1.05;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
+  line-height: 0.82;
   white-space: nowrap;
 }
 
+.label-store-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.2mm;
+  line-height: 1;
+}
+
+.label-info-panel {
+  display: grid;
+  grid-template-rows: 17.5mm minmax(0, 1fr);
+  border-right: 0.25mm solid #000;
+}
+
+.label-price-panel {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 5.5mm minmax(0, 1fr);
+  align-items: center;
+  border-bottom: 0.25mm solid #000;
+}
+
+.label-price-title {
+  justify-self: center;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 2.3mm;
+  line-height: 1;
+}
+
 .label-price-value {
-  display: flex;
-  align-items: baseline;
-  gap: 0.7mm;
-  max-width: 100%;
+  justify-self: center;
+  max-height: 100%;
   overflow: hidden;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
   font-size: 4.8mm;
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
-.label-price-value small {
-  font-size: 2.7mm;
-}
-
-.label-price-value span {
+.label-fields-panel {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.label-footer {
-  flex: 0 0 auto;
-  min-height: 4.6mm;
+.label-field {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 3mm;
+  align-items: center;
+  justify-items: center;
+  border-right: 0.2mm solid #000;
+}
+
+.label-field:last-child {
+  border-right: 0;
+}
+
+.label-field-title,
+.label-field-value {
+  max-height: 100%;
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  white-space: nowrap;
+}
+
+.label-field-title {
+  font-size: 2.2mm;
+  line-height: 1;
+  font-weight: 400;
+}
+
+.label-field-value {
+  font-size: 1.55mm;
+  font-weight: 800;
+  line-height: 0.95;
+}
+
+.label-separator-panel {
+  border-right: 0.25mm solid #000;
+}
+
+.label-quote-panel {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
+  border-right: 0.25mm solid #000;
+}
+
+.label-quote-text {
+  display: flex;
+  gap: 0.6mm;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.9mm;
+  font-size: 2.1mm;
   font-style: italic;
-  line-height: 1.1;
+  line-height: 1.15;
   text-align: center;
 }
 
