@@ -22,6 +22,12 @@ DEFAULT_RECEIPT_SETTINGS = {
     "open_cash_drawer": False,
 }
 
+DEFAULT_LABEL_SETTINGS = {
+    "printer_name": "ELGIN L42PRO FULL",
+    "printer_search_terms": ["ELGIN L42PRO FULL", "ELGIN", "L42"],
+    "language": "TSPL",
+}
+
 
 class VendaPayloadError(Exception):
     def __init__(self, message, field_errors=None, status_code=400):
@@ -34,6 +40,11 @@ class VendaPayloadError(Exception):
 def get_receipt_settings():
     custom_settings = getattr(settings, "PDV_RECEIPT_SETTINGS", {})
     return {**DEFAULT_RECEIPT_SETTINGS, **custom_settings}
+
+
+def get_label_settings():
+    custom_settings = getattr(settings, "PDV_LABEL_SETTINGS", {})
+    return {**DEFAULT_LABEL_SETTINGS, **custom_settings}
 
 
 def decimal_to_str(value):

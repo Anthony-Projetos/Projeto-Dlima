@@ -196,14 +196,14 @@
                         <div class="form-group">
                             <label for="etiquetaLinguagem">Linguagem</label>
                             <select id="etiquetaLinguagem" class="label-input">
-                                <option value="TSPL">TSPL / TSC</option>
-                                <option value="ZPL">ZPL</option>
+                                <option value="TSPL" {% if pdv_config.labelLanguage == "TSPL" %}selected{% endif %}>TSPL / TSC</option>
+                                <option value="ZPL" {% if pdv_config.labelLanguage == "ZPL" %}selected{% endif %}>ZPL</option>
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label for="etiquetaPrinterName">Impressora QZ</label>
-                            <input id="etiquetaPrinterName" type="text" class="label-input" value="ELGIN" placeholder="Nome da impressora">
+                            <input id="etiquetaPrinterName" type="text" class="label-input" value="{{ pdv_config.labelPrinterName }}" placeholder="Nome da impressora">
                         </div>
                     </div>
 
@@ -301,19 +301,9 @@
         </section>
     </div>
 
+    {{ pdv_config|json_script:"pdv-config-data" }}
     <script>
-        window.PDV_CONFIG = {
-            finalizeSaleUrl: "{% url 'finalizar_venda_api' %}",
-            productSearchUrl: "{% url 'buscar_produtos_api_root' %}",
-            printerName: "PIPrinter",
-            printerSearchTerms: ["PIPrinter"],
-            receiptEncoding: "CP860",
-            receiptHtmlFallback: true,
-            labelPrinterName: "ELGIN",
-            labelLanguage: "TSPL",
-            qzCertificateUrl: "",
-            qzSignatureUrl: ""
-        };
+        window.PDV_CONFIG = JSON.parse(document.getElementById('pdv-config-data').textContent);
     </script>
     <script src="{% static 'js/vendas/print.js' %}"></script>
     <script src="{% static 'js/vendas/registrar_venda.js' %}"></script>

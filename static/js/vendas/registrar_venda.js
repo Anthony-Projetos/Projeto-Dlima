@@ -56,6 +56,30 @@
         return window.PDV_CONFIG || {};
     }
 
+    function toArray(value) {
+        if (Array.isArray(value)) {
+            return value;
+        }
+
+        if (typeof value === 'string') {
+            return value.split(',').map(item => item.trim()).filter(Boolean);
+        }
+
+        return [];
+    }
+
+    function normalizePrinterName(value) {
+        return String(value || '').trim().toLowerCase();
+    }
+
+    function getPrinterNameFromDetail(printer) {
+        if (typeof printer === 'string') {
+            return printer;
+        }
+
+        return printer?.name || printer?.printerName || printer?.displayName || '';
+    }
+
     function formatCurrency(value) {
         return Number(value || 0).toFixed(2).replace('.', ',');
     }
@@ -1029,17 +1053,51 @@
     }
 
     async function resolveLabelPrinter(printerName) {
+        const config = getAppConfig();
+        const searchTerms = [
+            printerName,
+            config.labelPrinterName,
+            ...toArray(config.labelPrinterSearchTerms),
+        ]
+            .map(term => String(term || '').trim())
+            .filter((term, index, terms) => term && terms.indexOf(term) === index);
+
+        let details = [];
         try {
-            return await window.qz.printers.find(printerName);
+            const rawDetails = await window.qz.printers.details();
+            details = Array.isArray(rawDetails) ? rawDetails : [];
         } catch (error) {
-            const details = await window.qz.printers.details();
-            const normalized = printerName.toLowerCase();
-            const match = details.find(printer => String(printer.name).toLowerCase().includes(normalized));
-            if (match) {
-                return match.name;
-            }
-            throw new Error(`Impressora "${printerName}" nao encontrada no QZ Tray.`);
+            details = [];
         }
+
+        const printerNames = details.map(getPrinterNameFromDetail).filter(Boolean);
+
+        for (const term of searchTerms) {
+            const normalizedTerm = normalizePrinterName(term);
+            const exactMatch = printerNames.find(name => normalizePrinterName(name) === normalizedTerm);
+            if (exactMatch) {
+                return exactMatch;
+            }
+        }
+
+        for (const term of searchTerms) {
+            const normalizedTerm = normalizePrinterName(term);
+            const partialMatch = printerNames.find(name => normalizePrinterName(name).includes(normalizedTerm));
+            if (partialMatch) {
+                return partialMatch;
+            }
+        }
+
+        for (const term of searchTerms) {
+            try {
+                return await window.qz.printers.find(term);
+            } catch (error) {
+                // Try the next configured printer alias.
+            }
+        }
+
+        const availablePrinters = printerNames.length ? printerNames.join(', ') : 'nenhuma impressora retornada';
+        throw new Error(`Impressora de etiquetas "${printerName}" nao encontrada no QZ Tray. Disponiveis: ${availablePrinters}.`);
     }
 
     function setLabelPrintButtonState(isPrinting) {
@@ -1057,6 +1115,9 @@
     async function sendLabelPayloadToPrinter(state, payload) {
         await connectQzForLabels();
         const printerName = await resolveLabelPrinter(state.printerName);
+        if (etiquetaPrinterName) {
+            etiquetaPrinterName.value = printerName;
+        }
         const config = window.qz.configs.create(printerName, {
             encoding: 'UTF-8',
         });

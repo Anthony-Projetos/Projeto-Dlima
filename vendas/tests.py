@@ -1,7 +1,7 @@
 import json
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from core.models import Vendedor
@@ -52,6 +52,18 @@ class RegistrarVendaBuscaTests(TestCase):
 
         self.assertContains(response, 'Calca Jeans Preta')
         self.assertNotContains(response, 'Camisa Polo Azul')
+
+    @override_settings(PDV_LABEL_SETTINGS={
+        'printer_name': 'ELGIN L42PRO FULL',
+        'printer_search_terms': ['ELGIN L42PRO FULL', 'ELGIN', 'L42'],
+        'language': 'TSPL',
+    })
+    def test_registrar_venda_expoe_configuracao_da_impressora_de_etiquetas(self):
+        response = self.client.get(reverse('registrar_venda'))
+
+        self.assertContains(response, '"labelPrinterName": "ELGIN L42PRO FULL"')
+        self.assertContains(response, '"labelPrinterSearchTerms": ["ELGIN L42PRO FULL", "ELGIN", "L42"]')
+        self.assertContains(response, 'value="ELGIN L42PRO FULL"')
 
     def test_finalizar_venda_retorna_dados_para_impressao(self):
         produto = Produto.objects.get(nome='Camisa Polo Azul')

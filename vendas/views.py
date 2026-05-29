@@ -5,9 +5,16 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.urls import reverse
 from .forms import VendaForm
 from .models import Produto
-from .services import VendaPayloadError, build_receipt_payload, create_venda_from_payload
+from .services import (
+    VendaPayloadError,
+    build_receipt_payload,
+    create_venda_from_payload,
+    get_label_settings,
+    get_receipt_settings,
+)
 
 @login_required
 def registrar_venda(request):
@@ -23,11 +30,27 @@ def registrar_venda(request):
         )
 
     form = VendaForm()
+    receipt_settings = get_receipt_settings()
+    label_settings = get_label_settings()
+    pdv_config = {
+        'finalizeSaleUrl': reverse('finalizar_venda_api'),
+        'productSearchUrl': reverse('buscar_produtos_api_root'),
+        'printerName': receipt_settings['printer_name'],
+        'printerSearchTerms': receipt_settings['printer_search_terms'],
+        'receiptEncoding': receipt_settings['receipt_encoding'],
+        'receiptHtmlFallback': True,
+        'labelPrinterName': label_settings['printer_name'],
+        'labelPrinterSearchTerms': label_settings['printer_search_terms'],
+        'labelLanguage': label_settings['language'],
+        'qzCertificateUrl': '',
+        'qzSignatureUrl': '',
+    }
 
     return render(request, 'vendas/registrar_venda.html', {
         'form': form,
         'produtos': produtos,
         'termo_pesquisa': termo_pesquisa,
+        'pdv_config': pdv_config,
     })
 
 

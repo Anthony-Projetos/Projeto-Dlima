@@ -89,6 +89,15 @@ PDV_RECEIPT_SETTINGS = {
     "open_cash_drawer": env_bool("PDV_OPEN_CASH_DRAWER", False),
 }
 
+PDV_LABEL_SETTINGS = {
+    "printer_name": env("PDV_LABEL_PRINTER_NAME", "ELGIN L42PRO FULL"),
+    "printer_search_terms": env_list(
+        "PDV_LABEL_PRINTER_SEARCH_TERMS",
+        ["ELGIN L42PRO FULL", "ELGIN", "L42"],
+    ),
+    "language": env("PDV_LABEL_LANGUAGE", "TSPL"),
+}
+
 
 def sqlite_database():
     return {

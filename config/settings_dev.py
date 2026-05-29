@@ -1,7 +1,8 @@
 from .settings_base import *  # noqa: F403,F401
+from .env import env_bool
 
 
-DEBUG = False
+DEBUG = env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = [
     "dlimastore.com.br",
     "www.dlimastore.com.br",
