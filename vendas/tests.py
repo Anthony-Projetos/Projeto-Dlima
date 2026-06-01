@@ -122,15 +122,15 @@ class LabelPrintingFrontendTests(TestCase):
         self.assertIn('label-fields-panel', source)
         self.assertIn('label-quote-panel', source)
         self.assertIn('writing-mode: vertical-rl', source)
+        self.assertIn('rotate(-90deg)', source)
         self.assertNotIn("type: 'raw'", source)
         self.assertNotIn("format: 'command'", source)
         self.assertNotIn('buildRawLabelDocument', source)
         self.assertNotIn('buildZpl', source)
         self.assertNotIn('buildTspl', source)
-        self.assertNotIn('rotate(', source)
         self.assertNotIn('scale(', source)
         self.assertNotIn('zoom:', source)
-        self.assertNotIn('position: absolute', source)
+        self.assertIn('position: absolute', source)
 
 
 class ReceiptPayloadTests(TestCase):

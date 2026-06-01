@@ -713,30 +713,36 @@ body.label-modal-open {
 }
 
 .label-preview .label-logo-panel {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 36px;
-    align-items: center;
-    justify-items: center;
+    position: relative;
+    overflow: hidden;
     border-right: 2px solid #111111;
 }
 
 .label-preview .label-logo-text {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
+    position: absolute;
+    left: 43%;
+    top: 50%;
+    display: block;
     font-family: "Brush Script MT", "Segoe Script", cursive;
-    font-size: 82px;
+    font-size: 70px;
     font-style: italic;
     font-weight: 800;
-    line-height: 0.82;
+    line-height: 1;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    transform-origin: center;
     white-space: nowrap;
 }
 
 .label-preview .label-store-text {
+    position: absolute;
+    right: 11px;
+    top: 50%;
     writing-mode: vertical-rl;
     text-orientation: mixed;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 17px;
     line-height: 1;
+    transform: translateY(-50%);
 }
 
 .label-preview .label-info-panel {

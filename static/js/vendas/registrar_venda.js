@@ -223,30 +223,36 @@ html, body {
 }
 
 .label-logo-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 4mm;
-  align-items: center;
-  justify-items: center;
+  position: relative;
+  overflow: hidden;
   border-right: 0.25mm solid #000;
 }
 
 .label-logo-text {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
+  position: absolute;
+  left: 43%;
+  top: 50%;
+  display: block;
   font-family: "Brush Script MT", "Segoe Script", cursive;
-  font-size: 11mm;
+  font-size: 9.6mm;
   font-style: italic;
   font-weight: 800;
-  line-height: 0.82;
+  line-height: 1;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  transform-origin: center;
   white-space: nowrap;
 }
 
 .label-store-text {
+  position: absolute;
+  right: 1.2mm;
+  top: 50%;
   writing-mode: vertical-rl;
   text-orientation: mixed;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 2.2mm;
   line-height: 1;
+  transform: translateY(-50%);
 }
 
 .label-info-panel {
