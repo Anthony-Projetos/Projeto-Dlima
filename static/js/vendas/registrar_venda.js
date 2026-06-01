@@ -112,11 +112,11 @@
             .replace(/'/g, '&#39;');
     }
 
-    function buildLabelField(label, value) {
+    function buildLabelDetail(label, value) {
         return [
-            '<div class="label-field">',
-            `<span class="label-field-title">${escapeHtml(label)}</span>`,
-            `<strong class="label-field-value">${escapeHtml(value)}</strong>`,
+            '<div class="label-detail">',
+            `<span class="label-detail-title">${escapeHtml(label)}</span>`,
+            `<strong class="label-detail-value">${escapeHtml(value)}</strong>`,
             '</div>',
         ].join('');
     }
@@ -132,38 +132,31 @@
             ].join('');
         }
 
-        const productName = state.showNome ? fitLabelText(state.nome || 'PRODUTO', 16) : '';
-        const productCode = state.showCodigo ? fitLabelText(state.codigo || '000000', 10) : '';
-        const productSize = fitLabelText(state.produtoTamanho || 'G', 4);
+        const productName = state.showNome ? fitLabelText(state.nome || 'PRODUTO', 30) : '';
+        const productCode = state.showCodigo ? fitLabelText(state.codigo || '000000', 16) : '';
+        const productSize = fitLabelText(state.produtoTamanho || 'G', 8);
         const priceText = state.showPreco ? formatCurrency(parseMoney(state.preco)) : '';
-        const fields = [
-            buildLabelField('PRODUTO', productName),
-            buildLabelField('REF.', productCode),
-            buildLabelField('TAMANHO', productSize),
+        const details = [
+            buildLabelDetail('Referencia', productCode),
+            buildLabelDetail('Tamanho', productSize),
         ].join('');
 
         return [
-            `<div class="label${testBorderClass}">`,
-            '<div class="label-reference">',
-            '<section class="label-logo-panel">',
-            '<strong class="label-logo-text">D&#39;lima</strong>',
-            '<span class="label-store-text">store</span>',
+            `<div class="label label--garment${testBorderClass}">`,
+            '<header class="label-brand">Dlima Store</header>',
+            '<main class="label-content">',
+            '<section class="label-product-panel">',
+            `<strong class="label-product-name">${escapeHtml(productName || 'PRODUTO')}</strong>`,
+            `<div class="label-details-grid">${details}</div>`,
             '</section>',
-            '<section class="label-info-panel">',
-            '<div class="label-price-panel">',
-            '<span class="label-price-title">VALOR</span>',
-            `<strong class="label-price-value">${priceText ? `R$${escapeHtml(priceText)}` : ''}</strong>`,
-            '</div>',
-            `<div class="label-fields-panel">${fields}</div>`,
-            '</section>',
-            '<div class="label-separator-panel"></div>',
-            '<section class="label-quote-panel">',
-            '<div class="label-quote-text">',
-            `<span>&quot;${escapeHtml(DLIMA_LABEL_QUOTE_LINES[0])}</span>`,
-            `<span>${escapeHtml(DLIMA_LABEL_QUOTE_LINES[1])}&quot;</span>`,
-            '</div>',
-            '</section>',
-            '</div>',
+            '<aside class="label-price-panel">',
+            '<span class="label-price-title">Preco</span>',
+            `<strong class="label-price-value">${priceText ? `R$ ${escapeHtml(priceText)}` : ''}</strong>`,
+            '</aside>',
+            '</main>',
+            '<footer class="label-footer">',
+            `<em>&quot;${escapeHtml(DLIMA_LABEL_QUOTE_LINES[0])} ${escapeHtml(DLIMA_LABEL_QUOTE_LINES[1])}&quot;</em>`,
+            '</footer>',
             '</div>',
         ].join('');
     }
@@ -191,9 +184,9 @@ html, body {
 .label {
   width: 60mm;
   height: 40mm;
-  padding: 2.8mm 3mm;
+  box-sizing: border-box;
+  padding: 2mm;
   border: 0.25mm solid #000;
-  border-radius: 2mm;
   display: flex;
   flex-direction: column;
   font-family: Arial, sans-serif;
@@ -207,152 +200,148 @@ html, body {
   outline-offset: -0.5mm;
 }
 
-.label-reference {
-  flex: 1 1 auto;
+.label-brand {
+  flex: 0 0 6mm;
   min-height: 0;
-  display: grid;
-  grid-template-columns: 18fr 22fr 4fr 9fr;
-}
-
-.label-logo-panel,
-.label-info-panel,
-.label-separator-panel,
-.label-quote-panel {
-  min-width: 0;
-  min-height: 0;
-}
-
-.label-logo-panel {
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  border-right: 0.25mm solid #000;
-}
-
-.label-logo-text {
-  position: absolute;
-  left: 35%;
-  top: 50%;
-  display: block;
-  font-family: "Brush Script MT", "Segoe Script", cursive;
-  font-size: 11.4mm;
-  font-style: italic;
-  font-weight: 800;
+  border-bottom: 0.25mm solid #000;
+  font-size: 4mm;
+  font-weight: 900;
   line-height: 1;
-  transform: translate(-50%, -50%) rotate(-90deg);
-  transform-origin: center;
+  text-align: center;
   white-space: nowrap;
 }
 
-.label-store-text {
-  position: absolute;
-  right: 4.2mm;
-  top: 50%;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 2.2mm;
-  line-height: 1;
-  transform: translateY(-50%);
+.label-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21mm;
+  gap: 1.2mm;
+  padding: 1.2mm 0;
+  overflow: hidden;
+  border-bottom: 0.25mm solid #000;
 }
 
-.label-info-panel {
+.label-product-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1mm;
+  overflow: hidden;
+  padding: 0 0.8mm;
+}
+
+.label-product-name {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 3.2mm;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.label-details-grid {
+  min-height: 0;
   display: grid;
-  grid-template-rows: 17.5mm minmax(0, 1fr);
-  border-right: 0.25mm solid #000;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1mm;
+}
+
+.label-detail {
+  min-width: 0;
+  overflow: hidden;
+  border: 0.2mm solid #000;
+  padding: 0.7mm 0.8mm;
+}
+
+.label-detail-title {
+  display: block;
+  overflow: hidden;
+  font-size: 1.55mm;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.label-detail-value {
+  display: block;
+  max-width: 100%;
+  margin-top: 0.35mm;
+  overflow: hidden;
+  font-size: 2.25mm;
+  font-weight: 900;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .label-price-panel {
   min-width: 0;
   min-height: 0;
-  display: grid;
-  grid-template-columns: 5.5mm minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  border-bottom: 0.25mm solid #000;
+  justify-content: center;
+  overflow: hidden;
+  padding-left: 1mm;
+  border-left: 0.25mm solid #000;
 }
 
 .label-price-title {
-  justify-self: center;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-size: 2.3mm;
+  display: block;
+  margin-bottom: 0.8mm;
+  font-size: 1.6mm;
+  font-weight: 700;
   line-height: 1;
+  text-transform: uppercase;
 }
 
 .label-price-value {
-  justify-self: center;
-  max-height: 100%;
+  display: block;
+  max-width: 100%;
   overflow: hidden;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-size: 5.2mm;
+  font-size: 4.1mm;
   font-weight: 900;
   line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.label-fields-panel {
-  min-width: 0;
+.label-footer {
+  flex: 0 0 4.6mm;
   min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.label-field {
-  min-width: 0;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 3mm;
-  align-items: center;
-  justify-items: center;
-  border-right: 0.2mm solid #000;
-}
-
-.label-field:last-child {
-  border-right: 0;
-}
-
-.label-field-title,
-.label-field-value {
-  max-height: 100%;
-  overflow: hidden;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  white-space: nowrap;
-}
-
-.label-field-title {
-  font-size: 2.2mm;
-  line-height: 1;
-  font-weight: 400;
-}
-
-.label-field-value {
-  font-size: 1.55mm;
-  font-weight: 800;
-  line-height: 0.95;
-}
-
-.label-separator-panel {
-  border-right: 0.25mm solid #000;
-}
-
-.label-quote-panel {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-right: 0.25mm solid #000;
+  overflow: hidden;
+  padding-top: 0.6mm;
 }
 
-.label-quote-text {
-  display: flex;
-  gap: 0.6mm;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
+.label-footer em {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 2.1mm;
+  font-size: 1.7mm;
   font-style: italic;
-  line-height: 1.15;
+  line-height: 1;
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .label--center-test {
@@ -743,7 +732,6 @@ html, body {
             state.showPreco && state.preco,
             state.showCodigo && state.codigo,
             state.produtoTamanho,
-            state.cor,
         ];
         const hasContent = printableFields.some(Boolean);
 
@@ -990,6 +978,20 @@ html, body {
         }
     }
 
+    function buildLabelPrintData(htmlEtiqueta, quantity) {
+        const etiquetas = [];
+        for (let i = 0; i < quantity; i += 1) {
+            etiquetas.push({
+                type: 'pixel',
+                format: 'html',
+                flavor: 'plain',
+                data: htmlEtiqueta,
+            });
+        }
+
+        return etiquetas;
+    }
+
     async function sendLabelHtmlToPrinter(state, htmlEtiqueta) {
         await connectQzForLabels();
         const printerName = await resolveLabelPrinter(state.printerName);
@@ -998,20 +1000,14 @@ html, body {
         }
         const config = window.qz.configs.create(printerName, {
             units: 'mm',
-            size: { width: 60, height: 40 },
+            size: { width: 60, height: 40, custom: true },
+            orientation: 'landscape',
             margins: 0,
             density: 203,
+            scaleContent: false,
         });
-        const data = [{
-            type: 'pixel',
-            format: 'html',
-            flavor: 'plain',
-            data: htmlEtiqueta,
-        }];
-
-        for (let copy = 0; copy < state.quantity; copy += 1) {
-            await window.qz.print(config, data);
-        }
+        const etiquetas = buildLabelPrintData(htmlEtiqueta, state.quantity);
+        await window.qz.print(config, etiquetas);
         return printerName;
     }
 
