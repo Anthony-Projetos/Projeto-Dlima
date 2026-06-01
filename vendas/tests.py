@@ -66,6 +66,7 @@ class RegistrarVendaBuscaTests(TestCase):
         self.assertContains(response, '"labelPrinterSearchTerms": ["ELGIN L42PRO FULL", "ELGIN", "L42"]')
         self.assertContains(response, 'value="ELGIN L42PRO FULL"')
         self.assertContains(response, 'id="etiquetaBordaTeste"')
+        self.assertContains(response, 'id="imprimirEtiquetasZpl"')
 
     def test_finalizar_venda_retorna_dados_para_impressao(self):
         produto = Produto.objects.get(nome='Camisa Polo Azul')
@@ -140,7 +141,8 @@ class LabelPrintingFrontendTests(TestCase):
         self.assertNotIn("flavor: 'plain'", source)
         self.assertNotIn('@page', source)
         self.assertNotIn('scaleContent', source)
-        self.assertNotIn('orientation:', source)
+        self.assertNotIn("orientation: 'landscape'", source)
+        self.assertNotIn("orientation: 'portrait'", source)
         self.assertNotIn('pageWidth', source)
         self.assertNotIn('pageHeight', source)
         self.assertNotIn('custom: true', source)
@@ -168,6 +170,34 @@ class LabelPrintingFrontendTests(TestCase):
         self.assertNotIn('scale(', source)
         self.assertNotIn('zoom:', source)
         self.assertNotIn('position: absolute', source)
+
+    def test_js_de_etiquetas_oferece_zpl_raw_60x40(self):
+        source = Path(settings.BASE_DIR / 'static/js/vendas/registrar_venda.js').read_text(encoding='utf-8')
+        template = Path(settings.BASE_DIR / 'templates/vendas/registrar_venda.html').read_text(encoding='utf-8')
+
+        self.assertIn('function buildLabelZPL(dados, quantidade)', source)
+        self.assertIn('^XA', source)
+        self.assertIn('^PW480', source)
+        self.assertIn('^LL320', source)
+        self.assertIn('^CI28', source)
+        self.assertIn('^FO${x},${y}^A0${orientation},${fontHeight},${fontWidth}^FD${text}^FS', source)
+        self.assertIn('buildZPLText(38, 286, \'Dlima\'', source)
+        self.assertIn('buildZPLText(122, 212, \'store\'', source)
+        self.assertIn('buildZPLText(242, 150, preco', source)
+        self.assertIn('Não seja cópia,', source)
+        self.assertIn('seja referência.', source)
+        self.assertIn('^PQ${copies}', source)
+        self.assertIn('^XZ', source)
+        self.assertIn('function sendLabelZPLToPrinter(state, zpl)', source)
+        self.assertIn("type: 'raw'", source)
+        self.assertIn("format: 'plain'", source)
+        self.assertIn('data: zpl', source)
+        self.assertIn('const data = buildLabelZPLPrintData(zpl);', source)
+        self.assertIn('await window.qz.print(config, data);', source)
+        self.assertIn('[DLIMA etiqueta ZPL RAW]', source)
+        self.assertIn('function printLabelsZPL()', source)
+        self.assertIn('id="imprimirEtiquetasZpl"', template)
+        self.assertIn('RAW QZ', template)
 
 
 class ReceiptPayloadTests(TestCase):

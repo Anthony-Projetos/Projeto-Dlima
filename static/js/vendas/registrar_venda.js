@@ -31,7 +31,10 @@
     const LABEL_WIDTH_MM = 60;
     const LABEL_HEIGHT_MM = 40;
     const TSPL_DOTS_PER_MM = 8;
+    const ZPL_DOTS_PER_MM = 8;
     const LABEL_WIDTH_DOTS = LABEL_WIDTH_MM * TSPL_DOTS_PER_MM;
+    const ZPL_LABEL_WIDTH_DOTS = LABEL_WIDTH_MM * ZPL_DOTS_PER_MM;
+    const ZPL_LABEL_HEIGHT_DOTS = LABEL_HEIGHT_MM * ZPL_DOTS_PER_MM;
     const CENTER_TEST_DEFAULT_TEXT = 'TESTE';
 
     function getAppConfig() {
@@ -164,6 +167,35 @@
         return `BAR ${x},${y},${width},${height}`;
     }
 
+    function normalizeZplText(value, maxLength) {
+        const text = sanitizeLabelText(value)
+            .replace(/\^/g, ' ')
+            .replace(/~/g, ' ')
+            .replace(/\\/g, '/')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        if (!maxLength || text.length <= maxLength) {
+            return text;
+        }
+
+        return text.slice(0, maxLength).trimEnd();
+    }
+
+    function buildZPLText(x, y, value, options = {}) {
+        const orientation = options.orientation || 'N';
+        const fontHeight = options.fontHeight || 24;
+        const fontWidth = options.fontWidth || fontHeight;
+        const maxLength = options.maxLength || 0;
+        const text = normalizeZplText(value, maxLength);
+
+        return `^FO${x},${y}^A0${orientation},${fontHeight},${fontWidth}^FD${text}^FS`;
+    }
+
+    function buildZPLBox(x, y, width, height, thickness = 2) {
+        return `^FO${x},${y}^GB${width},${height},${thickness}^FS`;
+    }
+
     function buildLabelTSPL(dados, quantidade) {
         const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
         const nome = dados.showNome === false ? 'PRODUTO' : dados.nome || 'PRODUTO';
@@ -201,6 +233,45 @@
             buildTsplText(392, 250, '"Nao seja copia,', { font: '2', rotation: 270, maxWidthDots: 190 }),
             buildTsplText(420, 250, 'seja referencia."', { font: '2', rotation: 270, maxWidthDots: 190 }),
             `PRINT ${copies}`,
+            '',
+        ].join('\r\n');
+    }
+
+    function buildLabelZPL(dados, quantidade) {
+        const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
+        const nome = dados.showNome === false ? 'PRODUTO' : dados.nome || 'PRODUTO';
+        const referencia = dados.showCodigo === false ? '000000' : dados.codigo || '000000';
+        const tamanho = dados.produtoTamanho || 'G';
+        const preco = dados.showPreco === false ? 'R$0,00' : formatLabelPriceCompact(dados.preco || 0);
+
+        return [
+            '^XA',
+            '^PW480',
+            '^LL320',
+            '^CI28',
+            '^LH0,0',
+            buildZPLBox(8, 8, 464, 304, 2),
+            buildZPLBox(160, 24, 2, 272, 2),
+            buildZPLBox(332, 24, 2, 272, 2),
+            buildZPLBox(362, 24, 2, 272, 2),
+            buildZPLBox(452, 24, 2, 272, 2),
+            buildZPLBox(162, 160, 170, 2, 2),
+            buildZPLBox(218, 160, 2, 136, 2),
+            buildZPLBox(276, 160, 2, 136, 2),
+            buildZPLText(38, 286, 'Dlima', { orientation: 'B', fontHeight: 70, fontWidth: 44, maxLength: 6 }),
+            buildZPLText(122, 212, 'store', { orientation: 'B', fontHeight: 24, fontWidth: 16, maxLength: 8 }),
+            buildZPLText(178, 148, 'VALOR', { orientation: 'B', fontHeight: 24, fontWidth: 16, maxLength: 8 }),
+            buildZPLText(242, 150, preco, { orientation: 'B', fontHeight: 46, fontWidth: 30, maxLength: 9 }),
+            buildZPLText(178, 292, 'PRODUTO', { orientation: 'B', fontHeight: 22, fontWidth: 14, maxLength: 10 }),
+            buildZPLText(202, 292, nome, { orientation: 'B', fontHeight: 16, fontWidth: 10, maxLength: 16 }),
+            buildZPLText(236, 292, 'REF', { orientation: 'B', fontHeight: 22, fontWidth: 14, maxLength: 6 }),
+            buildZPLText(260, 292, referencia, { orientation: 'B', fontHeight: 16, fontWidth: 10, maxLength: 16 }),
+            buildZPLText(294, 292, 'TAMANHO', { orientation: 'B', fontHeight: 22, fontWidth: 14, maxLength: 10 }),
+            buildZPLText(318, 292, tamanho, { orientation: 'B', fontHeight: 16, fontWidth: 10, maxLength: 16 }),
+            buildZPLText(392, 250, 'Não seja cópia,', { orientation: 'B', fontHeight: 24, fontWidth: 16, maxLength: 18 }),
+            buildZPLText(420, 250, 'seja referência.', { orientation: 'B', fontHeight: 24, fontWidth: 16, maxLength: 18 }),
+            `^PQ${copies}`,
+            '^XZ',
             '',
         ].join('\r\n');
     }
@@ -596,6 +667,12 @@
         return buildLabelTSPL(state, state.quantity);
     }
 
+    function buildLabelZPLCommand() {
+        const state = getLabelState();
+        validateLabelState(state);
+        return buildLabelZPL(state, state.quantity);
+    }
+
     function atualizarPreviewEtiqueta() {
         if (!etiquetaPreview) {
             return;
@@ -818,6 +895,11 @@
             imprimirEtiquetasButton.textContent = isPrinting ? 'Imprimindo...' : 'Imprimir etiquetas';
         }
 
+        if (imprimirEtiquetasZplButton) {
+            imprimirEtiquetasZplButton.disabled = isPrinting;
+            imprimirEtiquetasZplButton.textContent = isPrinting ? 'Imprimindo...' : 'Imprimir ZPL';
+        }
+
         if (imprimirTesteCentralizadoButton) {
             imprimirTesteCentralizadoButton.disabled = isPrinting;
             imprimirTesteCentralizadoButton.textContent = isPrinting ? 'Imprimindo...' : 'Teste centro';
@@ -836,6 +918,16 @@
             format: 'plain',
             data: comandoTSPL,
         }];
+    }
+
+    function buildLabelZPLPrintData(zpl) {
+        const data = [{
+            type: 'raw',
+            format: 'plain',
+            data: zpl,
+        }];
+
+        return data;
     }
 
     function logLabelTSPLDiagnostic({ state, printerName, configOptions, config, etiquetas, comandoTSPL }) {
@@ -876,6 +968,44 @@
         return printerName;
     }
 
+    function logLabelZPLDiagnostic({ state, printerName, configOptions, config, data, zpl }) {
+        console.group('[DLIMA etiqueta ZPL RAW]');
+        console.table({
+            larguraEtiquetaMm: state.size.width,
+            alturaEtiquetaMm: state.size.height,
+            larguraEtiquetaDots: ZPL_LABEL_WIDTH_DOTS,
+            alturaEtiquetaDots: ZPL_LABEL_HEIGHT_DOTS,
+            quantidade: state.quantity,
+        });
+        console.log('Impressora resolvida:', printerName);
+        console.log('qz.configs.create(printerName, configOptions) - configOptions:', configOptions);
+        console.log('Objeto config retornado pelo QZ:', config);
+        console.log('Array data enviado ao qz.print(config, data):', data);
+        console.log('Comando ZPL enviado ao QZ:', zpl);
+        console.groupEnd();
+    }
+
+    async function sendLabelZPLToPrinter(state, zpl) {
+        await connectQzForLabels();
+        const printerName = await resolveLabelPrinter(state.printerName);
+        if (etiquetaPrinterName) {
+            etiquetaPrinterName.value = printerName;
+        }
+        const configOptions = buildLabelRawConfigOptions();
+        const config = window.qz.configs.create(printerName, configOptions);
+        const data = buildLabelZPLPrintData(zpl);
+        logLabelZPLDiagnostic({
+            state,
+            printerName,
+            configOptions,
+            config,
+            data,
+            zpl,
+        });
+        await window.qz.print(config, data);
+        return printerName;
+    }
+
     async function printLabels() {
         clearEtiquetaStatus();
         setLabelPrintButtonState(true);
@@ -888,6 +1018,31 @@
             const comandoTSPL = buildLabelTSPL(state, state.quantity);
             const printerName = await sendLabelTSPLToPrinter(state, comandoTSPL);
             showEtiquetaStatus(`${state.quantity} etiqueta${state.quantity === 1 ? '' : 's'} enviada${state.quantity === 1 ? '' : 's'} para ${printerName}.`, 'success');
+        } catch (error) {
+            const message = /websocket|connect|qz/i.test(error.message || '')
+                ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
+                : error.message;
+            showEtiquetaStatus(message, 'error');
+        } finally {
+            setLabelPrintButtonState(false);
+        }
+    }
+
+    async function printLabelsZPL() {
+        clearEtiquetaStatus();
+        setLabelPrintButtonState(true);
+
+        try {
+            const state = getLabelState();
+            validateLabelState(state);
+            atualizarPreviewEtiqueta();
+            showEtiquetaStatus('Enviando etiqueta ZPL RAW para a impressora...', 'info');
+            const zpl = buildLabelZPL(state, state.quantity);
+            if (etiquetaHtmlPreview) {
+                etiquetaHtmlPreview.textContent = zpl;
+            }
+            const printerName = await sendLabelZPLToPrinter(state, zpl);
+            showEtiquetaStatus(`${state.quantity} etiqueta${state.quantity === 1 ? '' : 's'} ZPL enviada${state.quantity === 1 ? '' : 's'} para ${printerName}.`, 'success');
         } catch (error) {
             const message = /websocket|connect|qz/i.test(error.message || '')
                 ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
@@ -983,6 +1138,7 @@
     const fecharEtiquetas = document.getElementById('fecharEtiquetas');
     const limparEtiquetasButton = document.getElementById('limparEtiquetas');
     const imprimirEtiquetasButton = document.getElementById('imprimirEtiquetas');
+    const imprimirEtiquetasZplButton = document.getElementById('imprimirEtiquetasZpl');
     const imprimirTesteCentralizadoButton = document.getElementById('imprimirTesteCentralizado');
     let etiquetaSearchTimeout = null;
 
@@ -1000,6 +1156,9 @@
     }
     if (imprimirEtiquetasButton) {
         imprimirEtiquetasButton.addEventListener('click', printLabels);
+    }
+    if (imprimirEtiquetasZplButton) {
+        imprimirEtiquetasZplButton.addEventListener('click', printLabelsZPL);
     }
     if (imprimirTesteCentralizadoButton) {
         imprimirTesteCentralizadoButton.addEventListener('click', printCenteredWordTest);
@@ -1052,7 +1211,10 @@
     window.buscarProdutoEtiqueta = buscarProdutoEtiqueta;
     window.atualizarPreviewEtiqueta = atualizarPreviewEtiqueta;
     window.buildLabelTSPL = buildLabelTSPL;
+    window.buildLabelZPL = buildLabelZPL;
     window.buildLabelCommand = buildLabelCommand;
+    window.buildLabelZPLCommand = buildLabelZPLCommand;
     window.printLabels = printLabels;
+    window.printLabelsZPL = printLabelsZPL;
     window.printCenteredWordTest = printCenteredWordTest;
 })();
