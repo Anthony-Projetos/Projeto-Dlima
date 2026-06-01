@@ -211,7 +211,7 @@ html, body {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 18fr 21fr 4fr 13fr;
+  grid-template-columns: 18fr 22fr 4fr 9fr;
 }
 
 .label-logo-panel,
@@ -230,11 +230,11 @@ html, body {
 
 .label-logo-text {
   position: absolute;
-  left: 43%;
+  left: 35%;
   top: 50%;
   display: block;
   font-family: "Brush Script MT", "Segoe Script", cursive;
-  font-size: 9.6mm;
+  font-size: 11.4mm;
   font-style: italic;
   font-weight: 800;
   line-height: 1;
@@ -245,7 +245,7 @@ html, body {
 
 .label-store-text {
   position: absolute;
-  right: 1.2mm;
+  right: 4.2mm;
   top: 50%;
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -284,7 +284,7 @@ html, body {
   overflow: hidden;
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  font-size: 4.8mm;
+  font-size: 5.2mm;
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;

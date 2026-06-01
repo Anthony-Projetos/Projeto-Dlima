@@ -701,7 +701,7 @@ body.label-modal-open {
     flex: 1 1 auto;
     min-height: 0;
     display: grid;
-    grid-template-columns: 18fr 21fr 4fr 13fr;
+    grid-template-columns: 18fr 22fr 4fr 9fr;
 }
 
 .label-preview .label-logo-panel,
@@ -720,11 +720,11 @@ body.label-modal-open {
 
 .label-preview .label-logo-text {
     position: absolute;
-    left: 43%;
+    left: 35%;
     top: 50%;
     display: block;
     font-family: "Brush Script MT", "Segoe Script", cursive;
-    font-size: 70px;
+    font-size: 84px;
     font-style: italic;
     font-weight: 800;
     line-height: 1;
@@ -735,7 +735,7 @@ body.label-modal-open {
 
 .label-preview .label-store-text {
     position: absolute;
-    right: 11px;
+    right: 38px;
     top: 50%;
     writing-mode: vertical-rl;
     text-orientation: mixed;
@@ -774,7 +774,7 @@ body.label-modal-open {
     overflow: hidden;
     writing-mode: vertical-rl;
     text-orientation: mixed;
-    font-size: 46px;
+    font-size: 50px;
     font-weight: 900;
     line-height: 1;
     white-space: nowrap;
