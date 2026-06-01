@@ -735,13 +735,98 @@ html, body {
         }
     }
 
-    function buildLabelPrintData(htmlEtiqueta) {
+    function buildLabelPrintConfigOptions(state) {
+        return {
+            units: 'mm',
+            size: { width: state.size.width, height: state.size.height },
+            orientation: state.size.orientation,
+            margins: 0,
+            density: 203,
+            copies: state.quantity,
+            scaleContent: false,
+        };
+    }
+
+    function buildLabelPrintData(htmlEtiqueta, state) {
         return [{
             type: 'pixel',
             format: 'html',
             flavor: 'plain',
             data: htmlEtiqueta,
+            options: {
+                pageWidth: state.size.width,
+                pageHeight: state.size.height,
+            },
         }];
+    }
+
+    function measureLabelHtml(htmlEtiqueta) {
+        return new Promise(resolve => {
+            if (!document.body) {
+                resolve(null);
+                return;
+            }
+
+            const iframe = document.createElement('iframe');
+            const timeout = window.setTimeout(() => {
+                iframe.remove();
+                resolve(null);
+            }, 1200);
+
+            iframe.style.position = 'fixed';
+            iframe.style.left = '-10000px';
+            iframe.style.top = '0';
+            iframe.style.width = `${DIAGNOSTIC_LABEL_WIDTH_MM}mm`;
+            iframe.style.height = `${DIAGNOSTIC_LABEL_HEIGHT_MM}mm`;
+            iframe.style.border = '0';
+            iframe.style.opacity = '0';
+            iframe.style.pointerEvents = 'none';
+            iframe.setAttribute('aria-hidden', 'true');
+
+            iframe.addEventListener('load', () => {
+                window.clearTimeout(timeout);
+                try {
+                    const element = iframe.contentDocument.querySelector('.etiqueta-teste');
+                    const rect = element ? element.getBoundingClientRect() : null;
+                    resolve(rect ? {
+                        widthPx: rect.width,
+                        heightPx: rect.height,
+                        expectedWidthPxAt96Dpi: DIAGNOSTIC_LABEL_WIDTH_MM * 96 / 25.4,
+                        expectedHeightPxAt96Dpi: DIAGNOSTIC_LABEL_HEIGHT_MM * 96 / 25.4,
+                    } : null);
+                } catch (error) {
+                    resolve(null);
+                } finally {
+                    iframe.remove();
+                }
+            });
+
+            document.body.appendChild(iframe);
+            iframe.srcdoc = htmlEtiqueta;
+        });
+    }
+
+    function logLabelPrintDiagnostic({ state, printerName, configOptions, config, etiquetas, htmlEtiqueta, measurement }) {
+        const summary = {
+            elementWidthPx: measurement ? measurement.widthPx : null,
+            elementHeightPx: measurement ? measurement.heightPx : null,
+            expectedWidthPxAt96Dpi: measurement ? measurement.expectedWidthPxAt96Dpi : null,
+            expectedHeightPxAt96Dpi: measurement ? measurement.expectedHeightPxAt96Dpi : null,
+            qzWidthMm: state.size.width,
+            qzHeightMm: state.size.height,
+            qzOrientation: state.size.orientation,
+            qzHtmlPageWidth: etiquetas[0]?.options?.pageWidth,
+            qzHtmlPageHeight: etiquetas[0]?.options?.pageHeight,
+        };
+
+        console.group('[DLIMA etiqueta diagnostico]');
+        console.table(summary);
+        console.log('Impressora resolvida:', printerName);
+        console.log('qz.configs.create(printerName, configOptions) - configOptions:', configOptions);
+        console.log('Objeto config retornado pelo QZ:', config);
+        console.log('Array data enviado ao qz.print(config, data):', etiquetas);
+        console.log('HTML enviado ao QZ:', htmlEtiqueta);
+        console.groupEnd();
     }
 
     async function sendLabelHtmlToPrinter(state, htmlEtiqueta) {
@@ -750,16 +835,19 @@ html, body {
         if (etiquetaPrinterName) {
             etiquetaPrinterName.value = printerName;
         }
-        const config = window.qz.configs.create(printerName, {
-            units: 'mm',
-            size: { width: state.size.width, height: state.size.height },
-            orientation: state.size.orientation,
-            margins: 0,
-            density: 203,
-            copies: state.quantity,
-            scaleContent: false,
+        const configOptions = buildLabelPrintConfigOptions(state);
+        const config = window.qz.configs.create(printerName, configOptions);
+        const etiquetas = buildLabelPrintData(htmlEtiqueta, state);
+        const measurement = await measureLabelHtml(htmlEtiqueta);
+        logLabelPrintDiagnostic({
+            state,
+            printerName,
+            configOptions,
+            config,
+            etiquetas,
+            htmlEtiqueta,
+            measurement,
         });
-        const etiquetas = buildLabelPrintData(htmlEtiqueta);
         await window.qz.print(config, etiquetas);
         return printerName;
     }
