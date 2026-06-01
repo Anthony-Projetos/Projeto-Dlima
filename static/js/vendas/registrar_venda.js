@@ -28,9 +28,10 @@
         preco: document.getElementById('etiquetaMostrarPreco'),
         codigo: document.getElementById('etiquetaMostrarCodigo'),
     };
-    const DIAGNOSTIC_LABEL_WIDTH_MM = 60;
-    const DIAGNOSTIC_LABEL_HEIGHT_MM = 40;
-    const DIAGNOSTIC_LABEL_ORIENTATION = 'landscape';
+    const LABEL_WIDTH_MM = 60;
+    const LABEL_HEIGHT_MM = 40;
+    const TSPL_DOTS_PER_MM = 8;
+    const LABEL_WIDTH_DOTS = LABEL_WIDTH_MM * TSPL_DOTS_PER_MM;
     const CENTER_TEST_DEFAULT_TEXT = 'TESTE';
 
     function getAppConfig() {
@@ -88,63 +89,101 @@
             .trim();
     }
 
-    function buildLabelMarkup(state, options = {}) {
+    function escapePreviewText(value) {
+        return sanitizeLabelText(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function normalizeTsplText(value, maxLength) {
+        const text = sanitizeLabelText(value)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/"/g, "'")
+            .replace(/[^\x20-\x7E]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        if (!maxLength || text.length <= maxLength) {
+            return text;
+        }
+
+        return text.slice(0, maxLength).trimEnd();
+    }
+
+    function getTsplFontWidth(font, multiplier) {
+        const fontWidths = {
+            '1': 8,
+            '2': 12,
+            '3': 16,
+            '4': 24,
+            '5': 32,
+        };
+
+        return (fontWidths[font] || 16) * (multiplier || 1);
+    }
+
+    function fitTsplTextToWidth(value, font, multiplier, maxWidthDots) {
+        const charWidth = getTsplFontWidth(font, multiplier);
+        const maxLength = Math.max(Math.floor(maxWidthDots / charWidth), 1);
+        return normalizeTsplText(value, maxLength);
+    }
+
+    function buildCenteredTsplText(y, value, options = {}) {
+        const font = options.font || '3';
+        const xMultiplier = options.xMultiplier || 1;
+        const yMultiplier = options.yMultiplier || 1;
+        const maxWidthDots = options.maxWidthDots || LABEL_WIDTH_DOTS;
+        const text = fitTsplTextToWidth(value, font, xMultiplier, maxWidthDots);
+        const charWidth = getTsplFontWidth(font, xMultiplier);
+        const textWidth = text.length * charWidth;
+        const x = Math.max(Math.round((LABEL_WIDTH_DOTS - textWidth) / 2), 0);
+
+        return `TEXT ${x},${y},"${font}",0,${xMultiplier},${yMultiplier},"${text}"`;
+    }
+
+    function buildLabelTSPL(dados, quantidade) {
+        const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
+        const nome = dados.showNome === false ? 'PRODUTO' : dados.nome || 'PRODUTO';
+        const referencia = dados.showCodigo === false ? '000000' : dados.codigo || '000000';
+        const tamanho = dados.produtoTamanho || 'G';
+        const preco = dados.showPreco === false ? 'R$ 0,00' : formatLabelPrice(dados.preco || 0);
+
         return [
-            '<div class="etiqueta-teste">',
-            'TESTE DLIMA',
-            '</div>',
-        ].join('');
+            'SIZE 60 mm,40 mm',
+            'GAP 3 mm,0 mm',
+            'DIRECTION 1',
+            'REFERENCE 0,0',
+            'CLS',
+            buildCenteredTsplText(24, 'Dlima Store', { font: '3', maxWidthDots: 440 }),
+            buildCenteredTsplText(72, nome, { font: '3', maxWidthDots: 440 }),
+            buildCenteredTsplText(122, `REF: ${referencia}`, { font: '2', maxWidthDots: 440 }),
+            buildCenteredTsplText(162, `TAM: ${tamanho}`, { font: '2', maxWidthDots: 440 }),
+            buildCenteredTsplText(214, preco, { font: '4', maxWidthDots: 440 }),
+            `PRINT ${copies}`,
+            '',
+        ].join('\r\n');
     }
 
-    function buildLabelPrintCss() {
-        return `
-@page {
-    size: 60mm 40mm;
-    margin: 0;
-}
-
-html, body {
-    width: 60mm;
-    height: 40mm;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-.etiqueta-teste {
-    width: 60mm;
-    height: 40mm;
-    border: 2px solid black;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: Arial, sans-serif;
-    font-size: 20px;
-    font-weight: bold;
-    overflow: hidden;
-}
-`;
-    }
-
-    function buildLabelHtmlDocument(state, options = {}) {
+    function getLabelPreviewLines(state) {
         return [
-            '<!doctype html>',
-            '<html>',
-            '<head>',
-            '<meta charset="utf-8">',
-            `<style>${buildLabelPrintCss()}</style>`,
-            '</head>',
-            '<body>',
-            buildLabelMarkup(state, options),
-            '</body>',
-            '</html>',
-        ].join('');
+            'Dlima Store',
+            state.nome || 'PRODUTO',
+            `REF: ${state.codigo || '000000'}`,
+            `TAM: ${state.produtoTamanho || 'G'}`,
+            formatLabelPrice(state.preco || 0),
+        ];
     }
 
-    function buildCenteredWordTestHtml(state) {
-        const word = sanitizeLabelText(etiquetaTesteTexto ? etiquetaTesteTexto.value : '') || CENTER_TEST_DEFAULT_TEXT;
-        return buildLabelHtmlDocument(state, { centerText: word });
+    function buildLabelMarkup(state) {
+        const lines = getLabelPreviewLines(state)
+            .map(line => `<span>${escapePreviewText(line)}</span>`)
+            .join('');
+
+        return `<div class="etiqueta-teste etiqueta-teste--tspl">${lines}</div>`;
     }
 
     function showStatus(message, type) {
@@ -453,15 +492,14 @@ html, body {
 
     function getLabelState() {
         const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
-        const sizeKey = 'diagnostico-60x40';
+        const sizeKey = 'tspl-60x40';
         const size = {
-            width: DIAGNOSTIC_LABEL_WIDTH_MM,
-            height: DIAGNOSTIC_LABEL_HEIGHT_MM,
-            orientation: DIAGNOSTIC_LABEL_ORIENTATION,
+            width: LABEL_WIDTH_MM,
+            height: LABEL_HEIGHT_MM,
         };
         const configuredPrinterName = etiquetaPrinterName ? etiquetaPrinterName.value : '';
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = '60x40 diagnostico';
+            etiquetaTamanho.value = '60x40 TSPL RAW';
         }
 
         return {
@@ -501,10 +539,10 @@ html, body {
         }
     }
 
-    function buildLabelHtml() {
+    function buildLabelCommand() {
         const state = getLabelState();
         validateLabelState(state);
-        return buildLabelHtmlDocument(state);
+        return buildLabelTSPL(state, state.quantity);
     }
 
     function atualizarPreviewEtiqueta() {
@@ -519,7 +557,7 @@ html, body {
 
         if (etiquetaHtmlPreview) {
             try {
-                etiquetaHtmlPreview.textContent = buildLabelHtmlDocument(state);
+                etiquetaHtmlPreview.textContent = buildLabelTSPL(state, state.quantity);
             } catch (error) {
                 etiquetaHtmlPreview.textContent = '';
             }
@@ -641,7 +679,7 @@ html, body {
             etiquetaQuantidade.value = '1';
         }
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = '60x40 diagnostico';
+            etiquetaTamanho.value = '60x40 TSPL RAW';
         }
         if (etiquetaPrinterName) {
             etiquetaPrinterName.value = getAppConfig().labelPrinterName || 'ELGIN';
@@ -735,118 +773,53 @@ html, body {
         }
     }
 
-    function buildLabelPrintConfigOptions(state) {
+    function buildLabelRawConfigOptions() {
         return {
-            units: 'mm',
-            size: { width: state.size.width, height: state.size.height },
-            orientation: state.size.orientation,
-            margins: 0,
-            density: 203,
-            copies: state.quantity,
-            scaleContent: false,
+            encoding: 'UTF-8',
         };
     }
 
-    function buildLabelPrintData(htmlEtiqueta, state) {
+    function buildLabelPrintData(comandoTSPL) {
         return [{
-            type: 'pixel',
-            format: 'html',
-            flavor: 'plain',
-            data: htmlEtiqueta,
-            options: {
-                pageWidth: state.size.width,
-                pageHeight: state.size.height,
-            },
+            type: 'raw',
+            format: 'plain',
+            data: comandoTSPL,
         }];
     }
 
-    function measureLabelHtml(htmlEtiqueta) {
-        return new Promise(resolve => {
-            if (!document.body) {
-                resolve(null);
-                return;
-            }
-
-            const iframe = document.createElement('iframe');
-            const timeout = window.setTimeout(() => {
-                iframe.remove();
-                resolve(null);
-            }, 1200);
-
-            iframe.style.position = 'fixed';
-            iframe.style.left = '-10000px';
-            iframe.style.top = '0';
-            iframe.style.width = `${DIAGNOSTIC_LABEL_WIDTH_MM}mm`;
-            iframe.style.height = `${DIAGNOSTIC_LABEL_HEIGHT_MM}mm`;
-            iframe.style.border = '0';
-            iframe.style.opacity = '0';
-            iframe.style.pointerEvents = 'none';
-            iframe.setAttribute('aria-hidden', 'true');
-
-            iframe.addEventListener('load', () => {
-                window.clearTimeout(timeout);
-                try {
-                    const element = iframe.contentDocument.querySelector('.etiqueta-teste');
-                    const rect = element ? element.getBoundingClientRect() : null;
-                    resolve(rect ? {
-                        widthPx: rect.width,
-                        heightPx: rect.height,
-                        expectedWidthPxAt96Dpi: DIAGNOSTIC_LABEL_WIDTH_MM * 96 / 25.4,
-                        expectedHeightPxAt96Dpi: DIAGNOSTIC_LABEL_HEIGHT_MM * 96 / 25.4,
-                    } : null);
-                } catch (error) {
-                    resolve(null);
-                } finally {
-                    iframe.remove();
-                }
-            });
-
-            document.body.appendChild(iframe);
-            iframe.srcdoc = htmlEtiqueta;
+    function logLabelTSPLDiagnostic({ state, printerName, configOptions, config, etiquetas, comandoTSPL }) {
+        console.group('[DLIMA etiqueta TSPL RAW]');
+        console.table({
+            larguraEtiquetaMm: state.size.width,
+            alturaEtiquetaMm: state.size.height,
+            larguraEtiquetaDots: LABEL_WIDTH_DOTS,
+            alturaEtiquetaDots: LABEL_HEIGHT_MM * TSPL_DOTS_PER_MM,
+            quantidade: state.quantity,
         });
-    }
-
-    function logLabelPrintDiagnostic({ state, printerName, configOptions, config, etiquetas, htmlEtiqueta, measurement }) {
-        const summary = {
-            elementWidthPx: measurement ? measurement.widthPx : null,
-            elementHeightPx: measurement ? measurement.heightPx : null,
-            expectedWidthPxAt96Dpi: measurement ? measurement.expectedWidthPxAt96Dpi : null,
-            expectedHeightPxAt96Dpi: measurement ? measurement.expectedHeightPxAt96Dpi : null,
-            qzWidthMm: state.size.width,
-            qzHeightMm: state.size.height,
-            qzOrientation: state.size.orientation,
-            qzHtmlPageWidth: etiquetas[0]?.options?.pageWidth,
-            qzHtmlPageHeight: etiquetas[0]?.options?.pageHeight,
-        };
-
-        console.group('[DLIMA etiqueta diagnostico]');
-        console.table(summary);
         console.log('Impressora resolvida:', printerName);
         console.log('qz.configs.create(printerName, configOptions) - configOptions:', configOptions);
         console.log('Objeto config retornado pelo QZ:', config);
         console.log('Array data enviado ao qz.print(config, data):', etiquetas);
-        console.log('HTML enviado ao QZ:', htmlEtiqueta);
+        console.log('Comando TSPL enviado ao QZ:', comandoTSPL);
         console.groupEnd();
     }
 
-    async function sendLabelHtmlToPrinter(state, htmlEtiqueta) {
+    async function sendLabelTSPLToPrinter(state, comandoTSPL) {
         await connectQzForLabels();
         const printerName = await resolveLabelPrinter(state.printerName);
         if (etiquetaPrinterName) {
             etiquetaPrinterName.value = printerName;
         }
-        const configOptions = buildLabelPrintConfigOptions(state);
+        const configOptions = buildLabelRawConfigOptions();
         const config = window.qz.configs.create(printerName, configOptions);
-        const etiquetas = buildLabelPrintData(htmlEtiqueta, state);
-        const measurement = await measureLabelHtml(htmlEtiqueta);
-        logLabelPrintDiagnostic({
+        const etiquetas = buildLabelPrintData(comandoTSPL);
+        logLabelTSPLDiagnostic({
             state,
             printerName,
             configOptions,
             config,
             etiquetas,
-            htmlEtiqueta,
-            measurement,
+            comandoTSPL,
         });
         await window.qz.print(config, etiquetas);
         return printerName;
@@ -860,9 +833,9 @@ html, body {
             const state = getLabelState();
             validateLabelState(state);
             atualizarPreviewEtiqueta();
-            showEtiquetaStatus('Enviando etiqueta para a impressora...', 'info');
-            const htmlEtiqueta = buildLabelHtmlDocument(state);
-            const printerName = await sendLabelHtmlToPrinter(state, htmlEtiqueta);
+            showEtiquetaStatus('Enviando etiqueta TSPL RAW para a impressora...', 'info');
+            const comandoTSPL = buildLabelTSPL(state, state.quantity);
+            const printerName = await sendLabelTSPLToPrinter(state, comandoTSPL);
             showEtiquetaStatus(`${state.quantity} etiqueta${state.quantity === 1 ? '' : 's'} enviada${state.quantity === 1 ? '' : 's'} para ${printerName}.`, 'success');
         } catch (error) {
             const message = /websocket|connect|qz/i.test(error.message || '')
@@ -890,12 +863,19 @@ html, body {
 
             const word = sanitizeLabelText(etiquetaTesteTexto ? etiquetaTesteTexto.value : '') || CENTER_TEST_DEFAULT_TEXT;
             showEtiquetaStatus(`Enviando teste centralizado "${word}"...`, 'info');
-            etiquetaPreview.innerHTML = buildLabelMarkup(state, { centerText: word });
+            const testState = {
+                ...state,
+                nome: word,
+                codigo: 'TESTE',
+                produtoTamanho: 'G',
+                preco: '0',
+            };
+            etiquetaPreview.innerHTML = buildLabelMarkup(testState);
             if (etiquetaHtmlPreview) {
-                etiquetaHtmlPreview.textContent = buildCenteredWordTestHtml(state);
+                etiquetaHtmlPreview.textContent = buildLabelTSPL(testState, state.quantity);
             }
-            const htmlEtiqueta = buildCenteredWordTestHtml(state);
-            const printerName = await sendLabelHtmlToPrinter(state, htmlEtiqueta);
+            const comandoTSPL = buildLabelTSPL(testState, state.quantity);
+            const printerName = await sendLabelTSPLToPrinter(state, comandoTSPL);
             showEtiquetaStatus(`Teste centralizado enviado para ${printerName}.`, 'success');
         } catch (error) {
             const message = /websocket|connect|qz/i.test(error.message || '')
@@ -1020,8 +1000,8 @@ html, body {
     window.fecharModalEtiquetas = fecharModalEtiquetas;
     window.buscarProdutoEtiqueta = buscarProdutoEtiqueta;
     window.atualizarPreviewEtiqueta = atualizarPreviewEtiqueta;
-    window.buildLabelHtml = buildLabelHtml;
-    window.buildCenteredWordTestHtml = buildCenteredWordTestHtml;
+    window.buildLabelTSPL = buildLabelTSPL;
+    window.buildLabelCommand = buildLabelCommand;
     window.printLabels = printLabels;
     window.printCenteredWordTest = printCenteredWordTest;
 })();

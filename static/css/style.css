@@ -684,14 +684,23 @@ body.label-modal-open {
     border: 2px solid black;
     box-sizing: border-box;
     display: flex;
+    flex-direction: column;
+    gap: 6px;
     align-items: center;
     justify-content: center;
     font-family: Arial, sans-serif;
-    font-size: 34px;
+    font-size: 22px;
     font-weight: 700;
+    line-height: 1;
+    text-align: center;
     background: #ffffff;
     color: #000000;
     overflow: hidden;
+}
+
+.label-preview .etiqueta-teste span:first-child,
+.label-preview .etiqueta-teste span:last-child {
+    font-size: 26px;
 }
 
 .label-html-preview {
