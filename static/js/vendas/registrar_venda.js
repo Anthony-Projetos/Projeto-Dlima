@@ -163,10 +163,7 @@
 
     function buildLabelPrintCss() {
         return `
-@page {
-  size: 60mm 40mm;
-  margin: 0;
-}
+@page { size: 60mm 40mm; margin: 0; }
 
 * {
   box-sizing: border-box;
@@ -185,8 +182,9 @@ html, body {
   width: 60mm;
   height: 40mm;
   box-sizing: border-box;
+  margin: 0;
   padding: 2mm;
-  border: 0.25mm solid #000;
+  border: 1px solid black;
   display: flex;
   flex-direction: column;
   font-family: Arial, sans-serif;
@@ -978,18 +976,13 @@ html, body {
         }
     }
 
-    function buildLabelPrintData(htmlEtiqueta, quantity) {
-        const etiquetas = [];
-        for (let i = 0; i < quantity; i += 1) {
-            etiquetas.push({
-                type: 'pixel',
-                format: 'html',
-                flavor: 'plain',
-                data: htmlEtiqueta,
-            });
-        }
-
-        return etiquetas;
+    function buildLabelPrintData(htmlEtiqueta) {
+        return [{
+            type: 'pixel',
+            format: 'html',
+            flavor: 'plain',
+            data: htmlEtiqueta,
+        }];
     }
 
     async function sendLabelHtmlToPrinter(state, htmlEtiqueta) {
@@ -1000,13 +993,14 @@ html, body {
         }
         const config = window.qz.configs.create(printerName, {
             units: 'mm',
-            size: { width: 60, height: 40, custom: true },
+            size: { width: 60, height: 40 },
             orientation: 'landscape',
             margins: 0,
             density: 203,
+            copies: state.quantity,
             scaleContent: false,
         });
-        const etiquetas = buildLabelPrintData(htmlEtiqueta, state.quantity);
+        const etiquetas = buildLabelPrintData(htmlEtiqueta);
         await window.qz.print(config, etiquetas);
         return printerName;
     }
