@@ -77,6 +77,10 @@
         return `R$ ${formatCurrency(parseMoney(value))}`;
     }
 
+    function formatLabelPriceCompact(value) {
+        return `R$${formatCurrency(parseMoney(value))}`;
+    }
+
     function sanitizeLabelText(value) {
         return String(value || '')
             .normalize('NFC')
@@ -145,12 +149,27 @@
         return `TEXT ${x},${y},"${font}",0,${xMultiplier},${yMultiplier},"${text}"`;
     }
 
+    function buildTsplText(x, y, value, options = {}) {
+        const font = options.font || '2';
+        const rotation = options.rotation || 0;
+        const xMultiplier = options.xMultiplier || 1;
+        const yMultiplier = options.yMultiplier || 1;
+        const maxWidthDots = options.maxWidthDots || LABEL_WIDTH_DOTS;
+        const text = fitTsplTextToWidth(value, font, xMultiplier, maxWidthDots);
+
+        return `TEXT ${x},${y},"${font}",${rotation},${xMultiplier},${yMultiplier},"${text}"`;
+    }
+
+    function buildTsplBar(x, y, width, height) {
+        return `BAR ${x},${y},${width},${height}`;
+    }
+
     function buildLabelTSPL(dados, quantidade) {
         const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
         const nome = dados.showNome === false ? 'PRODUTO' : dados.nome || 'PRODUTO';
         const referencia = dados.showCodigo === false ? '000000' : dados.codigo || '000000';
         const tamanho = dados.produtoTamanho || 'G';
-        const preco = dados.showPreco === false ? 'R$ 0,00' : formatLabelPrice(dados.preco || 0);
+        const preco = dados.showPreco === false ? 'R$0,00' : formatLabelPriceCompact(dados.preco || 0);
 
         return [
             'SIZE 60 mm,40 mm',
@@ -158,32 +177,64 @@
             'DIRECTION 1',
             'REFERENCE 0,0',
             'CLS',
-            buildCenteredTsplText(24, 'Dlima Store', { font: '3', maxWidthDots: 440 }),
-            buildCenteredTsplText(72, nome, { font: '3', maxWidthDots: 440 }),
-            buildCenteredTsplText(122, `REF: ${referencia}`, { font: '2', maxWidthDots: 440 }),
-            buildCenteredTsplText(162, `TAM: ${tamanho}`, { font: '2', maxWidthDots: 440 }),
-            buildCenteredTsplText(214, preco, { font: '4', maxWidthDots: 440 }),
+            buildTsplBar(8, 8, 464, 2),
+            buildTsplBar(8, 310, 464, 2),
+            buildTsplBar(8, 8, 2, 304),
+            buildTsplBar(470, 8, 2, 304),
+            buildTsplBar(160, 24, 2, 272),
+            buildTsplBar(332, 24, 2, 272),
+            buildTsplBar(362, 24, 2, 272),
+            buildTsplBar(452, 24, 2, 272),
+            buildTsplBar(162, 160, 170, 2),
+            buildTsplBar(218, 160, 2, 136),
+            buildTsplBar(276, 160, 2, 136),
+            buildTsplText(38, 286, "D'lima", { font: '5', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 220 }),
+            buildTsplText(122, 212, 'store', { font: '2', rotation: 270, maxWidthDots: 70 }),
+            buildTsplText(178, 148, 'VALOR', { font: '2', rotation: 270, maxWidthDots: 70 }),
+            buildTsplText(246, 150, preco, { font: '3', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 118 }),
+            buildTsplText(178, 292, 'PRODUTO', { font: '2', rotation: 270, maxWidthDots: 88 }),
+            buildTsplText(202, 292, nome, { font: '1', rotation: 270, maxWidthDots: 112 }),
+            buildTsplText(236, 292, 'REF', { font: '2', rotation: 270, maxWidthDots: 60 }),
+            buildTsplText(260, 292, referencia, { font: '1', rotation: 270, maxWidthDots: 112 }),
+            buildTsplText(294, 292, 'TAMANHO', { font: '2', rotation: 270, maxWidthDots: 92 }),
+            buildTsplText(318, 292, tamanho, { font: '1', rotation: 270, maxWidthDots: 112 }),
+            buildTsplText(392, 250, '"Nao seja copia,', { font: '2', rotation: 270, maxWidthDots: 190 }),
+            buildTsplText(420, 250, 'seja referencia."', { font: '2', rotation: 270, maxWidthDots: 190 }),
             `PRINT ${copies}`,
             '',
         ].join('\r\n');
     }
 
-    function getLabelPreviewLines(state) {
-        return [
-            'Dlima Store',
-            state.nome || 'PRODUTO',
-            `REF: ${state.codigo || '000000'}`,
-            `TAM: ${state.produtoTamanho || 'G'}`,
-            formatLabelPrice(state.preco || 0),
-        ];
-    }
-
     function buildLabelMarkup(state) {
-        const lines = getLabelPreviewLines(state)
-            .map(line => `<span>${escapePreviewText(line)}</span>`)
-            .join('');
+        const nome = state.nome || 'PRODUTO';
+        const referencia = state.codigo || '000000';
+        const tamanho = state.produtoTamanho || 'G';
+        const preco = formatLabelPriceCompact(state.preco || 0);
 
-        return `<div class="etiqueta-teste etiqueta-teste--tspl">${lines}</div>`;
+        return [
+            '<div class="etiqueta-teste etiqueta-teste--premium">',
+            '<section class="label-preview-brand">',
+            '<strong>D&#39;lima</strong>',
+            '<span>store</span>',
+            '</section>',
+            '<section class="label-preview-table">',
+            '<div class="label-preview-value">',
+            '<span>VALOR</span>',
+            `<strong>${escapePreviewText(preco)}</strong>`,
+            '</div>',
+            '<div class="label-preview-fields">',
+            '<div><span>PRODUTO</span><strong>' + escapePreviewText(nome) + '</strong></div>',
+            '<div><span>REF</span><strong>' + escapePreviewText(referencia) + '</strong></div>',
+            '<div><span>TAMANHO</span><strong>' + escapePreviewText(tamanho) + '</strong></div>',
+            '</div>',
+            '</section>',
+            '<section class="label-preview-gap"></section>',
+            '<section class="label-preview-quote">',
+            '<span>&quot;Nao seja copia,</span>',
+            '<span>seja referencia.&quot;</span>',
+            '</section>',
+            '</div>',
+        ].join('');
     }
 
     function showStatus(message, type) {
