@@ -28,23 +28,9 @@
         preco: document.getElementById('etiquetaMostrarPreco'),
         codigo: document.getElementById('etiquetaMostrarCodigo'),
     };
-    const DEFAULT_LABEL_SIZE_KEY = '60x40';
-    const labelModes = {
-        '60x40': {
-            width: 60,
-            height: 40,
-            orientation: 'landscape',
-        },
-        '40x60': {
-            width: 40,
-            height: 60,
-            orientation: 'portrait',
-        },
-    };
-    const DLIMA_LABEL_QUOTE_LINES = [
-        'N\u00E3o seja copia,',
-        'seja refer\u00EAncia',
-    ];
+    const DIAGNOSTIC_LABEL_WIDTH_MM = 60;
+    const DIAGNOSTIC_LABEL_HEIGHT_MM = 40;
+    const DIAGNOSTIC_LABEL_ORIENTATION = 'landscape';
     const CENTER_TEST_DEFAULT_TEXT = 'TESTE';
 
     function getAppConfig() {
@@ -102,332 +88,42 @@
             .trim();
     }
 
-    function normalizeLabelSizeKey(value) {
-        const sizeKey = String(value || '').trim().toLowerCase();
-        return labelModes[sizeKey] ? sizeKey : DEFAULT_LABEL_SIZE_KEY;
-    }
-
-    function getLabelMode(sizeKey) {
-        const normalizedSizeKey = normalizeLabelSizeKey(sizeKey);
-        return {
-            sizeKey: normalizedSizeKey,
-            ...labelModes[normalizedSizeKey],
-        };
-    }
-
-    function fitLabelText(value, maxLength) {
-        const text = sanitizeLabelText(value).toUpperCase();
-        if (text.length <= maxLength) {
-            return text;
-        }
-
-        return text.slice(0, Math.max(maxLength - 1, 1)).trimEnd();
-    }
-
-    function escapeHtml(value) {
-        return sanitizeLabelText(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    function buildLabelDetail(label, value) {
-        return [
-            '<div class="label-detail">',
-            `<span class="label-detail-title">${escapeHtml(label)}</span>`,
-            `<strong class="label-detail-value">${escapeHtml(value)}</strong>`,
-            '</div>',
-        ].join('');
-    }
-
     function buildLabelMarkup(state, options = {}) {
-        const testBorderClass = state.testBorder ? ' label--test-border' : '';
-        const sizeModeClass = state.sizeKey === '40x60' ? ' label--portrait' : ' label--landscape';
-
-        if (options.centerText) {
-            return [
-                `<div class="label label--center-test${sizeModeClass}${testBorderClass}">`,
-                `<div class="label-center-word">${escapeHtml(fitLabelText(options.centerText, 18))}</div>`,
-                '</div>',
-            ].join('');
-        }
-
-        const productName = state.showNome ? fitLabelText(state.nome || 'PRODUTO', 30) : '';
-        const productCode = state.showCodigo ? fitLabelText(state.codigo || '000000', 16) : '';
-        const productSize = fitLabelText(state.produtoTamanho || 'G', 8);
-        const priceText = state.showPreco ? formatCurrency(parseMoney(state.preco)) : '';
-        const details = [
-            buildLabelDetail('Referencia', productCode),
-            buildLabelDetail('Tamanho', productSize),
-        ].join('');
-
         return [
-            `<div class="label label--garment${sizeModeClass}${testBorderClass}">`,
-            '<header class="label-brand">Dlima Store</header>',
-            '<main class="label-content">',
-            '<section class="label-product-panel">',
-            `<strong class="label-product-name">${escapeHtml(productName || 'PRODUTO')}</strong>`,
-            `<div class="label-details-grid">${details}</div>`,
-            '</section>',
-            '<aside class="label-price-panel">',
-            '<span class="label-price-title">Preco</span>',
-            `<strong class="label-price-value">${priceText ? `R$ ${escapeHtml(priceText)}` : ''}</strong>`,
-            '</aside>',
-            '</main>',
-            '<footer class="label-footer">',
-            `<em>&quot;${escapeHtml(DLIMA_LABEL_QUOTE_LINES[0])} ${escapeHtml(DLIMA_LABEL_QUOTE_LINES[1])}&quot;</em>`,
-            '</footer>',
+            '<div class="etiqueta-teste">',
+            'TESTE DLIMA',
             '</div>',
         ].join('');
     }
 
-    function buildLabelPrintCss(state = {}) {
-        const size = getLabelMode(state.sizeKey);
-        const portraitCss = size.orientation === 'portrait'
-            ? `
-.label-brand {
-  flex-basis: 7mm;
-  font-size: 3.6mm;
-}
-
-.label-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1mm;
-  padding: 1mm 0;
-}
-
-.label-product-panel {
-  flex: 1 1 auto;
-  padding: 0 0.5mm;
-}
-
-.label-product-name {
-  font-size: 2.9mm;
-  line-height: 1.05;
-  white-space: normal;
-}
-
-.label-price-panel {
-  flex: 0 0 13mm;
-  padding: 1mm 0 0;
-  border-left: 0;
-  border-top: 0.25mm solid #000;
-}
-
-.label-price-title {
-  margin-bottom: 0.5mm;
-}
-
-.label-price-value {
-  font-size: 4.4mm;
-}
-
-.label-footer {
-  flex-basis: 5mm;
-}
-`
-            : '';
-
+    function buildLabelPrintCss() {
         return `
-@page { size: ${size.width}mm ${size.height}mm; margin: 0; }
-
-* {
-  box-sizing: border-box;
+@page {
+    size: 60mm 40mm;
+    margin: 0;
 }
 
 html, body {
-  width: ${size.width}mm;
-  height: ${size.height}mm;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: #fff;
+    width: 60mm;
+    height: 40mm;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
-.label {
-  width: ${size.width}mm;
-  height: ${size.height}mm;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 2mm;
-  border: 1px solid black;
-  display: flex;
-  flex-direction: column;
-  font-family: Arial, sans-serif;
-  color: #000;
-  background: #fff;
-  overflow: hidden;
+.etiqueta-teste {
+    width: 60mm;
+    height: 40mm;
+    border: 2px solid black;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    font-weight: bold;
+    overflow: hidden;
 }
-
-.label--test-border {
-  outline: 0.5mm solid #e00000;
-  outline-offset: -0.5mm;
-}
-
-.label-brand {
-  flex: 0 0 6mm;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-bottom: 0.25mm solid #000;
-  font-size: 4mm;
-  font-weight: 900;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.label-content {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 21mm;
-  gap: 1.2mm;
-  padding: 1.2mm 0;
-  overflow: hidden;
-  border-bottom: 0.25mm solid #000;
-}
-
-.label-product-panel {
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1mm;
-  overflow: hidden;
-  padding: 0 0.8mm;
-}
-
-.label-product-name {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 3.2mm;
-  font-weight: 900;
-  line-height: 1;
-  text-align: center;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.label-details-grid {
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1mm;
-}
-
-.label-detail {
-  min-width: 0;
-  overflow: hidden;
-  border: 0.2mm solid #000;
-  padding: 0.7mm 0.8mm;
-}
-
-.label-detail-title {
-  display: block;
-  overflow: hidden;
-  font-size: 1.55mm;
-  font-weight: 700;
-  line-height: 1;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.label-detail-value {
-  display: block;
-  max-width: 100%;
-  margin-top: 0.35mm;
-  overflow: hidden;
-  font-size: 2.25mm;
-  font-weight: 900;
-  line-height: 1;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.label-price-panel {
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding-left: 1mm;
-  border-left: 0.25mm solid #000;
-}
-
-.label-price-title {
-  display: block;
-  margin-bottom: 0.8mm;
-  font-size: 1.6mm;
-  font-weight: 700;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.label-price-value {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 4.1mm;
-  font-weight: 900;
-  line-height: 1;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.label-footer {
-  flex: 0 0 4.6mm;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding-top: 0.6mm;
-}
-
-.label-footer em {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.7mm;
-  font-style: italic;
-  line-height: 1;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.label--center-test {
-  justify-content: center;
-  align-items: center;
-}
-
-.label-center-word {
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 9mm;
-  font-weight: 900;
-  line-height: 1;
-  text-align: center;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-${portraitCss}
 `;
     }
 
@@ -437,7 +133,7 @@ ${portraitCss}
             '<html>',
             '<head>',
             '<meta charset="utf-8">',
-            `<style>${buildLabelPrintCss(state)}</style>`,
+            `<style>${buildLabelPrintCss()}</style>`,
             '</head>',
             '<body>',
             buildLabelMarkup(state, options),
@@ -757,11 +453,15 @@ ${portraitCss}
 
     function getLabelState() {
         const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
-        const sizeKey = normalizeLabelSizeKey(etiquetaTamanho ? etiquetaTamanho.value : DEFAULT_LABEL_SIZE_KEY);
-        const size = getLabelMode(sizeKey);
+        const sizeKey = 'diagnostico-60x40';
+        const size = {
+            width: DIAGNOSTIC_LABEL_WIDTH_MM,
+            height: DIAGNOSTIC_LABEL_HEIGHT_MM,
+            orientation: DIAGNOSTIC_LABEL_ORIENTATION,
+        };
         const configuredPrinterName = etiquetaPrinterName ? etiquetaPrinterName.value : '';
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = sizeKey;
+            etiquetaTamanho.value = '60x40 diagnostico';
         }
 
         return {
@@ -794,18 +494,6 @@ ${portraitCss}
         state.quantity = normalizeLabelQuantity(state);
         if (state.quantity <= 0) {
             throw new Error('Informe uma quantidade de etiquetas maior que zero.');
-        }
-
-        const printableFields = [
-            state.showNome && state.nome,
-            state.showPreco && state.preco,
-            state.showCodigo && state.codigo,
-            state.produtoTamanho,
-        ];
-        const hasContent = printableFields.some(Boolean);
-
-        if (!hasContent) {
-            throw new Error('Informe ao menos um conteudo para imprimir na etiqueta.');
         }
 
         if (!state.printerName) {
@@ -953,7 +641,7 @@ ${portraitCss}
             etiquetaQuantidade.value = '1';
         }
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = DEFAULT_LABEL_SIZE_KEY;
+            etiquetaTamanho.value = '60x40 diagnostico';
         }
         if (etiquetaPrinterName) {
             etiquetaPrinterName.value = getAppConfig().labelPrinterName || 'ELGIN';
