@@ -28,16 +28,24 @@
         preco: document.getElementById('etiquetaMostrarPreco'),
         codigo: document.getElementById('etiquetaMostrarCodigo'),
     };
-    const LABEL_WIDTH_MM = 60;
-    const LABEL_HEIGHT_MM = 40;
+    const DEFAULT_LABEL_SIZE_KEY = '60x40';
+    const labelModes = {
+        '60x40': {
+            width: 60,
+            height: 40,
+            orientation: 'landscape',
+        },
+        '40x60': {
+            width: 40,
+            height: 60,
+            orientation: 'portrait',
+        },
+    };
     const DLIMA_LABEL_QUOTE_LINES = [
         'N\u00E3o seja copia,',
         'seja refer\u00EAncia',
     ];
     const CENTER_TEST_DEFAULT_TEXT = 'TESTE';
-    const labelSizes = {
-        '60x40': { width: LABEL_WIDTH_MM, height: LABEL_HEIGHT_MM },
-    };
 
     function getAppConfig() {
         return window.PDV_CONFIG || {};
@@ -94,6 +102,19 @@
             .trim();
     }
 
+    function normalizeLabelSizeKey(value) {
+        const sizeKey = String(value || '').trim().toLowerCase();
+        return labelModes[sizeKey] ? sizeKey : DEFAULT_LABEL_SIZE_KEY;
+    }
+
+    function getLabelMode(sizeKey) {
+        const normalizedSizeKey = normalizeLabelSizeKey(sizeKey);
+        return {
+            sizeKey: normalizedSizeKey,
+            ...labelModes[normalizedSizeKey],
+        };
+    }
+
     function fitLabelText(value, maxLength) {
         const text = sanitizeLabelText(value).toUpperCase();
         if (text.length <= maxLength) {
@@ -123,10 +144,11 @@
 
     function buildLabelMarkup(state, options = {}) {
         const testBorderClass = state.testBorder ? ' label--test-border' : '';
+        const sizeModeClass = state.sizeKey === '40x60' ? ' label--portrait' : ' label--landscape';
 
         if (options.centerText) {
             return [
-                `<div class="label label--center-test${testBorderClass}">`,
+                `<div class="label label--center-test${sizeModeClass}${testBorderClass}">`,
                 `<div class="label-center-word">${escapeHtml(fitLabelText(options.centerText, 18))}</div>`,
                 '</div>',
             ].join('');
@@ -142,7 +164,7 @@
         ].join('');
 
         return [
-            `<div class="label label--garment${testBorderClass}">`,
+            `<div class="label label--garment${sizeModeClass}${testBorderClass}">`,
             '<header class="label-brand">Dlima Store</header>',
             '<main class="label-content">',
             '<section class="label-product-panel">',
@@ -161,17 +183,64 @@
         ].join('');
     }
 
-    function buildLabelPrintCss() {
+    function buildLabelPrintCss(state = {}) {
+        const size = getLabelMode(state.sizeKey);
+        const portraitCss = size.orientation === 'portrait'
+            ? `
+.label-brand {
+  flex-basis: 7mm;
+  font-size: 3.6mm;
+}
+
+.label-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1mm;
+  padding: 1mm 0;
+}
+
+.label-product-panel {
+  flex: 1 1 auto;
+  padding: 0 0.5mm;
+}
+
+.label-product-name {
+  font-size: 2.9mm;
+  line-height: 1.05;
+  white-space: normal;
+}
+
+.label-price-panel {
+  flex: 0 0 13mm;
+  padding: 1mm 0 0;
+  border-left: 0;
+  border-top: 0.25mm solid #000;
+}
+
+.label-price-title {
+  margin-bottom: 0.5mm;
+}
+
+.label-price-value {
+  font-size: 4.4mm;
+}
+
+.label-footer {
+  flex-basis: 5mm;
+}
+`
+            : '';
+
         return `
-@page { size: 60mm 40mm; margin: 0; }
+@page { size: ${size.width}mm ${size.height}mm; margin: 0; }
 
 * {
   box-sizing: border-box;
 }
 
 html, body {
-  width: 60mm;
-  height: 40mm;
+  width: ${size.width}mm;
+  height: ${size.height}mm;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -179,8 +248,8 @@ html, body {
 }
 
 .label {
-  width: 60mm;
-  height: 40mm;
+  width: ${size.width}mm;
+  height: ${size.height}mm;
   box-sizing: border-box;
   margin: 0;
   padding: 2mm;
@@ -358,6 +427,7 @@ html, body {
   text-transform: uppercase;
   white-space: nowrap;
 }
+${portraitCss}
 `;
     }
 
@@ -367,7 +437,7 @@ html, body {
             '<html>',
             '<head>',
             '<meta charset="utf-8">',
-            `<style>${buildLabelPrintCss()}</style>`,
+            `<style>${buildLabelPrintCss(state)}</style>`,
             '</head>',
             '<body>',
             buildLabelMarkup(state, options),
@@ -687,7 +757,8 @@ html, body {
 
     function getLabelState() {
         const quantity = parseInt(etiquetaQuantidade ? etiquetaQuantidade.value : '1', 10) || 0;
-        const sizeKey = '60x40';
+        const sizeKey = normalizeLabelSizeKey(etiquetaTamanho ? etiquetaTamanho.value : DEFAULT_LABEL_SIZE_KEY);
+        const size = getLabelMode(sizeKey);
         const configuredPrinterName = etiquetaPrinterName ? etiquetaPrinterName.value : '';
         if (etiquetaTamanho) {
             etiquetaTamanho.value = sizeKey;
@@ -696,7 +767,7 @@ html, body {
         return {
             quantity,
             sizeKey,
-            size: labelSizes[sizeKey] || labelSizes['60x40'],
+            size,
             printerName: sanitizeLabelText(configuredPrinterName || getAppConfig().labelPrinterName || 'ELGIN'),
             nome: sanitizeLabelText(etiquetaNome ? etiquetaNome.value : ''),
             preco: sanitizeLabelText(etiquetaPreco ? etiquetaPreco.value : ''),
@@ -882,7 +953,7 @@ html, body {
             etiquetaQuantidade.value = '1';
         }
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = '60x40';
+            etiquetaTamanho.value = DEFAULT_LABEL_SIZE_KEY;
         }
         if (etiquetaPrinterName) {
             etiquetaPrinterName.value = getAppConfig().labelPrinterName || 'ELGIN';
@@ -993,8 +1064,8 @@ html, body {
         }
         const config = window.qz.configs.create(printerName, {
             units: 'mm',
-            size: { width: 60, height: 40 },
-            orientation: 'landscape',
+            size: { width: state.size.width, height: state.size.height },
+            orientation: state.size.orientation,
             margins: 0,
             density: 203,
             copies: state.quantity,

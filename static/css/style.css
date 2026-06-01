@@ -678,6 +678,11 @@ body.label-modal-open {
     overflow: hidden;
 }
 
+.label-preview[data-size="40x60"] {
+    width: min(100%, 360px);
+    aspect-ratio: 2 / 3;
+}
+
 .label-preview .label {
     width: 100%;
     height: 100%;
@@ -839,6 +844,48 @@ body.label-modal-open {
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.label-preview .label--portrait .label-brand {
+    flex-basis: 50px;
+    font-size: 26px;
+}
+
+.label-preview .label--portrait .label-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 0;
+}
+
+.label-preview .label--portrait .label-product-panel {
+    flex: 1 1 auto;
+    padding: 0 6px;
+}
+
+.label-preview .label--portrait .label-product-name {
+    font-size: 22px;
+    line-height: 1.05;
+    white-space: normal;
+}
+
+.label-preview .label--portrait .label-price-panel {
+    flex: 0 0 110px;
+    padding: 8px 0 0;
+    border-left: 0;
+    border-top: 2px solid #111111;
+}
+
+.label-preview .label--portrait .label-price-title {
+    margin-bottom: 5px;
+}
+
+.label-preview .label--portrait .label-price-value {
+    font-size: 32px;
+}
+
+.label-preview .label--portrait .label-footer {
+    flex-basis: 42px;
 }
 
 .label-preview .label--center-test {
