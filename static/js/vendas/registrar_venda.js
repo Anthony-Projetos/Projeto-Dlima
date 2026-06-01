@@ -191,7 +191,9 @@ html, body {
 .label {
   width: 60mm;
   height: 40mm;
-  padding: 2mm;
+  padding: 2.8mm 3mm;
+  border: 0.25mm solid #000;
+  border-radius: 2mm;
   display: flex;
   flex-direction: column;
   font-family: Arial, sans-serif;
