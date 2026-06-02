@@ -707,7 +707,7 @@ body.label-modal-open {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 42px;
+    font-size: 34px;
     font-weight: 500;
     line-height: 0.95;
 }
@@ -749,7 +749,7 @@ body.label-modal-open {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-family: Arial, sans-serif;
-    font-size: 38px;
+    font-size: 32px;
     font-weight: 500;
     line-height: 1;
 }
@@ -765,7 +765,7 @@ body.label-modal-open {
 
 .label-simple-details span {
     justify-self: start;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 500;
     line-height: 1;
 }
@@ -777,7 +777,7 @@ body.label-modal-open {
     white-space: nowrap;
     justify-self: center;
     font-family: Arial, sans-serif;
-    font-size: 70px;
+    font-size: 54px;
     font-weight: 500;
     line-height: 1;
 }
@@ -791,7 +791,7 @@ body.label-modal-open {
     overflow: hidden;
     text-align: center;
     font-family: Arial, sans-serif;
-    font-size: 56px;
+    font-size: 46px;
     font-weight: 500;
     line-height: 1;
 }
@@ -800,21 +800,13 @@ body.label-modal-open {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 0;
     overflow: hidden;
     text-align: center;
     font-family: Arial, sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 400;
     line-height: 1;
-}
-
-.label-simple-quote::before,
-.label-simple-quote::after {
-    content: "";
-    flex: 0 0 34px;
-    height: 3px;
-    background: #111111;
 }
 
 .label-simple-footer {
@@ -822,7 +814,7 @@ body.label-modal-open {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 11px;
+    gap: 9px;
     padding: 0 14px;
     overflow: hidden;
     font-family: Arial, sans-serif;
@@ -835,7 +827,7 @@ body.label-modal-open {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 500;
     line-height: 1;
 }
