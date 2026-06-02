@@ -247,10 +247,18 @@
         return '2';
     }
 
+    function getProductLinesTsplFont(lines) {
+        return lines.reduce((font, line) => {
+            const lineFont = getProductTsplFont(line || '');
+            return Number(lineFont) < Number(font) ? lineFont : font;
+        }, '4');
+    }
+
     function buildLabelTSPL(dados, quantidade) {
         const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
         const nome = dados.showNome === false ? '' : dados.nome || '';
         const productLines = splitTsplProductName(nome);
+        const productFont = getProductLinesTsplFont(productLines);
         const referencia = dados.showCodigo === false ? 'DLM-000' : dados.codigo || 'DLM-000';
         const tamanho = dados.produtoTamanho || 'G';
         const preco = dados.showPreco === false ? 'R$ 0,00' : formatLabelPrice(dados.preco || 0);
@@ -268,11 +276,11 @@
             buildRotatedCenteredTsplText(38, "D'LIMA", { font: '3', xMultiplier: 2, maxWidthDots: 260 }),
             buildRotatedCenteredTsplText(66, 'S T O R E', { font: '2', maxWidthDots: 150 }),
             buildRotatedCenteredTsplText(118, productLines[0] || '', {
-                font: getProductTsplFont(productLines[0] || ''),
+                font: productFont,
                 maxWidthDots: PRODUCT_LINE_MAX_WIDTH_DOTS,
             }),
             buildRotatedCenteredTsplText(182, productLines[1] || '', {
-                font: getProductTsplFont(productLines[1] || ''),
+                font: productFont,
                 maxWidthDots: PRODUCT_LINE_MAX_WIDTH_DOTS,
             }),
             buildRotatedTsplText(200, 274, 'TAM:', { font: '3', maxWidthDots: 74 }),
