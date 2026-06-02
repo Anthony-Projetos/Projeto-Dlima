@@ -262,7 +262,6 @@
             'DIRECTION 1',
             'REFERENCE 0,0',
             'CLS',
-            buildRotatedTsplBar(0, 106, LABEL_LAYOUT_WIDTH_DOTS, 3),
             buildRotatedTsplBar(0, 238, LABEL_LAYOUT_WIDTH_DOTS, 3),
             buildRotatedTsplBar(0, 330, LABEL_LAYOUT_WIDTH_DOTS, 3),
             buildRotatedTsplBar(0, 420, LABEL_LAYOUT_WIDTH_DOTS, 3),
