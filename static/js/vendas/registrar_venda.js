@@ -162,9 +162,43 @@
         return `BAR ${x},${y},${width},${height}`;
     }
 
+    function splitTsplProductName(value) {
+        const text = normalizeTsplText(value, 30).toUpperCase();
+        const words = text.split(/\s+/).filter(Boolean);
+
+        if (words.length <= 1) {
+            return [text];
+        }
+
+        const lines = ['', ''];
+        words.forEach(word => {
+            const candidate = lines[0] ? `${lines[0]} ${word}` : word;
+            if (!lines[1] && candidate.length <= 9) {
+                lines[0] = candidate;
+                return;
+            }
+
+            lines[1] = lines[1] ? `${lines[1]} ${word}` : word;
+        });
+
+        return lines.filter(Boolean).slice(0, 2);
+    }
+
+    function getProductTsplOptions(value) {
+        const length = sanitizeLabelText(value).length;
+        if (length <= 9) {
+            return { font: '5', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 288 };
+        }
+        if (length <= 12) {
+            return { font: '4', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 288 };
+        }
+        return { font: '3', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 288 };
+    }
+
     function buildLabelTSPL(dados, quantidade) {
         const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
         const nome = dados.showNome === false ? '' : dados.nome || '';
+        const productLines = splitTsplProductName(nome);
         const referencia = dados.showCodigo === false ? '000000' : dados.codigo || '000000';
         const tamanho = dados.produtoTamanho || 'G';
         const preco = dados.showPreco === false ? 'R$0,00' : formatLabelPriceCompact(dados.preco || 0);
@@ -175,27 +209,24 @@
             'DIRECTION 1',
             'REFERENCE 0,0',
             'CLS',
-            buildTsplBar(8, 8, 464, 2),
-            buildTsplBar(8, 310, 464, 2),
-            buildTsplBar(8, 8, 2, 304),
-            buildTsplBar(470, 8, 2, 304),
-            buildTsplBar(160, 24, 2, 272),
-            buildTsplBar(332, 24, 2, 272),
-            buildTsplBar(362, 24, 2, 272),
-            buildTsplBar(452, 24, 2, 272),
-            buildTsplBar(162, 160, 170, 2),
-            buildTsplBar(218, 160, 2, 136),
-            buildTsplBar(276, 160, 2, 136),
-            buildTsplText(38, 286, "D'lima", { font: '5', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 220 }),
-            buildTsplText(122, 212, 'store', { font: '2', rotation: 270, maxWidthDots: 70 }),
-            buildTsplText(178, 148, 'VALOR', { font: '2', rotation: 270, maxWidthDots: 70 }),
-            buildTsplText(246, 150, preco, { font: '3', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 118 }),
-            buildTsplText(194, 292, nome, { font: '2', rotation: 270, maxWidthDots: 112 }),
-            buildTsplText(236, 292, 'REF', { font: '2', rotation: 270, maxWidthDots: 60 }),
-            buildTsplText(260, 292, referencia, { font: '1', rotation: 270, maxWidthDots: 112 }),
-            buildTsplText(306, 292, tamanho, { font: '3', rotation: 270, maxWidthDots: 112 }),
-            buildTsplText(392, 250, '"Nao seja copia,', { font: '2', rotation: 270, maxWidthDots: 190 }),
-            buildTsplText(420, 250, 'seja referencia."', { font: '2', rotation: 270, maxWidthDots: 190 }),
+            buildTsplBar(92, 24, 2, 272),
+            buildTsplBar(212, 24, 2, 272),
+            buildTsplBar(368, 24, 2, 272),
+            buildTsplBar(432, 24, 2, 272),
+            buildTsplBar(226, 184, 132, 2),
+            buildTsplBar(288, 202, 2, 92),
+            buildTsplText(40, 236, "D'lima", { font: '5', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 200 }),
+            buildTsplText(74, 176, 'store', { font: '2', rotation: 270, maxWidthDots: 64 }),
+            buildTsplText(112, 292, productLines[0] || '', getProductTsplOptions(productLines[0] || '')),
+            buildTsplText(160, 292, productLines[1] || '', getProductTsplOptions(productLines[1] || '')),
+            buildTsplText(226, 168, 'VALOR', { font: '2', rotation: 270, maxWidthDots: 76 }),
+            buildTsplText(274, 252, preco, { font: '4', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 210 }),
+            buildTsplText(226, 292, 'REF.', { font: '2', rotation: 270, maxWidthDots: 64 }),
+            buildTsplText(250, 292, referencia, { font: '3', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 116 }),
+            buildTsplText(310, 292, tamanho, { font: '5', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 84 }),
+            buildTsplText(392, 242, '"Nao seja copia,', { font: '2', rotation: 270, maxWidthDots: 210 }),
+            buildTsplText(416, 242, 'seja referencia."', { font: '2', rotation: 270, maxWidthDots: 210 }),
+            buildTsplText(456, 278, 'D L I M A  S T O R E', { font: '2', rotation: 270, maxWidthDots: 260 }),
             `PRINT ${copies}`,
             '',
         ].join('\r\n');
@@ -203,32 +234,36 @@
 
     function buildLabelMarkup(state) {
         const nome = state.nome || '';
+        const productLines = splitTsplProductName(nome);
         const referencia = state.codigo || '000000';
         const tamanho = state.produtoTamanho || 'G';
         const preco = formatLabelPriceCompact(state.preco || 0);
 
         return [
-            '<div class="etiqueta-teste etiqueta-teste--premium">',
-            '<section class="label-preview-brand">',
+            '<div class="etiqueta-teste etiqueta-teste--tspl-reference">',
+            '<section class="label-reference-brand">',
             '<strong>D&#39;lima</strong>',
             '<span>store</span>',
             '</section>',
-            '<section class="label-preview-table">',
-            '<div class="label-preview-value">',
+            '<section class="label-reference-product">',
+            '<strong>' + escapePreviewText(productLines[0] || '') + '</strong>',
+            '<strong>' + escapePreviewText(productLines[1] || '') + '</strong>',
+            '</section>',
+            '<section class="label-reference-details">',
+            '<div class="label-reference-price">',
             '<span>VALOR</span>',
             `<strong>${escapePreviewText(preco)}</strong>`,
             '</div>',
-            '<div class="label-preview-fields">',
-            '<div class="label-preview-product"><strong>' + escapePreviewText(nome) + '</strong></div>',
-            '<div><span>REF</span><strong>' + escapePreviewText(referencia) + '</strong></div>',
-            '<div class="label-preview-size"><strong>' + escapePreviewText(tamanho) + '</strong></div>',
+            '<div class="label-reference-bottom">',
+            '<div class="label-reference-code"><span>REF.</span><strong>' + escapePreviewText(referencia) + '</strong></div>',
+            '<strong class="label-reference-size">' + escapePreviewText(tamanho) + '</strong>',
             '</div>',
             '</section>',
-            '<section class="label-preview-gap"></section>',
-            '<section class="label-preview-quote">',
+            '<section class="label-reference-quote">',
             '<span>&quot;Nao seja copia,</span>',
             '<span>seja referencia.&quot;</span>',
             '</section>',
+            '<footer class="label-reference-footer">D L I M A&nbsp;&nbsp;S T O R E</footer>',
             '</div>',
         ].join('');
     }
