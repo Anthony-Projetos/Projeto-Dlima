@@ -34,7 +34,7 @@
     const LABEL_WIDTH_DOTS = LABEL_WIDTH_MM * TSPL_DOTS_PER_MM;
     const LABEL_HEIGHT_DOTS = LABEL_HEIGHT_MM * TSPL_DOTS_PER_MM;
     const LABEL_LAYOUT_WIDTH_DOTS = LABEL_HEIGHT_DOTS;
-    const PRODUCT_LINE_MAX_WIDTH_DOTS = 260;
+    const PRODUCT_LINE_MAX_WIDTH_DOTS = 288;
 
     function getAppConfig() {
         return window.PDV_CONFIG || {};
