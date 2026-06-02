@@ -669,172 +669,113 @@ body.label-modal-open {
     overflow: hidden;
 }
 
-.etiqueta-teste--tspl-reference {
-    padding: 22px 0;
+.label-preview .etiqueta-teste--tspl-simple {
+    display: grid;
+    grid-template-rows: 22% 28% 29% 11% 10%;
+    padding: 10px 16px;
+    font-family: Arial, sans-serif;
 }
 
-.label-reference-brand {
-    width: 20%;
-    min-width: 0;
-    position: relative;
+.label-simple-brand,
+.label-simple-product,
+.label-simple-details,
+.label-simple-quote {
+    border-bottom: 2px solid #111111;
+}
+
+.label-simple-brand {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-right: 2px solid #111111;
     overflow: hidden;
-}
-
-.label-reference-brand strong {
-    display: block;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 48px;
+    font-size: 24px;
     font-style: italic;
-    font-weight: 500;
-    line-height: 0.9;
-    writing-mode: vertical-rl;
-}
-
-.label-reference-brand span {
-    position: absolute;
-    right: 18px;
-    top: 46%;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 17px;
     line-height: 1;
-    writing-mode: vertical-rl;
 }
 
-.label-reference-product {
-    width: 22%;
-    min-width: 0;
+.label-simple-product {
+    min-height: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 16px;
-    border-right: 2px solid #111111;
+    gap: 4px;
     overflow: hidden;
+    text-align: center;
 }
 
-.label-reference-product strong {
-    max-height: 100%;
+.label-simple-product strong {
+    max-width: 100%;
     overflow: hidden;
-    font-family: Impact, "Arial Narrow", Arial, sans-serif;
-    font-size: 42px;
-    font-weight: 900;
-    line-height: 0.95;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    writing-mode: vertical-rl;
-}
-
-.label-reference-details {
-    width: 36%;
-    min-width: 0;
-    display: grid;
-    grid-template-columns: 52% 48%;
-    border-right: 2px solid #111111;
-    overflow: hidden;
-}
-
-.label-reference-price {
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    padding: 0 8px;
-    overflow: hidden;
-}
-
-.label-reference-price span,
-.label-reference-price strong {
-    writing-mode: vertical-rl;
-}
-
-.label-reference-price span {
-    font-family: Arial, sans-serif;
-    font-size: 18px;
-}
-
-.label-reference-price strong {
-    font-family: Impact, "Arial Narrow", Arial, sans-serif;
-    font-size: 44px;
-    font-weight: 900;
-    line-height: 1;
-}
-
-.label-reference-bottom {
-    min-height: 0;
-    display: grid;
-    grid-template-columns: 56% 44%;
-    border-right: 2px solid #111111;
-}
-
-.label-reference-code,
-.label-reference-size {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    writing-mode: vertical-rl;
-}
-
-.label-reference-code {
-    flex-direction: column;
-    gap: 6px;
-    border-right: 2px solid #111111;
-}
-
-.label-reference-code span {
-    font-family: Arial, sans-serif;
-    font-size: 17px;
-}
-
-.label-reference-code strong {
     font-family: Impact, "Arial Narrow", Arial, sans-serif;
     font-size: 24px;
-    font-weight: 900;
-}
-
-.label-reference-size {
-    font-family: Impact, "Arial Narrow", Arial, sans-serif;
-    font-size: 44px;
-    font-weight: 900;
     line-height: 1;
 }
 
-.label-reference-quote {
-    width: 14%;
+.label-simple-details {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 38% 24% 38%;
+    overflow: hidden;
+}
+
+.label-simple-details > div {
     min-width: 0;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
+    padding: 0 10px;
     border-right: 2px solid #111111;
     overflow: hidden;
 }
 
-.label-reference-quote span {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 17px;
-    font-style: italic;
-    line-height: 1.1;
-    writing-mode: vertical-rl;
+.label-simple-details > div:last-child {
+    border-right: 0;
 }
 
-.label-reference-footer {
-    width: 8%;
-    min-width: 0;
+.label-simple-details span {
+    font-size: 12px;
+    line-height: 1;
+}
+
+.label-simple-details strong {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: Impact, "Arial Narrow", Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.label-simple-details > div:last-child strong {
+    font-size: 21px;
+}
+
+.label-simple-quote {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-align: center;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 13px;
+    font-style: italic;
+}
+
+.label-simple-footer {
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     font-family: Arial, sans-serif;
-    font-size: 16px;
-    letter-spacing: 6px;
+    font-size: 13px;
+    letter-spacing: 5px;
     line-height: 1;
-    writing-mode: vertical-rl;
 }
 
 .label-command-preview {

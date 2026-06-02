@@ -163,17 +163,17 @@
     }
 
     function splitTsplProductName(value) {
-        const text = normalizeTsplText(value, 30).toUpperCase();
+        const text = normalizeTsplText(value, 42).toUpperCase();
         const words = text.split(/\s+/).filter(Boolean);
 
-        if (words.length <= 1) {
+        if (text.length <= 20 || words.length <= 1) {
             return [text];
         }
 
         const lines = ['', ''];
         words.forEach(word => {
             const candidate = lines[0] ? `${lines[0]} ${word}` : word;
-            if (!lines[1] && candidate.length <= 9) {
+            if (!lines[1] && candidate.length <= 20) {
                 lines[0] = candidate;
                 return;
             }
@@ -184,15 +184,13 @@
         return lines.filter(Boolean).slice(0, 2);
     }
 
-    function getProductTsplOptions(value) {
+    function getProductTsplFont(value) {
         const length = sanitizeLabelText(value).length;
-        if (length <= 9) {
-            return { font: '4', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 288 };
+        if (length <= 14) {
+            return '3';
         }
-        if (length <= 12) {
-            return { font: '3', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 288 };
-        }
-        return { font: '2', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 288 };
+
+        return '2';
     }
 
     function buildLabelTSPL(dados, quantidade) {
@@ -209,24 +207,26 @@
             'DIRECTION 1',
             'REFERENCE 0,0',
             'CLS',
-            buildTsplBar(92, 24, 2, 272),
-            buildTsplBar(190, 24, 2, 272),
-            buildTsplBar(320, 24, 2, 272),
-            buildTsplBar(390, 24, 2, 272),
-            buildTsplBar(430, 24, 2, 272),
-            buildTsplBar(204, 154, 106, 2),
-            buildTsplText(34, 244, "D'lima", { font: '4', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 190 }),
-            buildTsplText(66, 178, 'store', { font: '2', rotation: 270, maxWidthDots: 64 }),
-            buildTsplText(112, 292, productLines[0] || '', getProductTsplOptions(productLines[0] || '')),
-            buildTsplText(150, 292, productLines[1] || '', getProductTsplOptions(productLines[1] || '')),
-            buildTsplText(204, 292, 'REF.', { font: '2', rotation: 270, maxWidthDots: 64 }),
-            buildTsplText(232, 292, referencia, { font: '2', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 120 }),
-            buildTsplText(276, 292, tamanho, { font: '4', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 84 }),
-            buildTsplText(204, 132, 'VALOR', { font: '2', rotation: 270, maxWidthDots: 76 }),
-            buildTsplText(244, 166, preco, { font: '4', rotation: 270, maxWidthDots: 178 }),
-            buildTsplText(340, 248, '"Nao seja copia,', { font: '2', rotation: 270, maxWidthDots: 210 }),
-            buildTsplText(364, 248, 'seja referencia."', { font: '2', rotation: 270, maxWidthDots: 210 }),
-            buildTsplText(406, 278, 'D L I M A  S T O R E', { font: '2', rotation: 270, maxWidthDots: 260 }),
+            buildTsplBar(12, 12, 456, 2),
+            buildTsplBar(12, 306, 456, 2),
+            buildTsplBar(12, 12, 2, 296),
+            buildTsplBar(468, 12, 2, 296),
+            buildTsplBar(24, 72, 432, 2),
+            buildTsplBar(24, 158, 432, 2),
+            buildTsplBar(24, 248, 432, 2),
+            buildTsplBar(178, 168, 2, 74),
+            buildTsplBar(300, 168, 2, 74),
+            buildCenteredTsplText(26, "D'lima Store", { font: '3', maxWidthDots: 420 }),
+            buildCenteredTsplText(84, productLines[0] || '', { font: getProductTsplFont(productLines[0] || ''), maxWidthDots: 420 }),
+            buildCenteredTsplText(116, productLines[1] || '', { font: getProductTsplFont(productLines[1] || ''), maxWidthDots: 420 }),
+            buildTsplText(34, 176, 'REF.', { font: '1', maxWidthDots: 60 }),
+            buildTsplText(34, 204, referencia, { font: '2', maxWidthDots: 136 }),
+            buildTsplText(204, 176, 'TAM.', { font: '1', maxWidthDots: 60 }),
+            buildTsplText(218, 202, tamanho, { font: '3', maxWidthDots: 56 }),
+            buildTsplText(326, 176, 'VALOR', { font: '1', maxWidthDots: 72 }),
+            buildTsplText(314, 202, preco, { font: '2', yMultiplier: 2, maxWidthDots: 140 }),
+            buildCenteredTsplText(256, '"Nao seja copia, seja referencia."', { font: '1', maxWidthDots: 420 }),
+            buildCenteredTsplText(286, 'D L I M A  S T O R E', { font: '2', maxWidthDots: 420 }),
             `PRINT ${copies}`,
             '',
         ].join('\r\n');
@@ -240,30 +240,19 @@
         const preco = formatLabelPriceCompact(state.preco || 0);
 
         return [
-            '<div class="etiqueta-teste etiqueta-teste--tspl-reference">',
-            '<section class="label-reference-brand">',
-            '<strong>D&#39;lima</strong>',
-            '<span>store</span>',
-            '</section>',
-            '<section class="label-reference-product">',
+            '<div class="etiqueta-teste etiqueta-teste--tspl-simple">',
+            '<header class="label-simple-brand">D&#39;lima Store</header>',
+            '<section class="label-simple-product">',
             '<strong>' + escapePreviewText(productLines[0] || '') + '</strong>',
             '<strong>' + escapePreviewText(productLines[1] || '') + '</strong>',
             '</section>',
-            '<section class="label-reference-details">',
-            '<div class="label-reference-bottom">',
-            '<div class="label-reference-code"><span>REF.</span><strong>' + escapePreviewText(referencia) + '</strong></div>',
-            '<strong class="label-reference-size">' + escapePreviewText(tamanho) + '</strong>',
-            '</div>',
-            '<div class="label-reference-price">',
-            '<span>VALOR</span>',
-            `<strong>${escapePreviewText(preco)}</strong>`,
-            '</div>',
+            '<section class="label-simple-details">',
+            '<div><span>REF.</span><strong>' + escapePreviewText(referencia) + '</strong></div>',
+            '<div><span>TAM.</span><strong>' + escapePreviewText(tamanho) + '</strong></div>',
+            '<div><span>VALOR</span><strong>' + escapePreviewText(preco) + '</strong></div>',
             '</section>',
-            '<section class="label-reference-quote">',
-            '<span>&quot;Nao seja copia,</span>',
-            '<span>seja referencia.&quot;</span>',
-            '</section>',
-            '<footer class="label-reference-footer">D L I M A&nbsp;&nbsp;S T O R E</footer>',
+            '<section class="label-simple-quote">&quot;Nao seja copia, seja referencia.&quot;</section>',
+            '<footer class="label-simple-footer">D L I M A&nbsp;&nbsp;S T O R E</footer>',
             '</div>',
         ].join('');
     }
