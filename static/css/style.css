@@ -644,9 +644,8 @@ body.label-modal-open {
 }
 
 .label-preview {
-    width: min(100%, 540px);
-    aspect-ratio: 3 / 2;
-    position: relative;
+    width: min(100%, 360px);
+    aspect-ratio: 2 / 3;
     display: flex;
     background: #ffffff;
     color: #111111;
@@ -671,17 +670,10 @@ body.label-modal-open {
 }
 
 .label-preview .etiqueta-teste--tspl-simple {
-    position: absolute;
-    top: -25%;
-    left: 16.6667%;
-    width: 66.6667%;
-    height: 150%;
     display: grid;
     grid-template-rows: 20% 30% 19% 19% 12%;
     padding: 0;
     font-family: Arial, sans-serif;
-    transform: rotate(-90deg);
-    transform-origin: center;
 }
 
 .label-simple-brand,

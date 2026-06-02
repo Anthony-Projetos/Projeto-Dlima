@@ -27,13 +27,12 @@
         preco: document.getElementById('etiquetaMostrarPreco'),
         codigo: document.getElementById('etiquetaMostrarCodigo'),
     };
-    const LABEL_WIDTH_MM = 60;
-    const LABEL_HEIGHT_MM = 40;
-    const LABEL_DISPLAY_NAME = '60x40 TSPL RAW horizontal girada';
+    const LABEL_WIDTH_MM = 40;
+    const LABEL_HEIGHT_MM = 60;
+    const LABEL_DISPLAY_NAME = '60x40 TSPL RAW em pe';
     const TSPL_DOTS_PER_MM = 8;
     const LABEL_WIDTH_DOTS = LABEL_WIDTH_MM * TSPL_DOTS_PER_MM;
     const LABEL_HEIGHT_DOTS = LABEL_HEIGHT_MM * TSPL_DOTS_PER_MM;
-    const LABEL_LAYOUT_WIDTH_DOTS = LABEL_HEIGHT_DOTS;
 
     function getAppConfig() {
         return window.PDV_CONFIG || {};
@@ -161,47 +160,8 @@
         return `TEXT ${x},${y},"${font}",${rotation},${xMultiplier},${yMultiplier},"${text}"`;
     }
 
-    function buildRotatedTsplText(x, y, value, options = {}) {
-        const font = options.font || '2';
-        const rotation = options.rotation || 270;
-        const xMultiplier = options.xMultiplier || 1;
-        const yMultiplier = options.yMultiplier || 1;
-        const maxWidthDots = options.maxWidthDots || LABEL_LAYOUT_WIDTH_DOTS;
-        const text = fitTsplTextToWidth(value, font, xMultiplier, maxWidthDots);
-        const charWidth = getTsplFontWidth(font, xMultiplier);
-        const textWidth = text.length * charWidth;
-        const rotatedX = Math.max(Math.round(y), 0);
-        const rotatedY = Math.max(Math.round(LABEL_LAYOUT_WIDTH_DOTS - x - textWidth), 0);
-
-        return `TEXT ${rotatedX},${rotatedY},"${font}",${rotation},${xMultiplier},${yMultiplier},"${text}"`;
-    }
-
-    function buildRotatedCenteredTsplText(y, value, options = {}) {
-        const font = options.font || '3';
-        const xMultiplier = options.xMultiplier || 1;
-        const maxWidthDots = options.maxWidthDots || LABEL_LAYOUT_WIDTH_DOTS;
-        const text = fitTsplTextToWidth(value, font, xMultiplier, maxWidthDots);
-        const charWidth = getTsplFontWidth(font, xMultiplier);
-        const textWidth = text.length * charWidth;
-        const x = Math.max(Math.round((LABEL_LAYOUT_WIDTH_DOTS - textWidth) / 2), 0);
-
-        return buildRotatedTsplText(x, y, text, {
-            ...options,
-            font,
-            xMultiplier,
-            maxWidthDots,
-        });
-    }
-
     function buildTsplBar(x, y, width, height) {
         return `BAR ${x},${y},${width},${height}`;
-    }
-
-    function buildRotatedTsplBar(x, y, width, height) {
-        const rotatedX = Math.max(Math.round(y), 0);
-        const rotatedY = Math.max(Math.round(LABEL_LAYOUT_WIDTH_DOTS - x - width), 0);
-
-        return buildTsplBar(rotatedX, rotatedY, height, width);
     }
 
     function splitTsplProductName(value) {
@@ -245,36 +205,36 @@
         const footerText = `REF: ${referencia}`;
 
         return [
-            'SIZE 60 mm,40 mm',
+            'SIZE 40 mm,60 mm',
             'GAP 3 mm,0 mm',
             'DIRECTION 1',
             'REFERENCE 0,0',
             'CLS',
-            buildRotatedTsplBar(0, 96, LABEL_LAYOUT_WIDTH_DOTS, 3),
-            buildRotatedTsplBar(0, 238, LABEL_LAYOUT_WIDTH_DOTS, 3),
-            buildRotatedTsplBar(0, 330, LABEL_LAYOUT_WIDTH_DOTS, 3),
-            buildRotatedTsplBar(0, 420, LABEL_LAYOUT_WIDTH_DOTS, 3),
-            buildRotatedCenteredTsplText(20, "D'LIMA", { font: '4', xMultiplier: 2, maxWidthDots: 300 }),
-            buildRotatedTsplBar(44, 76, 54, 3),
-            buildRotatedCenteredTsplText(66, 'S T O R E', { font: '2', maxWidthDots: 150 }),
-            buildRotatedTsplBar(222, 76, 54, 3),
-            buildRotatedCenteredTsplText(110, productLines[0] || '', {
+            buildTsplBar(0, 96, LABEL_WIDTH_DOTS, 3),
+            buildTsplBar(0, 238, LABEL_WIDTH_DOTS, 3),
+            buildTsplBar(0, 330, LABEL_WIDTH_DOTS, 3),
+            buildTsplBar(0, 420, LABEL_WIDTH_DOTS, 3),
+            buildCenteredTsplText(20, "D'LIMA", { font: '4', xMultiplier: 2, maxWidthDots: 300 }),
+            buildTsplBar(44, 76, 54, 3),
+            buildCenteredTsplText(66, 'S T O R E', { font: '2', maxWidthDots: 150 }),
+            buildTsplBar(222, 76, 54, 3),
+            buildCenteredTsplText(110, productLines[0] || '', {
                 font: getProductTsplFont(productLines[0] || ''),
                 yMultiplier: 2,
                 maxWidthDots: 300,
             }),
-            buildRotatedCenteredTsplText(174, productLines[1] || '', {
+            buildCenteredTsplText(174, productLines[1] || '', {
                 font: getProductTsplFont(productLines[1] || ''),
                 yMultiplier: 2,
                 maxWidthDots: 300,
             }),
-            buildRotatedTsplText(26, 274, 'TAM:', { font: '3', maxWidthDots: 74 }),
-            buildRotatedCenteredTsplText(260, tamanho, { font: '5', xMultiplier: 2, maxWidthDots: 160 }),
-            buildRotatedCenteredTsplText(350, preco, { font: '5', maxWidthDots: 300 }),
-            buildRotatedCenteredTsplText(434, footerText, { font: '2', maxWidthDots: 292 }),
-            buildRotatedCenteredTsplText(462, 'NAO SEJA COPIA, SEJA REFERENCIA', { font: '1', maxWidthDots: 300 }),
-            buildRotatedTsplBar(24, 466, 38, 3),
-            buildRotatedTsplBar(258, 466, 38, 3),
+            buildTsplText(26, 274, 'TAM:', { font: '3', maxWidthDots: 74 }),
+            buildCenteredTsplText(260, tamanho, { font: '5', xMultiplier: 2, maxWidthDots: 160 }),
+            buildCenteredTsplText(350, preco, { font: '5', maxWidthDots: 300 }),
+            buildCenteredTsplText(434, footerText, { font: '2', maxWidthDots: 292 }),
+            buildCenteredTsplText(462, 'NAO SEJA COPIA, SEJA REFERENCIA', { font: '1', maxWidthDots: 300 }),
+            buildTsplBar(24, 466, 38, 3),
+            buildTsplBar(258, 466, 38, 3),
             `PRINT ${copies}`,
             '',
         ].join('\r\n');
