@@ -272,7 +272,6 @@
             'CLS',
             buildRotatedTsplBar(0, 238, LABEL_LAYOUT_WIDTH_DOTS, 3),
             buildRotatedTsplBar(0, 330, LABEL_LAYOUT_WIDTH_DOTS, 3),
-            buildRotatedTsplBar(0, 420, LABEL_LAYOUT_WIDTH_DOTS, 3),
             buildRotatedCenteredTsplText(38, "D'LIMA", { font: '3', xMultiplier: 2, maxWidthDots: 260 }),
             buildRotatedCenteredTsplText(66, 'S T O R E', { font: '2', maxWidthDots: 150 }),
             buildRotatedCenteredTsplText(118, productLines[0] || '', {

@@ -685,8 +685,7 @@ body.label-modal-open {
 }
 
 .label-simple-product,
-.label-simple-details,
-.label-simple-price {
+.label-simple-details {
     border-bottom: 3px solid #111111;
 }
 
