@@ -732,7 +732,8 @@ body.label-modal-open {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding: 0 18px;
+    box-sizing: border-box;
+    padding: 6px 18px 0;
     overflow: hidden;
     text-align: center;
 }

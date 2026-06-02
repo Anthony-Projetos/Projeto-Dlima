@@ -256,15 +256,15 @@
             buildRotatedTsplBar(0, 420, LABEL_LAYOUT_WIDTH_DOTS, 3),
             buildRotatedCenteredTsplText(38, "D'LIMA", { font: '3', xMultiplier: 2, maxWidthDots: 260 }),
             buildRotatedCenteredTsplText(66, 'S T O R E', { font: '2', maxWidthDots: 150 }),
-            buildRotatedCenteredTsplText(110, productLines[0] || '', {
+            buildRotatedCenteredTsplText(118, productLines[0] || '', {
                 font: getProductTsplFont(productLines[0] || ''),
                 maxWidthDots: 260,
             }),
-            buildRotatedCenteredTsplText(174, productLines[1] || '', {
+            buildRotatedCenteredTsplText(182, productLines[1] || '', {
                 font: getProductTsplFont(productLines[1] || ''),
                 maxWidthDots: 260,
             }),
-            buildRotatedTsplText(170, 274, 'TAM:', { font: '3', maxWidthDots: 74 }),
+            buildRotatedTsplText(200, 274, 'TAM:', { font: '3', maxWidthDots: 74 }),
             buildRotatedCenteredTsplText(260, tamanho, { font: '5', maxWidthDots: 120 }),
             buildRotatedCenteredTsplText(350, preco, { font: '4', maxWidthDots: 260 }),
             buildRotatedCenteredTsplText(434, footerText, { font: '2', maxWidthDots: 292 }),
