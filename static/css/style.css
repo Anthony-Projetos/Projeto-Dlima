@@ -673,27 +673,21 @@ body.label-modal-open {
     padding: 22px 0;
 }
 
-.label-reference-brand,
-.label-reference-product,
-.label-reference-details,
-.label-reference-quote {
-    border-right: 2px solid #111111;
-}
-
 .label-reference-brand {
-    width: 19.5%;
+    width: 20%;
     min-width: 0;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-right: 2px solid #111111;
     overflow: hidden;
 }
 
 .label-reference-brand strong {
     display: block;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 56px;
+    font-size: 48px;
     font-style: italic;
     font-weight: 500;
     line-height: 0.9;
@@ -702,21 +696,22 @@ body.label-modal-open {
 
 .label-reference-brand span {
     position: absolute;
-    right: 20px;
-    top: 44%;
+    right: 18px;
+    top: 46%;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 20px;
+    font-size: 17px;
     line-height: 1;
     writing-mode: vertical-rl;
 }
 
 .label-reference-product {
-    width: 25%;
+    width: 22%;
     min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 22px;
+    gap: 16px;
+    border-right: 2px solid #111111;
     overflow: hidden;
 }
 
@@ -724,7 +719,7 @@ body.label-modal-open {
     max-height: 100%;
     overflow: hidden;
     font-family: Impact, "Arial Narrow", Arial, sans-serif;
-    font-size: 58px;
+    font-size: 42px;
     font-weight: 900;
     line-height: 0.95;
     white-space: nowrap;
@@ -732,21 +727,22 @@ body.label-modal-open {
 }
 
 .label-reference-details {
-    width: 32.5%;
+    width: 36%;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 52% 48%;
+    border-right: 2px solid #111111;
     overflow: hidden;
 }
 
 .label-reference-price {
-    flex: 0 0 58%;
     min-height: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 36px;
-    border-bottom: 2px solid #111111;
+    gap: 14px;
+    padding: 0 8px;
     overflow: hidden;
 }
 
@@ -757,21 +753,21 @@ body.label-modal-open {
 
 .label-reference-price span {
     font-family: Arial, sans-serif;
-    font-size: 22px;
+    font-size: 18px;
 }
 
 .label-reference-price strong {
     font-family: Impact, "Arial Narrow", Arial, sans-serif;
-    font-size: 58px;
+    font-size: 44px;
     font-weight: 900;
     line-height: 1;
 }
 
 .label-reference-bottom {
-    flex: 1 1 auto;
     min-height: 0;
     display: grid;
-    grid-template-columns: 58% 42%;
+    grid-template-columns: 56% 44%;
+    border-right: 2px solid #111111;
 }
 
 .label-reference-code,
@@ -786,56 +782,57 @@ body.label-modal-open {
 
 .label-reference-code {
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     border-right: 2px solid #111111;
 }
 
 .label-reference-code span {
     font-family: Arial, sans-serif;
-    font-size: 20px;
+    font-size: 17px;
 }
 
 .label-reference-code strong {
     font-family: Impact, "Arial Narrow", Arial, sans-serif;
-    font-size: 34px;
+    font-size: 24px;
     font-weight: 900;
 }
 
 .label-reference-size {
     font-family: Impact, "Arial Narrow", Arial, sans-serif;
-    font-size: 58px;
+    font-size: 44px;
     font-weight: 900;
     line-height: 1;
 }
 
 .label-reference-quote {
-    width: 13.5%;
+    width: 14%;
     min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
+    border-right: 2px solid #111111;
     overflow: hidden;
 }
 
 .label-reference-quote span {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 20px;
+    font-size: 17px;
     font-style: italic;
     line-height: 1.1;
     writing-mode: vertical-rl;
 }
 
 .label-reference-footer {
-    width: 9.5%;
+    width: 8%;
     min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     font-family: Arial, sans-serif;
-    font-size: 20px;
-    letter-spacing: 8px;
+    font-size: 16px;
+    letter-spacing: 6px;
     line-height: 1;
     writing-mode: vertical-rl;
 }
