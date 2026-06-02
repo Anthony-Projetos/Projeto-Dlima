@@ -684,171 +684,163 @@ body.label-modal-open {
     border: 2px solid black;
     border-radius: 8px;
     box-sizing: border-box;
-    font-family: Arial, sans-serif;
+    font-family: "Arial Narrow", Arial, sans-serif;
     background: #ffffff;
     color: #000000;
     overflow: hidden;
-    position: relative;
+    display: grid;
+    grid-template-rows: 23% 41% 18% 18%;
 }
 
-.label-preview .dlima-label-line {
-    position: absolute;
-    display: block;
-    background: #111111;
+.label-preview .label-top,
+.label-preview .label-center,
+.label-preview .label-phrase {
+    border-bottom: 2px solid #111111;
 }
 
-.label-preview .dlima-label-line--main-left {
-    left: 33.7%;
-    top: 7%;
-    width: 0.4%;
-    height: 85%;
+.label-preview .label-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 18px 4px;
 }
 
-.label-preview .dlima-label-line--main-right {
-    left: 68.3%;
-    top: 7%;
-    width: 0.4%;
-    height: 85%;
-}
-
-.label-preview .dlima-label-line--quote-left {
-    left: 75%;
-    top: 7%;
-    width: 0.4%;
-    height: 85%;
-}
-
-.label-preview .dlima-label-line--quote-right {
-    left: 90.3%;
-    top: 7%;
-    width: 0.4%;
-    height: 85%;
-}
-
-.label-preview .dlima-label-line--value-bottom {
-    left: 33.7%;
-    top: 51.4%;
-    width: 34.7%;
-    height: 0.4%;
-}
-
-.label-preview .dlima-label-line--field-one {
-    left: 45.6%;
-    top: 51.4%;
-    width: 0.4%;
-    height: 40.6%;
-}
-
-.label-preview .dlima-label-line--field-two {
-    left: 56.8%;
-    top: 51.4%;
-    width: 0.4%;
-    height: 40.6%;
-}
-
-.label-preview .dlima-label-text {
-    position: absolute;
-    display: block;
-    color: #111111;
-    line-height: 1;
-    white-space: nowrap;
-    transform: rotate(-90deg);
-    transform-origin: left top;
-}
-
-.label-preview .dlima-label-logo {
-    left: 8.5%;
-    top: 84.3%;
+.label-preview .label-logo {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 74px;
+    font-size: 62px;
     font-style: italic;
     font-weight: 900;
-    letter-spacing: 0;
+    line-height: 0.82;
+    white-space: nowrap;
 }
 
-.label-preview .dlima-label-store {
-    left: 26.3%;
-    top: 56.5%;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 18px;
+.label-preview .label-logo span {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 26px;
+    font-style: normal;
+    font-weight: 400;
 }
 
-.label-preview .dlima-label-value-title {
-    left: 39.8%;
-    top: 48.3%;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 18px;
+.label-preview .label-center {
+    display: grid;
+    grid-template-columns: 56.5% 43.5%;
+    min-height: 0;
 }
 
-.label-preview .dlima-label-price {
-    left: 51.3%;
-    top: 46.5%;
-    font-size: 44px;
-    font-weight: 900;
+.label-preview .label-info {
+    display: grid;
+    grid-template-rows: 34% 32% 34%;
+    min-width: 0;
+    border-right: 2px solid #111111;
 }
 
-.label-preview .dlima-label-product-title,
-.label-preview .dlima-label-ref-title,
-.label-preview .dlima-label-size-title {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 18px;
+.label-preview .label-product-name,
+.label-preview .label-ref-row,
+.label-preview .label-size {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 5px 13px;
 }
 
-.label-preview .dlima-label-product-value,
-.label-preview .dlima-label-ref-value,
-.label-preview .dlima-label-size-value {
-    max-width: 160px;
+.label-preview .label-product-name,
+.label-preview .label-ref-row {
+    border-bottom: 2px solid #111111;
+}
+
+.label-preview .label-product-name {
+    justify-content: center;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 11px;
-    font-weight: 800;
+    white-space: nowrap;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 1px;
 }
 
-.label-preview .dlima-label-product-title {
-    left: 39.6%;
-    top: 86.5%;
-}
-
-.label-preview .dlima-label-product-value {
-    left: 44%;
-    top: 88%;
-}
-
-.label-preview .dlima-label-ref-title {
-    left: 51.2%;
-    top: 82.8%;
-}
-
-.label-preview .dlima-label-ref-value {
-    left: 55.3%;
-    top: 88%;
-}
-
-.label-preview .dlima-label-size-title {
-    left: 62%;
-    top: 87%;
-}
-
-.label-preview .dlima-label-size-value {
-    left: 66.2%;
-    top: 88%;
-}
-
-.label-preview .dlima-label-quote-one,
-.label-preview .dlima-label-quote-two {
-    font-family: Georgia, "Times New Roman", serif;
+.label-preview .label-ref-row {
+    justify-content: space-between;
+    gap: 8px;
     font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.label-preview .label-ref-row span {
+    font-weight: 700;
+}
+
+.label-preview .label-ref-row strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: uppercase;
+    font-size: 23px;
+    font-weight: 900;
+}
+
+.label-preview .label-size {
+    justify-content: center;
+    text-transform: uppercase;
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.label-preview .label-value {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 7px 10px;
+}
+
+.label-preview .label-value span {
+    align-self: flex-start;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.label-preview .label-value strong {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 0.95;
+}
+
+.label-preview .label-phrase {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 5px 18px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 19px;
     font-style: italic;
+    line-height: 1.05;
+    text-align: center;
 }
 
-.label-preview .dlima-label-quote-one {
-    left: 81.7%;
-    top: 69.5%;
-}
-
-.label-preview .dlima-label-quote-two {
-    left: 86.7%;
-    top: 69.5%;
+.label-preview .label-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 6px;
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: 16px;
+    text-indent: 16px;
+    line-height: 1;
 }
 
 .label-html-preview {

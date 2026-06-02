@@ -201,7 +201,7 @@
             nome: dados.showNome === false ? 'PRODUTO' : dados.nome || 'PRODUTO',
             referencia: dados.showCodigo === false ? '000000' : dados.codigo || '000000',
             tamanho: dados.produtoTamanho || 'G',
-            preco: dados.showPreco === false ? 'R$0,00' : formatLabelPriceCompact(dados.preco || 0),
+            preco: dados.showPreco === false ? 'R$ 0,00' : formatLabelPrice(dados.preco || 0),
         };
     }
 
@@ -210,25 +210,28 @@
 
         return [
             `<div class="${rootClass}">`,
-            '<span class="dlima-label-line dlima-label-line--main-left"></span>',
-            '<span class="dlima-label-line dlima-label-line--main-right"></span>',
-            '<span class="dlima-label-line dlima-label-line--quote-left"></span>',
-            '<span class="dlima-label-line dlima-label-line--quote-right"></span>',
-            '<span class="dlima-label-line dlima-label-line--value-bottom"></span>',
-            '<span class="dlima-label-line dlima-label-line--field-one"></span>',
-            '<span class="dlima-label-line dlima-label-line--field-two"></span>',
-            '<span class="dlima-label-text dlima-label-logo">D&#39;lima</span>',
-            '<span class="dlima-label-text dlima-label-store">store</span>',
-            '<span class="dlima-label-text dlima-label-value-title">VALOR</span>',
-            `<span class="dlima-label-text dlima-label-price">${escapePreviewText(values.preco)}</span>`,
-            '<span class="dlima-label-text dlima-label-product-title">PRODUTO</span>',
-            `<span class="dlima-label-text dlima-label-product-value">${escapePreviewText(values.nome)}</span>`,
-            '<span class="dlima-label-text dlima-label-ref-title">REF</span>',
-            `<span class="dlima-label-text dlima-label-ref-value">${escapePreviewText(values.referencia)}</span>`,
-            '<span class="dlima-label-text dlima-label-size-title">TAMANHO</span>',
-            `<span class="dlima-label-text dlima-label-size-value">${escapePreviewText(values.tamanho)}</span>`,
-            '<span class="dlima-label-text dlima-label-quote-one">&quot;Não seja cópia,</span>',
-            '<span class="dlima-label-text dlima-label-quote-two">seja referência.&quot;</span>',
+            '<header class="label-top">',
+            '<div class="label-logo">D&#39;lima <span>store</span></div>',
+            '</header>',
+            '<main class="label-center">',
+            '<section class="label-info">',
+            `<strong class="label-product-name">${escapePreviewText(values.nome)}</strong>`,
+            '<div class="label-ref-row">',
+            '<span>REF.</span>',
+            `<strong>${escapePreviewText(values.referencia)}</strong>`,
+            '</div>',
+            `<strong class="label-size">${escapePreviewText(values.tamanho)}</strong>`,
+            '</section>',
+            '<section class="label-value">',
+            '<span>VALOR</span>',
+            `<strong>${escapePreviewText(values.preco)}</strong>`,
+            '</section>',
+            '</main>',
+            '<section class="label-phrase">',
+            '<span>&quot;Estilo não é seguir regras,</span>',
+            '<span>é criar o seu caminho.&quot;</span>',
+            '</section>',
+            '<footer class="label-footer">DLIMA STORE</footer>',
             '</div>',
         ].join('');
     }
@@ -255,188 +258,182 @@
 
             body {
                 color: #000000;
-                font-family: Arial, Helvetica, sans-serif;
+                font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
 
-            .dlima-html-label {
+            .label {
                 width: 60mm;
                 height: 40mm;
-                position: relative;
+                box-sizing: border-box;
                 overflow: hidden;
-                background: #ffffff;
-                border: 0.25mm solid #111111;
-                border-radius: 1.8mm;
+                background: white;
+                color: black;
+                border: 0.28mm solid #111111;
+                border-radius: 1.2mm;
+                display: grid;
+                grid-template-rows: 9.2mm 16.5mm 7.2mm 6.5mm;
                 page-break-after: always;
             }
 
-            .dlima-html-label:last-child {
+            .label:last-child {
                 page-break-after: auto;
             }
 
-            .dlima-label-line {
-                position: absolute;
-                display: block;
-                background: #111111;
+            .label-top,
+            .label-center,
+            .label-phrase {
+                border-bottom: 0.28mm solid #111111;
             }
 
-            .dlima-label-line--main-left {
-                left: 20.2mm;
-                top: 2.8mm;
-                width: 0.22mm;
-                height: 34.0mm;
+            .label-top {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.8mm 2mm 0.6mm;
             }
 
-            .dlima-label-line--main-right {
-                left: 41.0mm;
-                top: 2.8mm;
-                width: 0.22mm;
-                height: 34.0mm;
-            }
-
-            .dlima-label-line--quote-left {
-                left: 45.0mm;
-                top: 2.8mm;
-                width: 0.22mm;
-                height: 34.0mm;
-            }
-
-            .dlima-label-line--quote-right {
-                left: 54.2mm;
-                top: 2.8mm;
-                width: 0.22mm;
-                height: 34.0mm;
-            }
-
-            .dlima-label-line--value-bottom {
-                left: 20.2mm;
-                top: 20.55mm;
-                width: 20.8mm;
-                height: 0.22mm;
-            }
-
-            .dlima-label-line--field-one {
-                left: 27.35mm;
-                top: 20.55mm;
-                width: 0.22mm;
-                height: 16.25mm;
-            }
-
-            .dlima-label-line--field-two {
-                left: 34.1mm;
-                top: 20.55mm;
-                width: 0.22mm;
-                height: 16.25mm;
-            }
-
-            .dlima-label-text {
-                position: absolute;
-                display: block;
-                color: #111111;
-                white-space: nowrap;
-                line-height: 1;
-                transform: rotate(-90deg);
-                transform-origin: left top;
-            }
-
-            .dlima-label-logo {
-                left: 5.1mm;
-                top: 33.7mm;
+            .label-logo {
                 font-family: Georgia, "Times New Roman", serif;
-                font-size: 9.4mm;
+                font-size: 6.8mm;
                 font-style: italic;
                 font-weight: 900;
+                line-height: 0.82;
                 letter-spacing: 0;
+                white-space: nowrap;
             }
 
-            .dlima-label-store {
-                left: 15.8mm;
-                top: 22.6mm;
-                font-family: Georgia, "Times New Roman", serif;
-                font-size: 2.6mm;
+            .label-logo span {
+                display: inline-block;
+                margin-left: 1.1mm;
+                font-size: 2.9mm;
+                font-style: normal;
                 font-weight: 400;
+                vertical-align: baseline;
             }
 
-            .dlima-label-value-title {
-                left: 23.9mm;
-                top: 19.3mm;
-                font-family: Georgia, "Times New Roman", serif;
-                font-size: 2.4mm;
-                font-weight: 400;
+            .label-center {
+                display: grid;
+                grid-template-columns: 34mm 1fr;
+                min-height: 0;
             }
 
-            .dlima-label-price {
-                left: 30.8mm;
-                top: 18.6mm;
-                font-size: 5.4mm;
+            .label-info {
+                display: grid;
+                grid-template-rows: 5.6mm 5.2mm 1fr;
+                min-width: 0;
+                border-right: 0.28mm solid #111111;
+            }
+
+            .label-product-name,
+            .label-ref-row,
+            .label-size {
+                display: flex;
+                align-items: center;
+                min-width: 0;
+                padding: 0.6mm 1.4mm;
+            }
+
+            .label-product-name,
+            .label-ref-row {
+                border-bottom: 0.24mm solid #111111;
+            }
+
+            .label-product-name {
+                justify-content: center;
+                font-size: 2.65mm;
                 font-weight: 900;
-            }
-
-            .dlima-label-product-title,
-            .dlima-label-ref-title,
-            .dlima-label-size-title {
-                font-family: Georgia, "Times New Roman", serif;
-                font-size: 2.35mm;
-                font-weight: 400;
-            }
-
-            .dlima-label-product-value,
-            .dlima-label-ref-value,
-            .dlima-label-size-value {
-                font-size: 1.45mm;
-                font-weight: 800;
-                max-width: 15.8mm;
+                letter-spacing: 0.18mm;
+                text-align: center;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                white-space: nowrap;
+                text-transform: uppercase;
             }
 
-            .dlima-label-product-title {
-                left: 23.8mm;
-                top: 34.6mm;
+            .label-ref-row {
+                justify-content: space-between;
+                gap: 1mm;
+                font-size: 2.1mm;
+                letter-spacing: 0.1mm;
             }
 
-            .dlima-label-product-value {
-                left: 26.4mm;
-                top: 35.2mm;
+            .label-ref-row span {
+                font-weight: 700;
             }
 
-            .dlima-label-ref-title {
-                left: 30.7mm;
-                top: 33.1mm;
+            .label-ref-row strong {
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 2.5mm;
+                font-weight: 900;
+                text-transform: uppercase;
             }
 
-            .dlima-label-ref-value {
-                left: 33.2mm;
-                top: 35.2mm;
+            .label-size {
+                justify-content: center;
+                font-size: 4.5mm;
+                font-weight: 900;
+                letter-spacing: 0.15mm;
+                text-transform: uppercase;
             }
 
-            .dlima-label-size-title {
-                left: 37.2mm;
-                top: 34.8mm;
+            .label-value {
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 1.1mm;
+                padding: 0.8mm 1.2mm;
             }
 
-            .dlima-label-size-value {
-                left: 39.7mm;
-                top: 35.2mm;
+            .label-value span {
+                align-self: flex-start;
+                font-size: 2.1mm;
+                font-weight: 700;
+                letter-spacing: 0.2mm;
             }
 
-            .dlima-label-quote-one,
-            .dlima-label-quote-two {
+            .label-value strong {
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 5.8mm;
+                font-weight: 900;
+                letter-spacing: 0;
+                line-height: 0.95;
+            }
+
+            .label-phrase {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 0.4mm;
+                padding: 0.6mm 2mm;
                 font-family: Georgia, "Times New Roman", serif;
-                font-size: 2.55mm;
+                font-size: 2.15mm;
                 font-style: italic;
                 font-weight: 400;
+                line-height: 1.05;
+                text-align: center;
             }
 
-            .dlima-label-quote-one {
-                left: 49.0mm;
-                top: 27.8mm;
-            }
-
-            .dlima-label-quote-two {
-                left: 52.0mm;
-                top: 27.8mm;
+            .label-footer {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding-top: 0.7mm;
+                font-size: 2.5mm;
+                font-weight: 700;
+                letter-spacing: 1.8mm;
+                text-indent: 1.8mm;
+                line-height: 1;
             }
         `;
     }
@@ -444,7 +441,7 @@
     function buildLabelHTML(dados, quantidade) {
         const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
         const labels = Array.from({ length: copies }, () => (
-            buildPremiumLabelMarkup(dados, 'dlima-html-label')
+            buildPremiumLabelMarkup(dados, 'label')
         )).join('');
 
         return [
@@ -544,7 +541,7 @@
     }
 
     function buildLabelMarkup(state) {
-        return buildPremiumLabelMarkup(state, 'dlima-html-label etiqueta-teste etiqueta-teste--premium');
+        return buildPremiumLabelMarkup(state, 'label etiqueta-teste etiqueta-teste--premium');
     }
 
     function showStatus(message, type) {
