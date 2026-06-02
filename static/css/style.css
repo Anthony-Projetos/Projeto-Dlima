@@ -677,7 +677,7 @@ body.label-modal-open {
     width: 66.6667%;
     height: 150%;
     display: grid;
-    grid-template-rows: 20% 30% 19% 19% 12%;
+    grid-template-rows: 22% 28% 19% 19% 12%;
     padding: 0;
     font-family: Arial, sans-serif;
     transform: rotate(-90deg);
@@ -772,7 +772,7 @@ body.label-modal-open {
     white-space: nowrap;
     justify-self: end;
     font-family: Arial, sans-serif;
-    font-size: 54px;
+    font-size: 46px;
     font-weight: 500;
     line-height: 1;
 }
@@ -787,7 +787,7 @@ body.label-modal-open {
     overflow: hidden;
     text-align: center;
     font-family: Arial, sans-serif;
-    font-size: 52px;
+    font-size: 46px;
     font-weight: 500;
     line-height: 1;
 }
