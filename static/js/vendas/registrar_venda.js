@@ -171,7 +171,7 @@
         const charWidth = getTsplFontWidth(font, xMultiplier);
         const textWidth = text.length * charWidth;
         const rotatedX = Math.max(Math.round(y), 0);
-        const rotatedY = Math.max(Math.round(LABEL_LAYOUT_WIDTH_DOTS - x - textWidth), 0);
+        const rotatedY = Math.max(Math.round(x + textWidth), 0);
 
         return `TEXT ${rotatedX},${rotatedY},"${font}",${rotation},${xMultiplier},${yMultiplier},"${text}"`;
     }
