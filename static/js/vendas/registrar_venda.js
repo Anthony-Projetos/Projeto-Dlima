@@ -29,8 +29,11 @@
     };
     const LABEL_WIDTH_MM = 60;
     const LABEL_HEIGHT_MM = 40;
+    const LABEL_DISPLAY_NAME = '60x40 TSPL RAW horizontal girada';
     const TSPL_DOTS_PER_MM = 8;
     const LABEL_WIDTH_DOTS = LABEL_WIDTH_MM * TSPL_DOTS_PER_MM;
+    const LABEL_HEIGHT_DOTS = LABEL_HEIGHT_MM * TSPL_DOTS_PER_MM;
+    const LABEL_LAYOUT_WIDTH_DOTS = LABEL_HEIGHT_DOTS;
 
     function getAppConfig() {
         return window.PDV_CONFIG || {};
@@ -158,22 +161,61 @@
         return `TEXT ${x},${y},"${font}",${rotation},${xMultiplier},${yMultiplier},"${text}"`;
     }
 
+    function buildRotatedTsplText(x, y, value, options = {}) {
+        const font = options.font || '2';
+        const rotation = options.rotation || 270;
+        const xMultiplier = options.xMultiplier || 1;
+        const yMultiplier = options.yMultiplier || 1;
+        const maxWidthDots = options.maxWidthDots || LABEL_LAYOUT_WIDTH_DOTS;
+        const text = fitTsplTextToWidth(value, font, xMultiplier, maxWidthDots);
+        const charWidth = getTsplFontWidth(font, xMultiplier);
+        const textWidth = text.length * charWidth;
+        const rotatedX = Math.max(Math.round(y), 0);
+        const rotatedY = Math.max(Math.round(LABEL_LAYOUT_WIDTH_DOTS - x - textWidth), 0);
+
+        return `TEXT ${rotatedX},${rotatedY},"${font}",${rotation},${xMultiplier},${yMultiplier},"${text}"`;
+    }
+
+    function buildRotatedCenteredTsplText(y, value, options = {}) {
+        const font = options.font || '3';
+        const xMultiplier = options.xMultiplier || 1;
+        const maxWidthDots = options.maxWidthDots || LABEL_LAYOUT_WIDTH_DOTS;
+        const text = fitTsplTextToWidth(value, font, xMultiplier, maxWidthDots);
+        const charWidth = getTsplFontWidth(font, xMultiplier);
+        const textWidth = text.length * charWidth;
+        const x = Math.max(Math.round((LABEL_LAYOUT_WIDTH_DOTS - textWidth) / 2), 0);
+
+        return buildRotatedTsplText(x, y, text, {
+            ...options,
+            font,
+            xMultiplier,
+            maxWidthDots,
+        });
+    }
+
     function buildTsplBar(x, y, width, height) {
         return `BAR ${x},${y},${width},${height}`;
     }
 
+    function buildRotatedTsplBar(x, y, width, height) {
+        const rotatedX = Math.max(Math.round(y), 0);
+        const rotatedY = Math.max(Math.round(LABEL_LAYOUT_WIDTH_DOTS - x - width), 0);
+
+        return buildTsplBar(rotatedX, rotatedY, height, width);
+    }
+
     function splitTsplProductName(value) {
-        const text = normalizeTsplText(value, 42).toUpperCase();
+        const text = normalizeTsplText(value, 30).toUpperCase();
         const words = text.split(/\s+/).filter(Boolean);
 
-        if (text.length <= 20 || words.length <= 1) {
+        if (text.length <= 12 || words.length <= 1) {
             return [text];
         }
 
         const lines = ['', ''];
         words.forEach(word => {
             const candidate = lines[0] ? `${lines[0]} ${word}` : word;
-            if (!lines[1] && candidate.length <= 20) {
+            if (!lines[1] && candidate.length <= 12) {
                 lines[0] = candidate;
                 return;
             }
@@ -186,20 +228,21 @@
 
     function getProductTsplFont(value) {
         const length = sanitizeLabelText(value).length;
-        if (length <= 14) {
-            return '3';
+        if (length <= 12) {
+            return '4';
         }
 
-        return '2';
+        return '3';
     }
 
     function buildLabelTSPL(dados, quantidade) {
         const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
         const nome = dados.showNome === false ? '' : dados.nome || '';
         const productLines = splitTsplProductName(nome);
-        const referencia = dados.showCodigo === false ? '000000' : dados.codigo || '000000';
+        const referencia = dados.showCodigo === false ? 'DLM-000' : dados.codigo || 'DLM-000';
         const tamanho = dados.produtoTamanho || 'G';
-        const preco = dados.showPreco === false ? 'R$0,00' : formatLabelPriceCompact(dados.preco || 0);
+        const preco = dados.showPreco === false ? 'R$ 0,00' : formatLabelPrice(dados.preco || 0);
+        const footerText = `REF: ${referencia}`;
 
         return [
             'SIZE 60 mm,40 mm',
@@ -207,26 +250,31 @@
             'DIRECTION 1',
             'REFERENCE 0,0',
             'CLS',
-            buildTsplBar(12, 12, 456, 2),
-            buildTsplBar(12, 306, 456, 2),
-            buildTsplBar(12, 12, 2, 296),
-            buildTsplBar(468, 12, 2, 296),
-            buildTsplBar(24, 72, 432, 2),
-            buildTsplBar(24, 158, 432, 2),
-            buildTsplBar(24, 248, 432, 2),
-            buildTsplBar(178, 168, 2, 74),
-            buildTsplBar(300, 168, 2, 74),
-            buildCenteredTsplText(26, "D'lima Store", { font: '3', maxWidthDots: 420 }),
-            buildCenteredTsplText(84, productLines[0] || '', { font: getProductTsplFont(productLines[0] || ''), maxWidthDots: 420 }),
-            buildCenteredTsplText(116, productLines[1] || '', { font: getProductTsplFont(productLines[1] || ''), maxWidthDots: 420 }),
-            buildTsplText(34, 176, 'REF.', { font: '1', maxWidthDots: 60 }),
-            buildTsplText(34, 204, referencia, { font: '2', maxWidthDots: 136 }),
-            buildTsplText(204, 176, 'TAM.', { font: '1', maxWidthDots: 60 }),
-            buildTsplText(218, 202, tamanho, { font: '3', maxWidthDots: 56 }),
-            buildTsplText(326, 176, 'VALOR', { font: '1', maxWidthDots: 72 }),
-            buildTsplText(314, 202, preco, { font: '2', yMultiplier: 2, maxWidthDots: 140 }),
-            buildCenteredTsplText(256, '"Nao seja copia, seja referencia."', { font: '1', maxWidthDots: 420 }),
-            buildCenteredTsplText(286, 'D L I M A  S T O R E', { font: '2', maxWidthDots: 420 }),
+            buildRotatedTsplBar(0, 96, LABEL_LAYOUT_WIDTH_DOTS, 3),
+            buildRotatedTsplBar(0, 238, LABEL_LAYOUT_WIDTH_DOTS, 3),
+            buildRotatedTsplBar(0, 330, LABEL_LAYOUT_WIDTH_DOTS, 3),
+            buildRotatedTsplBar(0, 420, LABEL_LAYOUT_WIDTH_DOTS, 3),
+            buildRotatedCenteredTsplText(20, "D'LIMA", { font: '4', xMultiplier: 2, maxWidthDots: 300 }),
+            buildRotatedTsplBar(44, 76, 54, 3),
+            buildRotatedCenteredTsplText(66, 'S T O R E', { font: '2', maxWidthDots: 150 }),
+            buildRotatedTsplBar(222, 76, 54, 3),
+            buildRotatedCenteredTsplText(110, productLines[0] || '', {
+                font: getProductTsplFont(productLines[0] || ''),
+                yMultiplier: 2,
+                maxWidthDots: 300,
+            }),
+            buildRotatedCenteredTsplText(174, productLines[1] || '', {
+                font: getProductTsplFont(productLines[1] || ''),
+                yMultiplier: 2,
+                maxWidthDots: 300,
+            }),
+            buildRotatedTsplText(26, 274, 'TAM:', { font: '3', maxWidthDots: 74 }),
+            buildRotatedCenteredTsplText(260, tamanho, { font: '5', xMultiplier: 2, maxWidthDots: 160 }),
+            buildRotatedCenteredTsplText(350, preco, { font: '5', maxWidthDots: 300 }),
+            buildRotatedCenteredTsplText(434, footerText, { font: '2', maxWidthDots: 292 }),
+            buildRotatedCenteredTsplText(462, 'NAO SEJA COPIA, SEJA REFERENCIA', { font: '1', maxWidthDots: 300 }),
+            buildRotatedTsplBar(24, 466, 38, 3),
+            buildRotatedTsplBar(258, 466, 38, 3),
             `PRINT ${copies}`,
             '',
         ].join('\r\n');
@@ -235,24 +283,29 @@
     function buildLabelMarkup(state) {
         const nome = state.nome || '';
         const productLines = splitTsplProductName(nome);
-        const referencia = state.codigo || '000000';
+        const referencia = state.codigo || 'DLM-000';
         const tamanho = state.produtoTamanho || 'G';
-        const preco = formatLabelPriceCompact(state.preco || 0);
+        const preco = formatLabelPrice(state.preco || 0);
 
         return [
             '<div class="etiqueta-teste etiqueta-teste--tspl-simple">',
-            '<header class="label-simple-brand">D&#39;lima Store</header>',
+            '<header class="label-simple-brand">',
+            '<span class="label-brand-main">D&#39;LIMA</span>',
+            '<span class="label-brand-sub">S T O R E</span>',
+            '</header>',
             '<section class="label-simple-product">',
             '<strong>' + escapePreviewText(productLines[0] || '') + '</strong>',
             '<strong>' + escapePreviewText(productLines[1] || '') + '</strong>',
             '</section>',
             '<section class="label-simple-details">',
-            '<div><span>REF.</span><strong>' + escapePreviewText(referencia) + '</strong></div>',
-            '<div><span>TAM.</span><strong>' + escapePreviewText(tamanho) + '</strong></div>',
-            '<div><span>VALOR</span><strong>' + escapePreviewText(preco) + '</strong></div>',
+            '<span>TAM:</span>',
+            '<strong>' + escapePreviewText(tamanho) + '</strong>',
             '</section>',
-            '<section class="label-simple-quote">&quot;Nao seja copia, seja referencia.&quot;</section>',
-            '<footer class="label-simple-footer">D L I M A&nbsp;&nbsp;S T O R E</footer>',
+            '<section class="label-simple-price">' + escapePreviewText(preco) + '</section>',
+            '<footer class="label-simple-footer">',
+            '<span class="label-simple-ref">REF: ' + escapePreviewText(referencia) + '</span>',
+            '<span class="label-simple-quote">NAO SEJA COPIA, SEJA REFERENCIA</span>',
+            '</footer>',
             '</div>',
         ].join('');
     }
@@ -570,7 +623,7 @@
         };
         const configuredPrinterName = etiquetaPrinterName ? etiquetaPrinterName.value : '';
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = '60x40 TSPL RAW';
+            etiquetaTamanho.value = LABEL_DISPLAY_NAME;
         }
 
         return {
@@ -747,7 +800,7 @@
             etiquetaQuantidade.value = '1';
         }
         if (etiquetaTamanho) {
-            etiquetaTamanho.value = '60x40 TSPL RAW';
+            etiquetaTamanho.value = LABEL_DISPLAY_NAME;
         }
         if (etiquetaPrinterName) {
             etiquetaPrinterName.value = getAppConfig().labelPrinterName || 'ELGIN';
@@ -857,7 +910,7 @@
             larguraEtiquetaMm: state.size.width,
             alturaEtiquetaMm: state.size.height,
             larguraEtiquetaDots: LABEL_WIDTH_DOTS,
-            alturaEtiquetaDots: LABEL_HEIGHT_MM * TSPL_DOTS_PER_MM,
+            alturaEtiquetaDots: LABEL_HEIGHT_DOTS,
             quantidade: state.quantity,
         });
         console.log('Impressora resolvida:', printerName);
