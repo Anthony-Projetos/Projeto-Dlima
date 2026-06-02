@@ -209,6 +209,10 @@
         const text = normalizeTsplText(value, 30).toUpperCase();
         const words = text.split(/\s+/).filter(Boolean);
 
+        if (words.length === 2) {
+            return words;
+        }
+
         if (text.length <= 12 || words.length <= 1) {
             return [text];
         }
