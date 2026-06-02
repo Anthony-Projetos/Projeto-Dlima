@@ -196,6 +196,273 @@
         return `^FO${x},${y}^GB${width},${height},${thickness}^FS`;
     }
 
+    function getLabelLayoutValues(dados) {
+        return {
+            nome: dados.showNome === false ? 'PRODUTO' : dados.nome || 'PRODUTO',
+            referencia: dados.showCodigo === false ? '000000' : dados.codigo || '000000',
+            tamanho: dados.produtoTamanho || 'G',
+            preco: dados.showPreco === false ? 'R$0,00' : formatLabelPriceCompact(dados.preco || 0),
+        };
+    }
+
+    function buildPremiumLabelMarkup(dados, rootClass) {
+        const values = getLabelLayoutValues(dados);
+
+        return [
+            `<div class="${rootClass}">`,
+            '<span class="dlima-label-line dlima-label-line--main-left"></span>',
+            '<span class="dlima-label-line dlima-label-line--main-right"></span>',
+            '<span class="dlima-label-line dlima-label-line--quote-left"></span>',
+            '<span class="dlima-label-line dlima-label-line--quote-right"></span>',
+            '<span class="dlima-label-line dlima-label-line--value-bottom"></span>',
+            '<span class="dlima-label-line dlima-label-line--field-one"></span>',
+            '<span class="dlima-label-line dlima-label-line--field-two"></span>',
+            '<span class="dlima-label-text dlima-label-logo">D&#39;lima</span>',
+            '<span class="dlima-label-text dlima-label-store">store</span>',
+            '<span class="dlima-label-text dlima-label-value-title">VALOR</span>',
+            `<span class="dlima-label-text dlima-label-price">${escapePreviewText(values.preco)}</span>`,
+            '<span class="dlima-label-text dlima-label-product-title">PRODUTO</span>',
+            `<span class="dlima-label-text dlima-label-product-value">${escapePreviewText(values.nome)}</span>`,
+            '<span class="dlima-label-text dlima-label-ref-title">REF</span>',
+            `<span class="dlima-label-text dlima-label-ref-value">${escapePreviewText(values.referencia)}</span>`,
+            '<span class="dlima-label-text dlima-label-size-title">TAMANHO</span>',
+            `<span class="dlima-label-text dlima-label-size-value">${escapePreviewText(values.tamanho)}</span>`,
+            '<span class="dlima-label-text dlima-label-quote-one">&quot;Não seja cópia,</span>',
+            '<span class="dlima-label-text dlima-label-quote-two">seja referência.&quot;</span>',
+            '</div>',
+        ].join('');
+    }
+
+    function buildLabelHtmlStyles() {
+        return `
+            @page {
+                size: 60mm 40mm;
+                margin: 0;
+            }
+
+            html,
+            body {
+                width: 60mm;
+                min-height: 40mm;
+                margin: 0;
+                padding: 0;
+                background: #ffffff;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                color: #000000;
+                font-family: Arial, Helvetica, sans-serif;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .dlima-html-label {
+                width: 60mm;
+                height: 40mm;
+                position: relative;
+                overflow: hidden;
+                background: #ffffff;
+                border: 0.25mm solid #111111;
+                border-radius: 1.8mm;
+                page-break-after: always;
+            }
+
+            .dlima-html-label:last-child {
+                page-break-after: auto;
+            }
+
+            .dlima-label-line {
+                position: absolute;
+                display: block;
+                background: #111111;
+            }
+
+            .dlima-label-line--main-left {
+                left: 20.2mm;
+                top: 2.8mm;
+                width: 0.22mm;
+                height: 34.0mm;
+            }
+
+            .dlima-label-line--main-right {
+                left: 41.0mm;
+                top: 2.8mm;
+                width: 0.22mm;
+                height: 34.0mm;
+            }
+
+            .dlima-label-line--quote-left {
+                left: 45.0mm;
+                top: 2.8mm;
+                width: 0.22mm;
+                height: 34.0mm;
+            }
+
+            .dlima-label-line--quote-right {
+                left: 54.2mm;
+                top: 2.8mm;
+                width: 0.22mm;
+                height: 34.0mm;
+            }
+
+            .dlima-label-line--value-bottom {
+                left: 20.2mm;
+                top: 20.55mm;
+                width: 20.8mm;
+                height: 0.22mm;
+            }
+
+            .dlima-label-line--field-one {
+                left: 27.35mm;
+                top: 20.55mm;
+                width: 0.22mm;
+                height: 16.25mm;
+            }
+
+            .dlima-label-line--field-two {
+                left: 34.1mm;
+                top: 20.55mm;
+                width: 0.22mm;
+                height: 16.25mm;
+            }
+
+            .dlima-label-text {
+                position: absolute;
+                display: block;
+                color: #111111;
+                white-space: nowrap;
+                line-height: 1;
+                transform: rotate(-90deg);
+                transform-origin: left top;
+            }
+
+            .dlima-label-logo {
+                left: 5.1mm;
+                top: 33.7mm;
+                font-family: Georgia, "Times New Roman", serif;
+                font-size: 9.4mm;
+                font-style: italic;
+                font-weight: 900;
+                letter-spacing: 0;
+            }
+
+            .dlima-label-store {
+                left: 15.8mm;
+                top: 22.6mm;
+                font-family: Georgia, "Times New Roman", serif;
+                font-size: 2.6mm;
+                font-weight: 400;
+            }
+
+            .dlima-label-value-title {
+                left: 23.9mm;
+                top: 19.3mm;
+                font-family: Georgia, "Times New Roman", serif;
+                font-size: 2.4mm;
+                font-weight: 400;
+            }
+
+            .dlima-label-price {
+                left: 30.8mm;
+                top: 18.6mm;
+                font-size: 5.4mm;
+                font-weight: 900;
+            }
+
+            .dlima-label-product-title,
+            .dlima-label-ref-title,
+            .dlima-label-size-title {
+                font-family: Georgia, "Times New Roman", serif;
+                font-size: 2.35mm;
+                font-weight: 400;
+            }
+
+            .dlima-label-product-value,
+            .dlima-label-ref-value,
+            .dlima-label-size-value {
+                font-size: 1.45mm;
+                font-weight: 800;
+                max-width: 15.8mm;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .dlima-label-product-title {
+                left: 23.8mm;
+                top: 34.6mm;
+            }
+
+            .dlima-label-product-value {
+                left: 26.4mm;
+                top: 35.2mm;
+            }
+
+            .dlima-label-ref-title {
+                left: 30.7mm;
+                top: 33.1mm;
+            }
+
+            .dlima-label-ref-value {
+                left: 33.2mm;
+                top: 35.2mm;
+            }
+
+            .dlima-label-size-title {
+                left: 37.2mm;
+                top: 34.8mm;
+            }
+
+            .dlima-label-size-value {
+                left: 39.7mm;
+                top: 35.2mm;
+            }
+
+            .dlima-label-quote-one,
+            .dlima-label-quote-two {
+                font-family: Georgia, "Times New Roman", serif;
+                font-size: 2.55mm;
+                font-style: italic;
+                font-weight: 400;
+            }
+
+            .dlima-label-quote-one {
+                left: 49.0mm;
+                top: 27.8mm;
+            }
+
+            .dlima-label-quote-two {
+                left: 52.0mm;
+                top: 27.8mm;
+            }
+        `;
+    }
+
+    function buildLabelHTML(dados, quantidade) {
+        const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
+        const labels = Array.from({ length: copies }, () => (
+            buildPremiumLabelMarkup(dados, 'dlima-html-label')
+        )).join('');
+
+        return [
+            '<!doctype html>',
+            '<html>',
+            '<head>',
+            '<meta charset="utf-8">',
+            '<style>',
+            buildLabelHtmlStyles(),
+            '</style>',
+            '</head>',
+            '<body>',
+            labels,
+            '</body>',
+            '</html>',
+        ].join('');
+    }
+
     function buildLabelTSPL(dados, quantidade) {
         const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
         const nome = dados.showNome === false ? 'PRODUTO' : dados.nome || 'PRODUTO';
@@ -277,35 +544,7 @@
     }
 
     function buildLabelMarkup(state) {
-        const nome = state.nome || 'PRODUTO';
-        const referencia = state.codigo || '000000';
-        const tamanho = state.produtoTamanho || 'G';
-        const preco = formatLabelPriceCompact(state.preco || 0);
-
-        return [
-            '<div class="etiqueta-teste etiqueta-teste--premium">',
-            '<section class="label-preview-brand">',
-            '<strong>D&#39;lima</strong>',
-            '<span>store</span>',
-            '</section>',
-            '<section class="label-preview-table">',
-            '<div class="label-preview-value">',
-            '<span>VALOR</span>',
-            `<strong>${escapePreviewText(preco)}</strong>`,
-            '</div>',
-            '<div class="label-preview-fields">',
-            '<div><span>PRODUTO</span><strong>' + escapePreviewText(nome) + '</strong></div>',
-            '<div><span>REF</span><strong>' + escapePreviewText(referencia) + '</strong></div>',
-            '<div><span>TAMANHO</span><strong>' + escapePreviewText(tamanho) + '</strong></div>',
-            '</div>',
-            '</section>',
-            '<section class="label-preview-gap"></section>',
-            '<section class="label-preview-quote">',
-            '<span>&quot;Nao seja copia,</span>',
-            '<span>seja referencia.&quot;</span>',
-            '</section>',
-            '</div>',
-        ].join('');
+        return buildPremiumLabelMarkup(state, 'dlima-html-label etiqueta-teste etiqueta-teste--premium');
     }
 
     function showStatus(message, type) {
@@ -673,6 +912,12 @@
         return buildLabelZPL(state, state.quantity);
     }
 
+    function buildLabelHTMLCommand() {
+        const state = getLabelState();
+        validateLabelState(state);
+        return buildLabelHTML(state, state.quantity);
+    }
+
     function atualizarPreviewEtiqueta() {
         if (!etiquetaPreview) {
             return;
@@ -900,6 +1145,11 @@
             imprimirEtiquetasZplButton.textContent = isPrinting ? 'Imprimindo...' : 'Imprimir ZPL';
         }
 
+        if (imprimirEtiquetasHtmlButton) {
+            imprimirEtiquetasHtmlButton.disabled = isPrinting;
+            imprimirEtiquetasHtmlButton.textContent = isPrinting ? 'Imprimindo...' : 'Imprimir HTML';
+        }
+
         if (imprimirTesteCentralizadoButton) {
             imprimirTesteCentralizadoButton.disabled = isPrinting;
             imprimirTesteCentralizadoButton.textContent = isPrinting ? 'Imprimindo...' : 'Teste centro';
@@ -909,6 +1159,18 @@
     function buildLabelRawConfigOptions() {
         return {
             encoding: 'UTF-8',
+        };
+    }
+
+    function buildLabelHtmlConfigOptions() {
+        return {
+            units: 'mm',
+            size: {
+                width: LABEL_WIDTH_MM,
+                height: LABEL_HEIGHT_MM,
+            },
+            margins: 0,
+            scaleContent: false,
         };
     }
 
@@ -925,6 +1187,17 @@
             type: 'raw',
             format: 'plain',
             data: zpl,
+        }];
+
+        return data;
+    }
+
+    function buildLabelHTMLPrintData(html) {
+        const data = [{
+            type: 'pixel',
+            format: 'html',
+            flavor: 'plain',
+            data: html,
         }];
 
         return data;
@@ -1006,6 +1279,42 @@
         return printerName;
     }
 
+    function logLabelHTMLDiagnostic({ state, printerName, configOptions, config, data, html }) {
+        console.group('[DLIMA etiqueta HTML QZ]');
+        console.table({
+            larguraEtiquetaMm: state.size.width,
+            alturaEtiquetaMm: state.size.height,
+            quantidade: state.quantity,
+        });
+        console.log('Impressora resolvida:', printerName);
+        console.log('qz.configs.create(printerName, configOptions) - configOptions:', configOptions);
+        console.log('Objeto config retornado pelo QZ:', config);
+        console.log('Array data enviado ao qz.print(config, data):', data);
+        console.log('HTML enviado ao QZ:', html);
+        console.groupEnd();
+    }
+
+    async function sendLabelHTMLToPrinter(state, html) {
+        await connectQzForLabels();
+        const printerName = await resolveLabelPrinter(state.printerName);
+        if (etiquetaPrinterName) {
+            etiquetaPrinterName.value = printerName;
+        }
+        const configOptions = buildLabelHtmlConfigOptions();
+        const config = window.qz.configs.create(printerName, configOptions);
+        const data = buildLabelHTMLPrintData(html);
+        logLabelHTMLDiagnostic({
+            state,
+            printerName,
+            configOptions,
+            config,
+            data,
+            html,
+        });
+        await window.qz.print(config, data);
+        return printerName;
+    }
+
     async function printLabels() {
         clearEtiquetaStatus();
         setLabelPrintButtonState(true);
@@ -1043,6 +1352,31 @@
             }
             const printerName = await sendLabelZPLToPrinter(state, zpl);
             showEtiquetaStatus(`${state.quantity} etiqueta${state.quantity === 1 ? '' : 's'} ZPL enviada${state.quantity === 1 ? '' : 's'} para ${printerName}.`, 'success');
+        } catch (error) {
+            const message = /websocket|connect|qz/i.test(error.message || '')
+                ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
+                : error.message;
+            showEtiquetaStatus(message, 'error');
+        } finally {
+            setLabelPrintButtonState(false);
+        }
+    }
+
+    async function printLabelsHTML() {
+        clearEtiquetaStatus();
+        setLabelPrintButtonState(true);
+
+        try {
+            const state = getLabelState();
+            validateLabelState(state);
+            atualizarPreviewEtiqueta();
+            showEtiquetaStatus('Enviando etiqueta HTML 60x40 pelo QZ Tray...', 'info');
+            const html = buildLabelHTML(state, state.quantity);
+            if (etiquetaHtmlPreview) {
+                etiquetaHtmlPreview.textContent = html;
+            }
+            const printerName = await sendLabelHTMLToPrinter(state, html);
+            showEtiquetaStatus(`${state.quantity} etiqueta${state.quantity === 1 ? '' : 's'} HTML enviada${state.quantity === 1 ? '' : 's'} para ${printerName}.`, 'success');
         } catch (error) {
             const message = /websocket|connect|qz/i.test(error.message || '')
                 ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
@@ -1139,6 +1473,7 @@
     const limparEtiquetasButton = document.getElementById('limparEtiquetas');
     const imprimirEtiquetasButton = document.getElementById('imprimirEtiquetas');
     const imprimirEtiquetasZplButton = document.getElementById('imprimirEtiquetasZpl');
+    const imprimirEtiquetasHtmlButton = document.getElementById('imprimirEtiquetasHtml');
     const imprimirTesteCentralizadoButton = document.getElementById('imprimirTesteCentralizado');
     let etiquetaSearchTimeout = null;
 
@@ -1159,6 +1494,9 @@
     }
     if (imprimirEtiquetasZplButton) {
         imprimirEtiquetasZplButton.addEventListener('click', printLabelsZPL);
+    }
+    if (imprimirEtiquetasHtmlButton) {
+        imprimirEtiquetasHtmlButton.addEventListener('click', printLabelsHTML);
     }
     if (imprimirTesteCentralizadoButton) {
         imprimirTesteCentralizadoButton.addEventListener('click', printCenteredWordTest);
@@ -1212,9 +1550,12 @@
     window.atualizarPreviewEtiqueta = atualizarPreviewEtiqueta;
     window.buildLabelTSPL = buildLabelTSPL;
     window.buildLabelZPL = buildLabelZPL;
+    window.buildLabelHTML = buildLabelHTML;
     window.buildLabelCommand = buildLabelCommand;
     window.buildLabelZPLCommand = buildLabelZPLCommand;
+    window.buildLabelHTMLCommand = buildLabelHTMLCommand;
     window.printLabels = printLabels;
     window.printLabelsZPL = printLabelsZPL;
+    window.printLabelsHTML = printLabelsHTML;
     window.printCenteredWordTest = printCenteredWordTest;
 })();

@@ -684,140 +684,171 @@ body.label-modal-open {
     border: 2px solid black;
     border-radius: 8px;
     box-sizing: border-box;
-    display: flex;
     font-family: Arial, sans-serif;
     background: #ffffff;
     color: #000000;
     overflow: hidden;
-}
-
-.label-preview-brand {
-    width: 34%;
-    min-width: 0;
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-right: 2px solid #111111;
-    overflow: hidden;
 }
 
-.label-preview-brand strong {
-    display: block;
-    font-family: "Georgia", "Times New Roman", serif;
-    font-size: 66px;
-    font-style: italic;
-    font-weight: 800;
-    line-height: 0.85;
-    writing-mode: vertical-rl;
-}
-
-.label-preview-brand span {
+.label-preview .dlima-label-line {
     position: absolute;
-    right: 22px;
-    top: 50%;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 16px;
+    display: block;
+    background: #111111;
+}
+
+.label-preview .dlima-label-line--main-left {
+    left: 33.7%;
+    top: 7%;
+    width: 0.4%;
+    height: 85%;
+}
+
+.label-preview .dlima-label-line--main-right {
+    left: 68.3%;
+    top: 7%;
+    width: 0.4%;
+    height: 85%;
+}
+
+.label-preview .dlima-label-line--quote-left {
+    left: 75%;
+    top: 7%;
+    width: 0.4%;
+    height: 85%;
+}
+
+.label-preview .dlima-label-line--quote-right {
+    left: 90.3%;
+    top: 7%;
+    width: 0.4%;
+    height: 85%;
+}
+
+.label-preview .dlima-label-line--value-bottom {
+    left: 33.7%;
+    top: 51.4%;
+    width: 34.7%;
+    height: 0.4%;
+}
+
+.label-preview .dlima-label-line--field-one {
+    left: 45.6%;
+    top: 51.4%;
+    width: 0.4%;
+    height: 40.6%;
+}
+
+.label-preview .dlima-label-line--field-two {
+    left: 56.8%;
+    top: 51.4%;
+    width: 0.4%;
+    height: 40.6%;
+}
+
+.label-preview .dlima-label-text {
+    position: absolute;
+    display: block;
+    color: #111111;
     line-height: 1;
-    writing-mode: vertical-rl;
+    white-space: nowrap;
+    transform: rotate(-90deg);
+    transform-origin: left top;
 }
 
-.label-preview-table {
-    width: 33%;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    border-right: 2px solid #111111;
+.label-preview .dlima-label-logo {
+    left: 8.5%;
+    top: 84.3%;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 74px;
+    font-style: italic;
+    font-weight: 900;
+    letter-spacing: 0;
 }
 
-.label-preview-value {
-    flex: 0 0 48%;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-    border-bottom: 2px solid #111111;
-    overflow: hidden;
-}
-
-.label-preview-value span,
-.label-preview-value strong {
-    writing-mode: vertical-rl;
-}
-
-.label-preview-value span {
+.label-preview .dlima-label-store {
+    left: 26.3%;
+    top: 56.5%;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 18px;
 }
 
-.label-preview-value strong {
+.label-preview .dlima-label-value-title {
+    left: 39.8%;
+    top: 48.3%;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+}
+
+.label-preview .dlima-label-price {
+    left: 51.3%;
+    top: 46.5%;
     font-size: 44px;
     font-weight: 900;
-    line-height: 1;
 }
 
-.label-preview-fields {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+.label-preview .dlima-label-product-title,
+.label-preview .dlima-label-ref-title,
+.label-preview .dlima-label-size-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
 }
 
-.label-preview-fields > div {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border-right: 2px solid #111111;
-    overflow: hidden;
-}
-
-.label-preview-fields > div:last-child {
-    border-right: 0;
-}
-
-.label-preview-fields span,
-.label-preview-fields strong {
-    max-height: 100%;
+.label-preview .dlima-label-product-value,
+.label-preview .dlima-label-ref-value,
+.label-preview .dlima-label-size-value {
+    max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    writing-mode: vertical-rl;
-}
-
-.label-preview-fields span {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 16px;
-}
-
-.label-preview-fields strong {
     font-size: 11px;
     font-weight: 800;
 }
 
-.label-preview-gap {
-    width: 6%;
-    border-right: 2px solid #111111;
+.label-preview .dlima-label-product-title {
+    left: 39.6%;
+    top: 86.5%;
 }
 
-.label-preview-quote {
-    width: 27%;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    overflow: hidden;
+.label-preview .dlima-label-product-value {
+    left: 44%;
+    top: 88%;
 }
 
-.label-preview-quote span {
+.label-preview .dlima-label-ref-title {
+    left: 51.2%;
+    top: 82.8%;
+}
+
+.label-preview .dlima-label-ref-value {
+    left: 55.3%;
+    top: 88%;
+}
+
+.label-preview .dlima-label-size-title {
+    left: 62%;
+    top: 87%;
+}
+
+.label-preview .dlima-label-size-value {
+    left: 66.2%;
+    top: 88%;
+}
+
+.label-preview .dlima-label-quote-one,
+.label-preview .dlima-label-quote-two {
     font-family: Georgia, "Times New Roman", serif;
     font-size: 18px;
     font-style: italic;
-    line-height: 1.1;
-    writing-mode: vertical-rl;
+}
+
+.label-preview .dlima-label-quote-one {
+    left: 81.7%;
+    top: 69.5%;
+}
+
+.label-preview .dlima-label-quote-two {
+    left: 86.7%;
+    top: 69.5%;
 }
 
 .label-html-preview {

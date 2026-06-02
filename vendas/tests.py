@@ -66,6 +66,7 @@ class RegistrarVendaBuscaTests(TestCase):
         self.assertContains(response, '"labelPrinterSearchTerms": ["ELGIN L42PRO FULL", "ELGIN", "L42"]')
         self.assertContains(response, 'value="ELGIN L42PRO FULL"')
         self.assertContains(response, 'id="etiquetaBordaTeste"')
+        self.assertContains(response, 'id="imprimirEtiquetasHtml"')
         self.assertContains(response, 'id="imprimirEtiquetasZpl"')
 
     def test_finalizar_venda_retorna_dados_para_impressao(self):
@@ -136,11 +137,6 @@ class LabelPrintingFrontendTests(TestCase):
         self.assertIn('Comando TSPL enviado ao QZ:', source)
         self.assertIn('value="60x40 TSPL RAW"', template)
         self.assertIn('readonly', template)
-        self.assertNotIn("type: 'pixel'", source)
-        self.assertNotIn("format: 'html'", source)
-        self.assertNotIn("flavor: 'plain'", source)
-        self.assertNotIn('@page', source)
-        self.assertNotIn('scaleContent', source)
         self.assertNotIn("orientation: 'landscape'", source)
         self.assertNotIn("orientation: 'portrait'", source)
         self.assertNotIn('pageWidth', source)
@@ -166,10 +162,8 @@ class LabelPrintingFrontendTests(TestCase):
         self.assertNotIn('html2canvas', source.lower())
         self.assertNotIn('screenshot', source.lower())
         self.assertNotIn('writing-mode:', source)
-        self.assertNotIn('rotate(', source)
         self.assertNotIn('scale(', source)
         self.assertNotIn('zoom:', source)
-        self.assertNotIn('position: absolute', source)
 
     def test_js_de_etiquetas_oferece_zpl_raw_60x40(self):
         source = Path(settings.BASE_DIR / 'static/js/vendas/registrar_venda.js').read_text(encoding='utf-8')
@@ -198,6 +192,37 @@ class LabelPrintingFrontendTests(TestCase):
         self.assertIn('function printLabelsZPL()', source)
         self.assertIn('id="imprimirEtiquetasZpl"', template)
         self.assertIn('RAW QZ', template)
+
+    def test_js_de_etiquetas_oferece_html_qz_60x40(self):
+        source = Path(settings.BASE_DIR / 'static/js/vendas/registrar_venda.js').read_text(encoding='utf-8')
+        template = Path(settings.BASE_DIR / 'templates/vendas/registrar_venda.html').read_text(encoding='utf-8')
+
+        self.assertIn('function buildLabelHTML(dados, quantidade)', source)
+        self.assertIn('@page', source)
+        self.assertIn('size: 60mm 40mm;', source)
+        self.assertIn('width: 60mm;', source)
+        self.assertIn('height: 40mm;', source)
+        self.assertIn('overflow: hidden;', source)
+        self.assertIn('border: 0.25mm solid #111111;', source)
+        self.assertIn('transform: rotate(-90deg);', source)
+        self.assertIn('D&#39;lima', source)
+        self.assertIn('&quot;Não seja cópia,', source)
+        self.assertIn('seja referência.&quot;', source)
+        self.assertIn('function buildLabelHTMLPrintData(html)', source)
+        self.assertIn("type: 'pixel'", source)
+        self.assertIn("format: 'html'", source)
+        self.assertIn("flavor: 'plain'", source)
+        self.assertIn('data: html', source)
+        self.assertIn('function buildLabelHtmlConfigOptions()', source)
+        self.assertIn("units: 'mm'", source)
+        self.assertIn('scaleContent: false', source)
+        self.assertIn('function sendLabelHTMLToPrinter(state, html)', source)
+        self.assertIn('const data = buildLabelHTMLPrintData(html);', source)
+        self.assertIn('await window.qz.print(config, data);', source)
+        self.assertIn('[DLIMA etiqueta HTML QZ]', source)
+        self.assertIn('function printLabelsHTML()', source)
+        self.assertIn('id="imprimirEtiquetasHtml"', template)
+        self.assertIn('Imprimir HTML', template)
 
 
 class ReceiptPayloadTests(TestCase):
