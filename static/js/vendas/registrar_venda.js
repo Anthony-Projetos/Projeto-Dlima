@@ -266,7 +266,7 @@
             }),
             buildRotatedTsplText(200, 274, 'TAM:', { font: '3', maxWidthDots: 74 }),
             buildRotatedCenteredTsplText(260, tamanho, { font: '5', maxWidthDots: 120 }),
-            buildRotatedCenteredTsplText(350, preco, { font: '4', maxWidthDots: 260 }),
+            buildRotatedCenteredTsplText(360, preco, { font: '5', maxWidthDots: 288 }),
             buildRotatedCenteredTsplText(434, footerText, { font: '2', maxWidthDots: 292 }),
             buildRotatedTsplText(46, 462, 'NAO SEJA COPIA, SEJA REFERENCIA', { font: '1', maxWidthDots: 260 }),
             `PRINT ${copies}`,
