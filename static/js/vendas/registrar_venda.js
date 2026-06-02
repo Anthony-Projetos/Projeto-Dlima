@@ -34,6 +34,7 @@
     const LABEL_WIDTH_DOTS = LABEL_WIDTH_MM * TSPL_DOTS_PER_MM;
     const LABEL_HEIGHT_DOTS = LABEL_HEIGHT_MM * TSPL_DOTS_PER_MM;
     const LABEL_LAYOUT_WIDTH_DOTS = LABEL_HEIGHT_DOTS;
+    const PRODUCT_LINE_MAX_WIDTH_DOTS = 260;
 
     function getAppConfig() {
         return window.PDV_CONFIG || {};
@@ -227,12 +228,19 @@
     }
 
     function getProductTsplFont(value) {
-        const length = sanitizeLabelText(value).length;
-        if (length <= 12) {
+        const text = normalizeTsplText(value, 30).toUpperCase();
+        const largeTextWidth = text.length * getTsplFontWidth('4', 1);
+        const mediumTextWidth = text.length * getTsplFontWidth('3', 1);
+
+        if (largeTextWidth <= PRODUCT_LINE_MAX_WIDTH_DOTS) {
             return '4';
         }
 
-        return '3';
+        if (mediumTextWidth <= PRODUCT_LINE_MAX_WIDTH_DOTS) {
+            return '3';
+        }
+
+        return '2';
     }
 
     function buildLabelTSPL(dados, quantidade) {
@@ -258,11 +266,11 @@
             buildRotatedCenteredTsplText(66, 'S T O R E', { font: '2', maxWidthDots: 150 }),
             buildRotatedCenteredTsplText(118, productLines[0] || '', {
                 font: getProductTsplFont(productLines[0] || ''),
-                maxWidthDots: 260,
+                maxWidthDots: PRODUCT_LINE_MAX_WIDTH_DOTS,
             }),
             buildRotatedCenteredTsplText(182, productLines[1] || '', {
                 font: getProductTsplFont(productLines[1] || ''),
-                maxWidthDots: 260,
+                maxWidthDots: PRODUCT_LINE_MAX_WIDTH_DOTS,
             }),
             buildRotatedTsplText(200, 274, 'TAM:', { font: '3', maxWidthDots: 74 }),
             buildRotatedCenteredTsplText(260, tamanho, { font: '5', maxWidthDots: 120 }),
