@@ -152,6 +152,8 @@ class LabelPrintingFrontendTests(TestCase):
         self.assertIn("console.log('Array data enviado ao qz.print(config, data):'", source)
         self.assertIn('Comando TSPL enviado ao QZ:', source)
         self.assertIn('value="60x40 TSPL RAW em pe"', template)
+        self.assertIn("css/style.css' %}?v=label-upright-20260602", template)
+        self.assertIn("js/vendas/registrar_venda.js' %}?v=label-upright-20260602", template)
         self.assertIn('id="etiquetaComandoPreview"', template)
         self.assertIn('readonly', template)
         self.assertNotIn("buildTsplText(178, 292, 'PRODUTO'", source)
