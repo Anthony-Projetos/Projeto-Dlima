@@ -19,10 +19,9 @@
     const etiquetaCodigo = document.getElementById('etiquetaCodigo');
     const etiquetaProdutoTamanho = document.getElementById('etiquetaProdutoTamanho');
     const etiquetaCor = document.getElementById('etiquetaCor');
-    const etiquetaTesteTexto = document.getElementById('etiquetaTesteTexto');
     const etiquetaBordaTeste = document.getElementById('etiquetaBordaTeste');
     const etiquetaPreview = document.getElementById('etiquetaPreview');
-    const etiquetaHtmlPreview = document.getElementById('etiquetaHtmlPreview');
+    const etiquetaComandoPreview = document.getElementById('etiquetaComandoPreview');
     const etiquetaOptions = {
         nome: document.getElementById('etiquetaMostrarNome'),
         preco: document.getElementById('etiquetaMostrarPreco'),
@@ -31,11 +30,7 @@
     const LABEL_WIDTH_MM = 60;
     const LABEL_HEIGHT_MM = 40;
     const TSPL_DOTS_PER_MM = 8;
-    const ZPL_DOTS_PER_MM = 8;
     const LABEL_WIDTH_DOTS = LABEL_WIDTH_MM * TSPL_DOTS_PER_MM;
-    const ZPL_LABEL_WIDTH_DOTS = LABEL_WIDTH_MM * ZPL_DOTS_PER_MM;
-    const ZPL_LABEL_HEIGHT_DOTS = LABEL_HEIGHT_MM * ZPL_DOTS_PER_MM;
-    const CENTER_TEST_DEFAULT_TEXT = 'TESTE';
 
     function getAppConfig() {
         return window.PDV_CONFIG || {};
@@ -167,302 +162,9 @@
         return `BAR ${x},${y},${width},${height}`;
     }
 
-    function normalizeZplText(value, maxLength) {
-        const text = sanitizeLabelText(value)
-            .replace(/\^/g, ' ')
-            .replace(/~/g, ' ')
-            .replace(/\\/g, '/')
-            .replace(/\s+/g, ' ')
-            .trim();
-
-        if (!maxLength || text.length <= maxLength) {
-            return text;
-        }
-
-        return text.slice(0, maxLength).trimEnd();
-    }
-
-    function buildZPLText(x, y, value, options = {}) {
-        const orientation = options.orientation || 'N';
-        const fontHeight = options.fontHeight || 24;
-        const fontWidth = options.fontWidth || fontHeight;
-        const maxLength = options.maxLength || 0;
-        const text = normalizeZplText(value, maxLength);
-
-        return `^FO${x},${y}^A0${orientation},${fontHeight},${fontWidth}^FD${text}^FS`;
-    }
-
-    function buildZPLBox(x, y, width, height, thickness = 2) {
-        return `^FO${x},${y}^GB${width},${height},${thickness}^FS`;
-    }
-
-    function getLabelLayoutValues(dados) {
-        return {
-            nome: dados.showNome === false ? 'PRODUTO' : dados.nome || 'PRODUTO',
-            referencia: dados.showCodigo === false ? '000000' : dados.codigo || '000000',
-            tamanho: dados.produtoTamanho || 'G',
-            preco: dados.showPreco === false ? 'R$ 0,00' : formatLabelPrice(dados.preco || 0),
-        };
-    }
-
-    function buildPremiumLabelMarkup(dados, rootClass) {
-        const values = getLabelLayoutValues(dados);
-
-        return [
-            `<div class="${rootClass}">`,
-            '<header class="label-top">',
-            '<div class="label-logo">D&#39;lima <span>store</span></div>',
-            '</header>',
-            '<main class="label-center">',
-            '<section class="label-info">',
-            `<strong class="label-product-name">${escapePreviewText(values.nome)}</strong>`,
-            '<div class="label-ref-row">',
-            '<span>REF.</span>',
-            `<strong>${escapePreviewText(values.referencia)}</strong>`,
-            '</div>',
-            `<strong class="label-size">${escapePreviewText(values.tamanho)}</strong>`,
-            '</section>',
-            '<section class="label-value">',
-            '<span>VALOR</span>',
-            `<strong>${escapePreviewText(values.preco)}</strong>`,
-            '</section>',
-            '</main>',
-            '<section class="label-phrase">',
-            '<span>&quot;Estilo não é seguir regras,</span>',
-            '<span>é criar o seu caminho.&quot;</span>',
-            '</section>',
-            '<footer class="label-footer">DLIMA STORE</footer>',
-            '</div>',
-        ].join('');
-    }
-
-    function buildLabelHtmlStyles() {
-        return `
-            @page {
-                size: 60mm 40mm;
-                margin: 0;
-            }
-
-            html,
-            body {
-                width: 60mm;
-                min-height: 40mm;
-                margin: 0;
-                padding: 0;
-                background: #ffffff;
-            }
-
-            * {
-                box-sizing: border-box;
-            }
-
-            body {
-                color: #000000;
-                font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            .label {
-                width: 60mm;
-                height: 40mm;
-                box-sizing: border-box;
-                overflow: hidden;
-                background: white;
-                color: black;
-                border: 0.28mm solid #111111;
-                border-radius: 1.2mm;
-                display: grid;
-                grid-template-rows: 9.2mm 16.5mm 7.2mm 6.5mm;
-                page-break-after: always;
-            }
-
-            .label:last-child {
-                page-break-after: auto;
-            }
-
-            .label-top,
-            .label-center,
-            .label-phrase {
-                border-bottom: 0.28mm solid #111111;
-            }
-
-            .label-top {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0.8mm 2mm 0.6mm;
-            }
-
-            .label-logo {
-                font-family: Georgia, "Times New Roman", serif;
-                font-size: 6.8mm;
-                font-style: italic;
-                font-weight: 900;
-                line-height: 0.82;
-                letter-spacing: 0;
-                white-space: nowrap;
-            }
-
-            .label-logo span {
-                display: inline-block;
-                margin-left: 1.1mm;
-                font-size: 2.9mm;
-                font-style: normal;
-                font-weight: 400;
-                vertical-align: baseline;
-            }
-
-            .label-center {
-                display: grid;
-                grid-template-columns: 34mm 1fr;
-                min-height: 0;
-            }
-
-            .label-info {
-                display: grid;
-                grid-template-rows: 5.6mm 5.2mm 1fr;
-                min-width: 0;
-                border-right: 0.28mm solid #111111;
-            }
-
-            .label-product-name,
-            .label-ref-row,
-            .label-size {
-                display: flex;
-                align-items: center;
-                min-width: 0;
-                padding: 0.6mm 1.4mm;
-            }
-
-            .label-product-name,
-            .label-ref-row {
-                border-bottom: 0.24mm solid #111111;
-            }
-
-            .label-product-name {
-                justify-content: center;
-                font-size: 2.65mm;
-                font-weight: 900;
-                letter-spacing: 0.18mm;
-                text-align: center;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                text-transform: uppercase;
-            }
-
-            .label-ref-row {
-                justify-content: space-between;
-                gap: 1mm;
-                font-size: 2.1mm;
-                letter-spacing: 0.1mm;
-            }
-
-            .label-ref-row span {
-                font-weight: 700;
-            }
-
-            .label-ref-row strong {
-                min-width: 0;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 2.5mm;
-                font-weight: 900;
-                text-transform: uppercase;
-            }
-
-            .label-size {
-                justify-content: center;
-                font-size: 4.5mm;
-                font-weight: 900;
-                letter-spacing: 0.15mm;
-                text-transform: uppercase;
-            }
-
-            .label-value {
-                min-width: 0;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 1.1mm;
-                padding: 0.8mm 1.2mm;
-            }
-
-            .label-value span {
-                align-self: flex-start;
-                font-size: 2.1mm;
-                font-weight: 700;
-                letter-spacing: 0.2mm;
-            }
-
-            .label-value strong {
-                max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 5.8mm;
-                font-weight: 900;
-                letter-spacing: 0;
-                line-height: 0.95;
-            }
-
-            .label-phrase {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 0.4mm;
-                padding: 0.6mm 2mm;
-                font-family: Georgia, "Times New Roman", serif;
-                font-size: 2.15mm;
-                font-style: italic;
-                font-weight: 400;
-                line-height: 1.05;
-                text-align: center;
-            }
-
-            .label-footer {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding-top: 0.7mm;
-                font-size: 2.5mm;
-                font-weight: 700;
-                letter-spacing: 1.8mm;
-                text-indent: 1.8mm;
-                line-height: 1;
-            }
-        `;
-    }
-
-    function buildLabelHTML(dados, quantidade) {
-        const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
-        const labels = Array.from({ length: copies }, () => (
-            buildPremiumLabelMarkup(dados, 'label')
-        )).join('');
-
-        return [
-            '<!doctype html>',
-            '<html>',
-            '<head>',
-            '<meta charset="utf-8">',
-            '<style>',
-            buildLabelHtmlStyles(),
-            '</style>',
-            '</head>',
-            '<body>',
-            labels,
-            '</body>',
-            '</html>',
-        ].join('');
-    }
-
     function buildLabelTSPL(dados, quantidade) {
         const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
-        const nome = dados.showNome === false ? 'PRODUTO' : dados.nome || 'PRODUTO';
+        const nome = dados.showNome === false ? '' : dados.nome || '';
         const referencia = dados.showCodigo === false ? '000000' : dados.codigo || '000000';
         const tamanho = dados.produtoTamanho || 'G';
         const preco = dados.showPreco === false ? 'R$0,00' : formatLabelPriceCompact(dados.preco || 0);
@@ -488,12 +190,10 @@
             buildTsplText(122, 212, 'store', { font: '2', rotation: 270, maxWidthDots: 70 }),
             buildTsplText(178, 148, 'VALOR', { font: '2', rotation: 270, maxWidthDots: 70 }),
             buildTsplText(246, 150, preco, { font: '3', rotation: 270, xMultiplier: 1, yMultiplier: 2, maxWidthDots: 118 }),
-            buildTsplText(178, 292, 'PRODUTO', { font: '2', rotation: 270, maxWidthDots: 88 }),
-            buildTsplText(202, 292, nome, { font: '1', rotation: 270, maxWidthDots: 112 }),
+            buildTsplText(194, 292, nome, { font: '2', rotation: 270, maxWidthDots: 112 }),
             buildTsplText(236, 292, 'REF', { font: '2', rotation: 270, maxWidthDots: 60 }),
             buildTsplText(260, 292, referencia, { font: '1', rotation: 270, maxWidthDots: 112 }),
-            buildTsplText(294, 292, 'TAMANHO', { font: '2', rotation: 270, maxWidthDots: 92 }),
-            buildTsplText(318, 292, tamanho, { font: '1', rotation: 270, maxWidthDots: 112 }),
+            buildTsplText(306, 292, tamanho, { font: '3', rotation: 270, maxWidthDots: 112 }),
             buildTsplText(392, 250, '"Nao seja copia,', { font: '2', rotation: 270, maxWidthDots: 190 }),
             buildTsplText(420, 250, 'seja referencia."', { font: '2', rotation: 270, maxWidthDots: 190 }),
             `PRINT ${copies}`,
@@ -501,47 +201,36 @@
         ].join('\r\n');
     }
 
-    function buildLabelZPL(dados, quantidade) {
-        const copies = Math.max(parseInt(quantidade, 10) || 1, 1);
-        const nome = dados.showNome === false ? 'PRODUTO' : dados.nome || 'PRODUTO';
-        const referencia = dados.showCodigo === false ? '000000' : dados.codigo || '000000';
-        const tamanho = dados.produtoTamanho || 'G';
-        const preco = dados.showPreco === false ? 'R$0,00' : formatLabelPriceCompact(dados.preco || 0);
+    function buildLabelMarkup(state) {
+        const nome = state.nome || '';
+        const referencia = state.codigo || '000000';
+        const tamanho = state.produtoTamanho || 'G';
+        const preco = formatLabelPriceCompact(state.preco || 0);
 
         return [
-            '^XA',
-            '^PW480',
-            '^LL320',
-            '^CI28',
-            '^LH0,0',
-            buildZPLBox(8, 8, 464, 304, 2),
-            buildZPLBox(160, 24, 2, 272, 2),
-            buildZPLBox(332, 24, 2, 272, 2),
-            buildZPLBox(362, 24, 2, 272, 2),
-            buildZPLBox(452, 24, 2, 272, 2),
-            buildZPLBox(162, 160, 170, 2, 2),
-            buildZPLBox(218, 160, 2, 136, 2),
-            buildZPLBox(276, 160, 2, 136, 2),
-            buildZPLText(38, 286, 'Dlima', { orientation: 'B', fontHeight: 70, fontWidth: 44, maxLength: 6 }),
-            buildZPLText(122, 212, 'store', { orientation: 'B', fontHeight: 24, fontWidth: 16, maxLength: 8 }),
-            buildZPLText(178, 148, 'VALOR', { orientation: 'B', fontHeight: 24, fontWidth: 16, maxLength: 8 }),
-            buildZPLText(242, 150, preco, { orientation: 'B', fontHeight: 46, fontWidth: 30, maxLength: 9 }),
-            buildZPLText(178, 292, 'PRODUTO', { orientation: 'B', fontHeight: 22, fontWidth: 14, maxLength: 10 }),
-            buildZPLText(202, 292, nome, { orientation: 'B', fontHeight: 16, fontWidth: 10, maxLength: 16 }),
-            buildZPLText(236, 292, 'REF', { orientation: 'B', fontHeight: 22, fontWidth: 14, maxLength: 6 }),
-            buildZPLText(260, 292, referencia, { orientation: 'B', fontHeight: 16, fontWidth: 10, maxLength: 16 }),
-            buildZPLText(294, 292, 'TAMANHO', { orientation: 'B', fontHeight: 22, fontWidth: 14, maxLength: 10 }),
-            buildZPLText(318, 292, tamanho, { orientation: 'B', fontHeight: 16, fontWidth: 10, maxLength: 16 }),
-            buildZPLText(392, 250, 'Não seja cópia,', { orientation: 'B', fontHeight: 24, fontWidth: 16, maxLength: 18 }),
-            buildZPLText(420, 250, 'seja referência.', { orientation: 'B', fontHeight: 24, fontWidth: 16, maxLength: 18 }),
-            `^PQ${copies}`,
-            '^XZ',
-            '',
-        ].join('\r\n');
-    }
-
-    function buildLabelMarkup(state) {
-        return buildPremiumLabelMarkup(state, 'label etiqueta-teste etiqueta-teste--premium');
+            '<div class="etiqueta-teste etiqueta-teste--premium">',
+            '<section class="label-preview-brand">',
+            '<strong>D&#39;lima</strong>',
+            '<span>store</span>',
+            '</section>',
+            '<section class="label-preview-table">',
+            '<div class="label-preview-value">',
+            '<span>VALOR</span>',
+            `<strong>${escapePreviewText(preco)}</strong>`,
+            '</div>',
+            '<div class="label-preview-fields">',
+            '<div class="label-preview-product"><strong>' + escapePreviewText(nome) + '</strong></div>',
+            '<div><span>REF</span><strong>' + escapePreviewText(referencia) + '</strong></div>',
+            '<div class="label-preview-size"><strong>' + escapePreviewText(tamanho) + '</strong></div>',
+            '</div>',
+            '</section>',
+            '<section class="label-preview-gap"></section>',
+            '<section class="label-preview-quote">',
+            '<span>&quot;Nao seja copia,</span>',
+            '<span>seja referencia.&quot;</span>',
+            '</section>',
+            '</div>',
+        ].join('');
     }
 
     function showStatus(message, type) {
@@ -903,18 +592,6 @@
         return buildLabelTSPL(state, state.quantity);
     }
 
-    function buildLabelZPLCommand() {
-        const state = getLabelState();
-        validateLabelState(state);
-        return buildLabelZPL(state, state.quantity);
-    }
-
-    function buildLabelHTMLCommand() {
-        const state = getLabelState();
-        validateLabelState(state);
-        return buildLabelHTML(state, state.quantity);
-    }
-
     function atualizarPreviewEtiqueta() {
         if (!etiquetaPreview) {
             return;
@@ -925,11 +602,11 @@
 
         etiquetaPreview.innerHTML = buildLabelMarkup(state);
 
-        if (etiquetaHtmlPreview) {
+        if (etiquetaComandoPreview) {
             try {
-                etiquetaHtmlPreview.textContent = buildLabelTSPL(state, state.quantity);
+                etiquetaComandoPreview.textContent = buildLabelTSPL(state, state.quantity);
             } catch (error) {
-                etiquetaHtmlPreview.textContent = '';
+                etiquetaComandoPreview.textContent = '';
             }
         }
     }
@@ -1042,9 +719,6 @@
                 input.value = '';
             }
         });
-        if (etiquetaTesteTexto) {
-            etiquetaTesteTexto.value = CENTER_TEST_DEFAULT_TEXT;
-        }
         if (etiquetaQuantidade) {
             etiquetaQuantidade.value = '1';
         }
@@ -1137,37 +811,11 @@
             imprimirEtiquetasButton.textContent = isPrinting ? 'Imprimindo...' : 'Imprimir etiquetas';
         }
 
-        if (imprimirEtiquetasZplButton) {
-            imprimirEtiquetasZplButton.disabled = isPrinting;
-            imprimirEtiquetasZplButton.textContent = isPrinting ? 'Imprimindo...' : 'Imprimir ZPL';
-        }
-
-        if (imprimirEtiquetasHtmlButton) {
-            imprimirEtiquetasHtmlButton.disabled = isPrinting;
-            imprimirEtiquetasHtmlButton.textContent = isPrinting ? 'Imprimindo...' : 'Imprimir HTML';
-        }
-
-        if (imprimirTesteCentralizadoButton) {
-            imprimirTesteCentralizadoButton.disabled = isPrinting;
-            imprimirTesteCentralizadoButton.textContent = isPrinting ? 'Imprimindo...' : 'Teste centro';
-        }
     }
 
     function buildLabelRawConfigOptions() {
         return {
             encoding: 'UTF-8',
-        };
-    }
-
-    function buildLabelHtmlConfigOptions() {
-        return {
-            units: 'mm',
-            size: {
-                width: LABEL_WIDTH_MM,
-                height: LABEL_HEIGHT_MM,
-            },
-            margins: 0,
-            scaleContent: false,
         };
     }
 
@@ -1177,27 +825,6 @@
             format: 'plain',
             data: comandoTSPL,
         }];
-    }
-
-    function buildLabelZPLPrintData(zpl) {
-        const data = [{
-            type: 'raw',
-            format: 'plain',
-            data: zpl,
-        }];
-
-        return data;
-    }
-
-    function buildLabelHTMLPrintData(html) {
-        const data = [{
-            type: 'pixel',
-            format: 'html',
-            flavor: 'plain',
-            data: html,
-        }];
-
-        return data;
     }
 
     function logLabelTSPLDiagnostic({ state, printerName, configOptions, config, etiquetas, comandoTSPL }) {
@@ -1238,80 +865,6 @@
         return printerName;
     }
 
-    function logLabelZPLDiagnostic({ state, printerName, configOptions, config, data, zpl }) {
-        console.group('[DLIMA etiqueta ZPL RAW]');
-        console.table({
-            larguraEtiquetaMm: state.size.width,
-            alturaEtiquetaMm: state.size.height,
-            larguraEtiquetaDots: ZPL_LABEL_WIDTH_DOTS,
-            alturaEtiquetaDots: ZPL_LABEL_HEIGHT_DOTS,
-            quantidade: state.quantity,
-        });
-        console.log('Impressora resolvida:', printerName);
-        console.log('qz.configs.create(printerName, configOptions) - configOptions:', configOptions);
-        console.log('Objeto config retornado pelo QZ:', config);
-        console.log('Array data enviado ao qz.print(config, data):', data);
-        console.log('Comando ZPL enviado ao QZ:', zpl);
-        console.groupEnd();
-    }
-
-    async function sendLabelZPLToPrinter(state, zpl) {
-        await connectQzForLabels();
-        const printerName = await resolveLabelPrinter(state.printerName);
-        if (etiquetaPrinterName) {
-            etiquetaPrinterName.value = printerName;
-        }
-        const configOptions = buildLabelRawConfigOptions();
-        const config = window.qz.configs.create(printerName, configOptions);
-        const data = buildLabelZPLPrintData(zpl);
-        logLabelZPLDiagnostic({
-            state,
-            printerName,
-            configOptions,
-            config,
-            data,
-            zpl,
-        });
-        await window.qz.print(config, data);
-        return printerName;
-    }
-
-    function logLabelHTMLDiagnostic({ state, printerName, configOptions, config, data, html }) {
-        console.group('[DLIMA etiqueta HTML QZ]');
-        console.table({
-            larguraEtiquetaMm: state.size.width,
-            alturaEtiquetaMm: state.size.height,
-            quantidade: state.quantity,
-        });
-        console.log('Impressora resolvida:', printerName);
-        console.log('qz.configs.create(printerName, configOptions) - configOptions:', configOptions);
-        console.log('Objeto config retornado pelo QZ:', config);
-        console.log('Array data enviado ao qz.print(config, data):', data);
-        console.log('HTML enviado ao QZ:', html);
-        console.groupEnd();
-    }
-
-    async function sendLabelHTMLToPrinter(state, html) {
-        await connectQzForLabels();
-        const printerName = await resolveLabelPrinter(state.printerName);
-        if (etiquetaPrinterName) {
-            etiquetaPrinterName.value = printerName;
-        }
-        const configOptions = buildLabelHtmlConfigOptions();
-        const config = window.qz.configs.create(printerName, configOptions);
-        const data = buildLabelHTMLPrintData(html);
-        logLabelHTMLDiagnostic({
-            state,
-            printerName,
-            configOptions,
-            config,
-            data,
-            html,
-        });
-        await window.qz.print(config, data);
-        return printerName;
-    }
-
     async function printLabels() {
         clearEtiquetaStatus();
         setLabelPrintButtonState(true);
@@ -1324,96 +877,6 @@
             const comandoTSPL = buildLabelTSPL(state, state.quantity);
             const printerName = await sendLabelTSPLToPrinter(state, comandoTSPL);
             showEtiquetaStatus(`${state.quantity} etiqueta${state.quantity === 1 ? '' : 's'} enviada${state.quantity === 1 ? '' : 's'} para ${printerName}.`, 'success');
-        } catch (error) {
-            const message = /websocket|connect|qz/i.test(error.message || '')
-                ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
-                : error.message;
-            showEtiquetaStatus(message, 'error');
-        } finally {
-            setLabelPrintButtonState(false);
-        }
-    }
-
-    async function printLabelsZPL() {
-        clearEtiquetaStatus();
-        setLabelPrintButtonState(true);
-
-        try {
-            const state = getLabelState();
-            validateLabelState(state);
-            atualizarPreviewEtiqueta();
-            showEtiquetaStatus('Enviando etiqueta ZPL RAW para a impressora...', 'info');
-            const zpl = buildLabelZPL(state, state.quantity);
-            if (etiquetaHtmlPreview) {
-                etiquetaHtmlPreview.textContent = zpl;
-            }
-            const printerName = await sendLabelZPLToPrinter(state, zpl);
-            showEtiquetaStatus(`${state.quantity} etiqueta${state.quantity === 1 ? '' : 's'} ZPL enviada${state.quantity === 1 ? '' : 's'} para ${printerName}.`, 'success');
-        } catch (error) {
-            const message = /websocket|connect|qz/i.test(error.message || '')
-                ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
-                : error.message;
-            showEtiquetaStatus(message, 'error');
-        } finally {
-            setLabelPrintButtonState(false);
-        }
-    }
-
-    async function printLabelsHTML() {
-        clearEtiquetaStatus();
-        setLabelPrintButtonState(true);
-
-        try {
-            const state = getLabelState();
-            validateLabelState(state);
-            atualizarPreviewEtiqueta();
-            showEtiquetaStatus('Enviando etiqueta HTML 60x40 pelo QZ Tray...', 'info');
-            const html = buildLabelHTML(state, state.quantity);
-            if (etiquetaHtmlPreview) {
-                etiquetaHtmlPreview.textContent = html;
-            }
-            const printerName = await sendLabelHTMLToPrinter(state, html);
-            showEtiquetaStatus(`${state.quantity} etiqueta${state.quantity === 1 ? '' : 's'} HTML enviada${state.quantity === 1 ? '' : 's'} para ${printerName}.`, 'success');
-        } catch (error) {
-            const message = /websocket|connect|qz/i.test(error.message || '')
-                ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
-                : error.message;
-            showEtiquetaStatus(message, 'error');
-        } finally {
-            setLabelPrintButtonState(false);
-        }
-    }
-
-    async function printCenteredWordTest() {
-        clearEtiquetaStatus();
-        setLabelPrintButtonState(true);
-
-        try {
-            const state = getLabelState();
-            state.quantity = normalizeLabelQuantity(state);
-            if (state.quantity <= 0) {
-                throw new Error('Informe uma quantidade de etiquetas maior que zero.');
-            }
-            if (!state.printerName) {
-                throw new Error('Informe o nome da impressora no QZ Tray.');
-            }
-
-            const word = sanitizeLabelText(etiquetaTesteTexto ? etiquetaTesteTexto.value : '') || CENTER_TEST_DEFAULT_TEXT;
-            showEtiquetaStatus(`Enviando teste centralizado "${word}"...`, 'info');
-            const testState = {
-                ...state,
-                nome: word,
-                codigo: 'TESTE',
-                produtoTamanho: 'G',
-                preco: '0',
-            };
-            etiquetaPreview.innerHTML = buildLabelMarkup(testState);
-            if (etiquetaHtmlPreview) {
-                etiquetaHtmlPreview.textContent = buildLabelTSPL(testState, state.quantity);
-            }
-            const comandoTSPL = buildLabelTSPL(testState, state.quantity);
-            const printerName = await sendLabelTSPLToPrinter(state, comandoTSPL);
-            showEtiquetaStatus(`Teste centralizado enviado para ${printerName}.`, 'success');
         } catch (error) {
             const message = /websocket|connect|qz/i.test(error.message || '')
                 ? 'Nao foi possivel conectar ao QZ Tray. Verifique se ele esta aberto e tente novamente.'
@@ -1469,9 +932,6 @@
     const fecharEtiquetas = document.getElementById('fecharEtiquetas');
     const limparEtiquetasButton = document.getElementById('limparEtiquetas');
     const imprimirEtiquetasButton = document.getElementById('imprimirEtiquetas');
-    const imprimirEtiquetasZplButton = document.getElementById('imprimirEtiquetasZpl');
-    const imprimirEtiquetasHtmlButton = document.getElementById('imprimirEtiquetasHtml');
-    const imprimirTesteCentralizadoButton = document.getElementById('imprimirTesteCentralizado');
     let etiquetaSearchTimeout = null;
 
     if (openEtiquetasModal) {
@@ -1488,15 +948,6 @@
     }
     if (imprimirEtiquetasButton) {
         imprimirEtiquetasButton.addEventListener('click', printLabels);
-    }
-    if (imprimirEtiquetasZplButton) {
-        imprimirEtiquetasZplButton.addEventListener('click', printLabelsZPL);
-    }
-    if (imprimirEtiquetasHtmlButton) {
-        imprimirEtiquetasHtmlButton.addEventListener('click', printLabelsHTML);
-    }
-    if (imprimirTesteCentralizadoButton) {
-        imprimirTesteCentralizadoButton.addEventListener('click', printCenteredWordTest);
     }
     if (etiquetasModal) {
         etiquetasModal.addEventListener('click', event => {
@@ -1521,7 +972,6 @@
         etiquetaCodigo,
         etiquetaProdutoTamanho,
         etiquetaCor,
-        etiquetaTesteTexto,
         etiquetaBordaTeste,
         etiquetaOptions.nome,
         etiquetaOptions.preco,
@@ -1546,13 +996,6 @@
     window.buscarProdutoEtiqueta = buscarProdutoEtiqueta;
     window.atualizarPreviewEtiqueta = atualizarPreviewEtiqueta;
     window.buildLabelTSPL = buildLabelTSPL;
-    window.buildLabelZPL = buildLabelZPL;
-    window.buildLabelHTML = buildLabelHTML;
     window.buildLabelCommand = buildLabelCommand;
-    window.buildLabelZPLCommand = buildLabelZPLCommand;
-    window.buildLabelHTMLCommand = buildLabelHTMLCommand;
     window.printLabels = printLabels;
-    window.printLabelsZPL = printLabelsZPL;
-    window.printLabelsHTML = printLabelsHTML;
-    window.printCenteredWordTest = printCenteredWordTest;
 })();

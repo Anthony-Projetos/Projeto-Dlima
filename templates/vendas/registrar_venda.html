@@ -156,7 +156,7 @@
                 <div>
                     <span class="brand-badge label-badge">RAW QZ</span>
                     <h2 id="etiquetasModalTitle">Etiquetas adesivas</h2>
-                    <p>Monte, confira a previa e envie TSPL, ZPL ou HTML pelo QZ Tray.</p>
+                    <p>Monte, confira a previa e envie TSPL RAW pelo QZ Tray.</p>
                 </div>
                 <button type="button" class="label-icon-button" id="closeEtiquetasModal" aria-label="Fechar">&times;</button>
             </div>
@@ -238,24 +238,14 @@
                     <div class="label-preview-stage">
                         <div class="label-preview" id="etiquetaPreview" data-size="60x40"></div>
                     </div>
-                    <pre class="label-html-preview" id="etiquetaHtmlPreview"></pre>
+                    <pre class="label-command-preview" id="etiquetaComandoPreview"></pre>
                 </div>
             </div>
 
             <div class="label-modal-actions">
-                <div class="label-center-test">
-                    <label for="etiquetaTesteTexto">Teste de centro</label>
-                    <div class="label-center-test-row">
-                        <input id="etiquetaTesteTexto" type="text" class="label-input" value="TESTE" maxlength="14">
-                        <button type="button" class="btn-secondary" id="imprimirTesteCentralizado">Teste centro</button>
-                    </div>
-                </div>
-
                 <div class="label-action-buttons">
                     <button type="button" class="btn-secondary" id="limparEtiquetas">Limpar</button>
                     <button type="button" class="btn-secondary" id="fecharEtiquetas">Fechar</button>
-                    <button type="button" class="btn-secondary" id="imprimirEtiquetasHtml">Imprimir HTML</button>
-                    <button type="button" class="btn-secondary" id="imprimirEtiquetasZpl">Imprimir ZPL</button>
                     <button type="button" class="btn-primary" id="imprimirEtiquetas">Imprimir etiquetas</button>
                 </div>
             </div>
