@@ -102,6 +102,23 @@ class RegistrarVendaBuscaTests(TestCase):
         self.assertEqual(data['receipt']['printer']['encoding'], 'CP860')
 
 
+class RegistrarVendaFrontendTests(TestCase):
+    def test_enter_na_busca_de_produtos_nao_recarrega_a_pagina(self):
+        source = Path(settings.BASE_DIR / 'static/js/vendas/registrar_venda.js').read_text(encoding='utf-8')
+
+        self.assertIn(
+            "function submitProductSearch() {\n"
+            "        if (!pesquisaProduto) {\n"
+            "            return;\n"
+            "        }\n"
+            "\n"
+            "        filterProducts();\n"
+            "    }",
+            source,
+        )
+        self.assertNotIn('window.location.assign(url.toString())', source)
+
+
 class LabelPrintingFrontendTests(TestCase):
     def test_js_de_etiquetas_usa_tspl_raw_60x40(self):
         source = Path(settings.BASE_DIR / 'static/js/vendas/registrar_venda.js').read_text(encoding='utf-8')

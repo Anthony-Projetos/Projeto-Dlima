@@ -614,16 +614,7 @@
             return;
         }
 
-        const url = new URL(window.location.href);
-        const termo = pesquisaProduto.value.trim();
-
-        if (termo) {
-            url.searchParams.set('q', termo);
-        } else {
-            url.searchParams.delete('q');
-        }
-
-        window.location.assign(url.toString());
+        filterProducts();
     }
 
     function getLabelState() {
