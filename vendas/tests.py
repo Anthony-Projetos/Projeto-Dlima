@@ -126,6 +126,18 @@ class RegistrarVendaFrontendTests(TestCase):
         self.assertIn('const shouldShow = corresponde || isSelected;', source)
         self.assertIn('card.hidden = !shouldShow;', source)
 
+    def test_busca_de_produtos_tem_botao_que_usa_filtro_local(self):
+        source = Path(settings.BASE_DIR / 'static/js/vendas/registrar_venda.js').read_text(encoding='utf-8')
+        template = Path(settings.BASE_DIR / 'templates/vendas/registrar_venda.html').read_text(encoding='utf-8')
+        css = Path(settings.BASE_DIR / 'static/css/style.css').read_text(encoding='utf-8')
+
+        self.assertIn('id="buscarProdutoButton"', template)
+        self.assertIn('type="button"', template)
+        self.assertIn("const buscarProdutoButton = document.getElementById('buscarProdutoButton');", source)
+        self.assertIn("buscarProdutoButton.addEventListener('click', submitProductSearch);", source)
+        self.assertIn('.search-controls', css)
+        self.assertIn('.search-button', css)
+
 
 class LabelPrintingFrontendTests(TestCase):
     def test_js_de_etiquetas_usa_tspl_raw_60x40(self):

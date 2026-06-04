@@ -5,6 +5,7 @@
     const statusBox = document.getElementById('vendaStatus');
     const descontoInput = document.getElementById('id_desconto');
     const pesquisaProduto = document.getElementById('pesquisaProduto');
+    const buscarProdutoButton = document.getElementById('buscarProdutoButton');
     const produtoCards = Array.from(document.querySelectorAll('.produto-card[data-produto-nome]'));
     const semResultadosBusca = document.getElementById('semResultadosBusca');
     const etiquetasModal = document.getElementById('etiquetasModal');
@@ -1008,6 +1009,10 @@
         filterProducts();
         pesquisaProduto.addEventListener('input', filterProducts);
         pesquisaProduto.addEventListener('keydown', handleProductSearchKeydown);
+    }
+
+    if (buscarProdutoButton) {
+        buscarProdutoButton.addEventListener('click', submitProductSearch);
     }
 
     const openEtiquetasModal = document.getElementById('openEtiquetasModal');

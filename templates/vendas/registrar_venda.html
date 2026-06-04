@@ -78,15 +78,20 @@
                     <h2>Produtos</h2>
                     <div class="search-box search-box-centered">
                         <label for="pesquisaProduto" class="search-label">Pesquisar produto</label>
-                        <input
-                            id="pesquisaProduto"
-                            type="text"
-                            class="search-input"
-                            name="q"
-                            value="{{ termo_pesquisa }}"
-                            placeholder="Digite nome, categoria, cor ou tamanho"
-                            autocomplete="off"
-                        >
+                        <div class="search-controls">
+                            <input
+                                id="pesquisaProduto"
+                                type="text"
+                                class="search-input"
+                                name="q"
+                                value="{{ termo_pesquisa }}"
+                                placeholder="Digite nome, categoria, cor ou tamanho"
+                                autocomplete="off"
+                            >
+                            <button id="buscarProdutoButton" class="search-button" type="button">
+                                Buscar
+                            </button>
+                        </div>
                     </div>
                 </div>
 
