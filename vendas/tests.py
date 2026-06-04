@@ -112,7 +112,7 @@ class RegistrarVendaFrontendTests(TestCase):
             "            return;\n"
             "        }\n"
             "\n"
-            "        filterProducts();\n"
+            "        filterProducts({ focusFirstMatch: true });\n"
             "    }",
             source,
         )
@@ -125,6 +125,14 @@ class RegistrarVendaFrontendTests(TestCase):
         self.assertIn('const isSelected = quantityInput && (parseInt(quantityInput.value, 10) || 0) > 0;', source)
         self.assertIn('const shouldShow = corresponde || isSelected;', source)
         self.assertIn('card.hidden = !shouldShow;', source)
+        self.assertIn("card.style.order = termo ? (corresponde ? '0' : '1') : '';", source)
+
+    def test_botao_de_busca_rola_ate_o_produto_encontrado(self):
+        source = Path(settings.BASE_DIR / 'static/js/vendas/registrar_venda.js').read_text(encoding='utf-8')
+
+        self.assertIn('let firstMatch = null;', source)
+        self.assertIn("firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });", source)
+        self.assertIn('return { visiveis, encontrados, firstMatch };', source)
 
     def test_busca_de_produtos_tem_botao_que_usa_filtro_local(self):
         source = Path(settings.BASE_DIR / 'static/js/vendas/registrar_venda.js').read_text(encoding='utf-8')

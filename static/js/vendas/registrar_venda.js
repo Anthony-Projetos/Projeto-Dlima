@@ -573,13 +573,16 @@
         }
     }
 
-    function filterProducts() {
+    function filterProducts(options = {}) {
         if (!pesquisaProduto) {
-            return;
+            return null;
         }
 
+        const focusFirstMatch = Boolean(options.focusFirstMatch);
         const termo = pesquisaProduto.value.trim().toLowerCase();
         let visiveis = 0;
+        let encontrados = 0;
+        let firstMatch = null;
 
         produtoCards.forEach(card => {
             const quantityInput = card.querySelector('[data-preco]');
@@ -594,14 +597,27 @@
             const shouldShow = corresponde || isSelected;
 
             card.hidden = !shouldShow;
+            card.style.order = termo ? (corresponde ? '0' : '1') : '';
             if (shouldShow) {
                 visiveis += 1;
+            }
+            if (termo && corresponde) {
+                encontrados += 1;
+                if (!firstMatch) {
+                    firstMatch = card;
+                }
             }
         });
 
         if (semResultadosBusca) {
-            semResultadosBusca.hidden = visiveis > 0 || termo === '';
+            semResultadosBusca.hidden = encontrados > 0 || termo === '';
         }
+
+        if (focusFirstMatch && firstMatch) {
+            firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        return { visiveis, encontrados, firstMatch };
     }
 
     function handleProductSearchKeydown(event) {
@@ -618,7 +634,7 @@
             return;
         }
 
-        filterProducts();
+        filterProducts({ focusFirstMatch: true });
     }
 
     function getLabelState() {
