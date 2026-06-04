@@ -581,6 +581,8 @@
         let visiveis = 0;
 
         produtoCards.forEach(card => {
+            const quantityInput = card.querySelector('[data-preco]');
+            const isSelected = quantityInput && (parseInt(quantityInput.value, 10) || 0) > 0;
             const conteudoPesquisa = [
                 card.dataset.produtoNome || '',
                 card.dataset.produtoCategoria || '',
@@ -588,9 +590,10 @@
                 card.dataset.produtoTamanho || '',
             ].join(' ');
             const corresponde = conteudoPesquisa.includes(termo);
+            const shouldShow = corresponde || isSelected;
 
-            card.hidden = !corresponde;
-            if (corresponde) {
+            card.hidden = !shouldShow;
+            if (shouldShow) {
                 visiveis += 1;
             }
         });

@@ -118,6 +118,14 @@ class RegistrarVendaFrontendTests(TestCase):
         )
         self.assertNotIn('window.location.assign(url.toString())', source)
 
+    def test_busca_de_produtos_mantem_produto_com_quantidade_selecionada(self):
+        source = Path(settings.BASE_DIR / 'static/js/vendas/registrar_venda.js').read_text(encoding='utf-8')
+
+        self.assertIn("const quantityInput = card.querySelector('[data-preco]');", source)
+        self.assertIn('const isSelected = quantityInput && (parseInt(quantityInput.value, 10) || 0) > 0;', source)
+        self.assertIn('const shouldShow = corresponde || isSelected;', source)
+        self.assertIn('card.hidden = !shouldShow;', source)
+
 
 class LabelPrintingFrontendTests(TestCase):
     def test_js_de_etiquetas_usa_tspl_raw_60x40(self):
